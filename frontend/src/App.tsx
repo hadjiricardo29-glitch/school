@@ -2,7 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { ToastProvider } from "@/components/ui/Toast";
-import { RequireAuth, RequireRole, RequireStaff } from "@/components/shared/RouteGuards";
+import { RequireActivation, RequireAuth, RequireRole, RequireStaff } from "@/components/shared/RouteGuards";
 
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { AppLayout } from "@/layouts/AppLayout";
@@ -69,7 +69,9 @@ export default function App() {
             <Route
               element={
                 <RequireAuth>
-                  <AppLayout />
+                  <RequireActivation>
+                    <AppLayout />
+                  </RequireActivation>
                 </RequireAuth>
               }
             >

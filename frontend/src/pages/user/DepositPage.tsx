@@ -1,15 +1,18 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
-import { createDepositRequest } from "@/services/wallet";
+import { createDepositRequest, getWallet } from "@/services/wallet";
+import { isAccountActivated } from "@/utils/activation";
 import { notify } from "@/utils/toast";
 import { formatCurrency } from "@/utils/format";
+import type { Wallet } from "@/types/domain";
 
 const METHODS = [
   { value: "mobile_money", label: "Mobile Money" },
@@ -19,11 +22,20 @@ const METHODS = [
 
 export function DepositPage() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const { settings } = useSettings();
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("mobile_money");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [wallet, setWallet] = useState<Wallet | null>(null);
+
+  useEffect(() => {
+    if (!profile) return;
+    getWallet(profile.id).then(setWallet).catch(() => setWallet(null));
+  }, [profile]);
+
+  const needsActivation = !isAccountActivated(wallet, settings);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -53,7 +65,19 @@ export function DepositPage() {
 
       <Card>
         <h1 className="text-lg font-semibold text-text-primary">Effectuer un dépôt</h1>
-        <div className="mt-4">
+        <div className="mt-4 flex flex-col gap-3">
+          {needsActivation && (
+            <div className="flex items-start gap-3 rounded-[10px] border border-warning/30 bg-warning-bg p-4">
+              <ShieldAlert className="mt-0.5 size-5 shrink-0 text-warning" />
+              <div>
+                <p className="text-sm font-semibold text-text-primary">Activation de compte requise</p>
+                <p className="mt-0.5 text-sm text-text-secondary">
+                  Déposez au moins {formatCurrency(settings.accountActivationMinDeposit, settings.currencyLabel)} pour
+                  activer votre compte. Tant que ce n'est pas fait, l'accès aux autres pages reste bloqué.
+                </p>
+              </div>
+            </div>
+          )}
           <Alert tone="warning">
             Environnement de démonstration — aucun paiement réel n'est effectué. Le montant est crédité instantanément à
             titre de test ("Demo payment").

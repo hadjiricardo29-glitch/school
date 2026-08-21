@@ -3,11 +3,6 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
-  UserPlus,
-  ListChecks,
-  Wallet,
-  Share2,
-  Banknote,
   ShieldCheck,
   Users,
   TrendingUp,
@@ -28,14 +23,6 @@ const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
-
-const HOW_IT_WORKS = [
-  { icon: UserPlus, title: "Créez votre compte", body: "Inscription gratuite en moins de deux minutes, avec ou sans lien de parrainage." },
-  { icon: ListChecks, title: "Accomplissez des missions", body: "Choisissez parmi des missions digitales variées et soumettez votre preuve de réalisation." },
-  { icon: Wallet, title: "Gagnez des récompenses", body: "Une fois votre mission validée, votre récompense est créditée automatiquement sur votre portefeuille." },
-  { icon: Share2, title: "Développez votre réseau", body: "Invitez votre entourage et percevez des commissions sur plusieurs niveaux de parrainage." },
-  { icon: Banknote, title: "Retirez vos gains", body: "Demandez le retrait de votre solde disponible selon les méthodes proposées." },
-];
 
 const WHY_MOTOSU = [
   { icon: Sparkles, title: "Missions variées", body: "Réseaux sociaux, contenu, sondages, tests d'applications et plus encore, mises à jour régulièrement." },
@@ -109,28 +96,22 @@ export function LandingPage() {
       <section id="how-it-works" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="text-center">
           <h2 className="text-2xl font-semibold text-text-primary sm:text-3xl">Comment ça marche</h2>
-          <p className="mt-2 text-text-secondary">Cinq étapes simples pour commencer à gagner.</p>
         </motion.div>
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
-          {HOW_IT_WORKS.map((step, i) => (
-            <motion.div
-              key={step.title}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true }}
-              variants={fadeUp}
-              transition={{ delay: i * 0.08 }}
-            >
-              <Card className="h-full">
-                <span className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <step.icon className="size-5" />
-                </span>
-                <p className="mt-4 text-sm font-semibold text-text-primary">{step.title}</p>
-                <p className="mt-1.5 text-sm text-text-secondary">{step.body}</p>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          variants={fadeUp}
+          className="mx-auto mt-8 max-w-3xl text-center text-base leading-relaxed text-text-secondary sm:text-lg"
+        >
+          <p>
+            Créez votre compte en moins de deux minutes, avec ou sans lien de parrainage. Choisissez une mission
+            parmi celles disponibles, réalisez-la et soumettez votre preuve : votre récompense est créditée
+            automatiquement dès qu'elle est validée. Partagez ensuite votre lien pour faire grandir votre équipe et
+            percevoir des commissions sur plusieurs niveaux de parrainage. Une fois votre solde disponible, demandez
+            un retrait selon la méthode qui vous convient le mieux.
+          </p>
+        </motion.div>
       </section>
 
       {/* FEATURED TASKS */}
