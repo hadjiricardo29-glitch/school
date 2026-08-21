@@ -31,7 +31,7 @@ insert into auth.users (
   ('00000000-0000-0000-0000-000000000000', 'a0000000-0000-4000-8000-000000000002', 'authenticated', 'authenticated',
    'prince@example.com', crypt('MotosuDemo#2026', gen_salt('bf')), now(), now(),
    '{"provider":"email","providers":["email"]}',
-   '{"username":"prince","first_name":"Prince","last_name":"Kouassi","country":"Côte d''Ivoire","phone_code":"+225","phone":"0100000002"}',
+   '{"username":"prince","first_name":"Prince","last_name":"Kouassi","country":"Côte d''Ivoire","phone_code":"+225","phone":"0100000002","referral_code":"admin"}',
    now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', 'a0000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated',
    'marie@example.com', crypt('MotosuDemo#2026', gen_salt('bf')), now(), now(),

@@ -55,7 +55,11 @@ export function RegisterPage() {
       setError("Vous devez accepter les conditions d'utilisation et la politique de confidentialité");
       return;
     }
-    if (referralCode && referralCode.trim().toUpperCase() === username.trim().toUpperCase()) {
+    if (!referralCode.trim()) {
+      setError("Le code de parrainage est requis pour créer un compte");
+      return;
+    }
+    if (referralCode.trim().toUpperCase() === username.trim().toUpperCase()) {
       setError("Vous ne pouvez pas être votre propre parrain");
       return;
     }
@@ -180,12 +184,13 @@ export function RegisterPage() {
         </div>
 
         <Input
-          label="Code de parrainage (optionnel)"
+          label="Code de parrainage"
+          required
           value={referralCode}
           onChange={(e) => setReferralCode(e.target.value)}
           disabled={referralLocked}
           placeholder="PRINCE123"
-          hint={referralLocked ? "Rempli automatiquement depuis votre lien d'invitation" : undefined}
+          hint={referralLocked ? "Rempli automatiquement depuis votre lien d'invitation" : "Demandez le code à la personne qui vous a invité"}
         />
 
         <div className="flex flex-col gap-2">
