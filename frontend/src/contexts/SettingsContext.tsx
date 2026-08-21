@@ -48,10 +48,10 @@ const DEFAULT_SETTINGS: Settings = {
   communityWhatsappUrl: "",
   spinEnabled: true,
   spinMinReward: 25,
-  spinMaxReward: 275,
+  spinMaxReward: 100,
   spinCooldownHours: 24,
-  spinMaxPerWindow: 3,
-  spinWindowDays: 5,
+  spinMaxPerWindow: 2,
+  spinWindowDays: 7,
 };
 
 const SettingsContext = createContext<{ settings: Settings; loading: boolean; refresh: () => Promise<void> }>({

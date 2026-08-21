@@ -16,7 +16,7 @@ import { notify } from "@/utils/toast";
 import type { Wallet } from "@/types/domain";
 
 const SEGMENT_COLORS = ["#DC2626", "#0EA5E9", "#16A34A", "#F59E0B", "#7C3AED", "#EC4899", "#059669", "#EA580C"];
-const SEGMENT_VALUES = [25, 50, 75, 100, 125, 175, 225, 275];
+const SEGMENT_VALUES = [25, 30, 35, 40, 50, 60, 75, 100];
 const BULB_COUNT = 24;
 
 function angleForSegment(i: number) {
