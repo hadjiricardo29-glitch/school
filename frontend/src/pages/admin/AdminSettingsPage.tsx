@@ -33,6 +33,8 @@ export function AdminSettingsPage() {
   const [spinMin, setSpinMin] = useState("");
   const [spinMax, setSpinMax] = useState("");
   const [spinCooldown, setSpinCooldown] = useState("");
+  const [spinMaxPerWindow, setSpinMaxPerWindow] = useState("");
+  const [spinWindowDays, setSpinWindowDays] = useState("");
   const [rules, setRules] = useState<CommissionRule[]>([]);
 
   useEffect(() => {
@@ -57,6 +59,8 @@ export function AdminSettingsPage() {
     setSpinMin(String(settings.spinMinReward));
     setSpinMax(String(settings.spinMaxReward));
     setSpinCooldown(String(settings.spinCooldownHours));
+    setSpinMaxPerWindow(String(settings.spinMaxPerWindow));
+    setSpinWindowDays(String(settings.spinWindowDays));
   }, [settings]);
 
   async function saveGeneral() {
@@ -136,6 +140,8 @@ export function AdminSettingsPage() {
         updateSetting("spin_min_reward", Number(spinMin)),
         updateSetting("spin_max_reward", Number(spinMax)),
         updateSetting("spin_cooldown_hours", Number(spinCooldown)),
+        updateSetting("spin_max_per_window", Number(spinMaxPerWindow)),
+        updateSetting("spin_window_days", Number(spinWindowDays)),
       ]);
       await refresh();
       notify.success("Paramètres de la roue enregistrés");
@@ -262,10 +268,11 @@ export function AdminSettingsPage() {
             Activer la roue
           </label>
           {spinEnabled && (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <Input label={`Min (${settings.currencyLabel})`} type="number" value={spinMin} onChange={(e) => setSpinMin(e.target.value)} />
               <Input label={`Max (${settings.currencyLabel})`} type="number" value={spinMax} onChange={(e) => setSpinMax(e.target.value)} />
-              <Input label="Cooldown (heures)" type="number" value={spinCooldown} onChange={(e) => setSpinCooldown(e.target.value)} />
+              <Input label="Nombre de tirages" type="number" value={spinMaxPerWindow} onChange={(e) => setSpinMaxPerWindow(e.target.value)} />
+              <Input label="Par période (jours)" type="number" value={spinWindowDays} onChange={(e) => setSpinWindowDays(e.target.value)} />
             </div>
           )}
           <Button className="self-start" loading={saving} onClick={saveSpinSettings}>Enregistrer</Button>

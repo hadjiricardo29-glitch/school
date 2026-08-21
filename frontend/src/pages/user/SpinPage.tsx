@@ -15,7 +15,22 @@ import { formatCurrency } from "@/utils/format";
 import { notify } from "@/utils/toast";
 import type { Wallet } from "@/types/domain";
 
-const SEGMENT_COLORS = ["#820000", "#B7791F", "#16803C", "#A00000", "#6B7280", "#820000", "#16803C", "#B7791F"];
+const SEGMENT_COLORS = ["#DC2626", "#0EA5E9", "#16A34A", "#F59E0B", "#7C3AED", "#EC4899", "#059669", "#EA580C"];
+const SEGMENT_VALUES = [25, 50, 75, 100, 125, 175, 225, 275];
+const BULB_COUNT = 24;
+
+function angleForSegment(i: number) {
+  const segmentAngle = 360 / SEGMENT_COLORS.length;
+  const center = i * segmentAngle + segmentAngle / 2;
+  return (360 - center) % 360;
+}
+
+function nearestSegmentIndex(reward: number) {
+  return SEGMENT_VALUES.reduce(
+    (best, v, i) => (Math.abs(v - reward) < Math.abs(SEGMENT_VALUES[best] - reward) ? i : best),
+    0,
+  );
+}
 
 export function SpinPage() {
   const { profile } = useAuth();
@@ -46,12 +61,16 @@ export function SpinPage() {
     if (!canSpin || spinning) return;
     setSpinning(true);
     setLastReward(null);
-    const extraTurns = 4 + Math.floor(Math.random() * 3);
-    const randomOffset = Math.floor(Math.random() * 360);
-    setRotation((r) => r + extraTurns * 360 + randomOffset);
 
     try {
       const reward = await claimDailySpin();
+      const target = angleForSegment(nearestSegmentIndex(reward));
+      const extraTurns = 4 + Math.floor(Math.random() * 3);
+      setRotation((prev) => {
+        const currentMod = ((prev % 360) + 360) % 360;
+        const delta = target - currentMod <= 0 ? target - currentMod + 360 : target - currentMod;
+        return prev + extraTurns * 360 + delta;
+      });
       setTimeout(async () => {
         setLastReward(reward);
         notify.success(`Vous avez gagné ${formatCurrency(reward, settings.currencyLabel)} !`);
@@ -71,7 +90,7 @@ export function SpinPage() {
       <div>
         <h1 className="text-xl font-semibold text-text-primary">Roue de la chance</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Un tirage gratuit toutes les {settings.spinCooldownHours} heures, montant entre{" "}
+          {settings.spinMaxPerWindow} tirages gratuits tous les {settings.spinWindowDays} jours, montant entre{" "}
           {formatCurrency(settings.spinMinReward, settings.currencyLabel)} et{" "}
           {formatCurrency(settings.spinMaxReward, settings.currencyLabel)}.
         </p>
@@ -83,32 +102,66 @@ export function SpinPage() {
         <ActivationBanner />
       ) : (
         <Card className="flex flex-col items-center gap-6 py-10">
-          <div className="relative flex size-64 items-center justify-center">
-            <motion.svg
-              viewBox="0 0 200 200"
-              className="size-64"
-              animate={{ rotate: rotation }}
-              transition={{ duration: 2.2, ease: [0.17, 0.67, 0.3, 0.99] }}
-            >
-              {SEGMENT_COLORS.map((color, i) => {
-                const angle = (360 / SEGMENT_COLORS.length) * i;
-                return (
+        <div className="relative flex size-72 items-center justify-center">
+          <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(14,165,233,0.25)_0%,rgba(220,38,38,0.18)_45%,transparent_75%)] blur-xl" />
+
+          <svg viewBox="0 0 200 200" className="absolute size-72">
+            {Array.from({ length: BULB_COUNT }).map((_, i) => {
+              const a = (360 / BULB_COUNT) * i * (Math.PI / 180);
+              return (
+                <circle
+                  key={i}
+                  cx={100 + 94 * Math.sin(a)}
+                  cy={100 - 94 * Math.cos(a)}
+                  r={i % 2 === 0 ? 3.4 : 2.4}
+                  fill={i % 2 === 0 ? "#FCD34D" : "#FEF3C7"}
+                />
+              );
+            })}
+          </svg>
+
+          <motion.svg
+            viewBox="0 0 200 200"
+            className="relative size-64 drop-shadow-[0_6px_16px_rgba(0,0,0,0.35)]"
+            animate={{ rotate: rotation }}
+            transition={{ duration: 2.2, ease: [0.17, 0.67, 0.3, 0.99] }}
+          >
+            <circle cx="100" cy="100" r="88" fill="none" stroke="#171717" strokeWidth="3" />
+            {SEGMENT_COLORS.map((color, i) => {
+              const angle = (360 / SEGMENT_COLORS.length) * i;
+              return (
+                <g key={i}>
                   <path
-                    key={i}
-                    d="M100,100 L100,4 A96,96 0 0,1 167.9,32.1 Z"
+                    d="M100,100 L100,12 A88,88 0 0,1 162.2,37.8 Z"
                     fill={color}
-                    opacity={0.9}
+                    stroke="#ffffff"
+                    strokeWidth="1.5"
                     transform={`rotate(${angle} 100 100)`}
                   />
-                );
-              })}
-              <circle cx="100" cy="100" r="28" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="2" />
-            </motion.svg>
-            <div className="absolute -top-1 left-1/2 size-0 -translate-x-1/2 border-x-[10px] border-t-[16px] border-x-transparent border-t-[#171717]" />
-            <span className="absolute flex size-14 items-center justify-center rounded-full bg-surface shadow-sm">
-              <Sparkles className="size-6 text-primary" />
-            </span>
-          </div>
+                  <text
+                    x="100"
+                    y="34"
+                    transform={`rotate(${angle + 22.5} 100 100)`}
+                    textAnchor="middle"
+                    fontSize="15"
+                    fontWeight="800"
+                    fill="#FFFFFF"
+                    stroke="rgba(0,0,0,0.35)"
+                    strokeWidth="0.5"
+                  >
+                    {SEGMENT_VALUES[i]}
+                  </text>
+                </g>
+              );
+            })}
+            <circle cx="100" cy="100" r="26" fill="#FFFFFF" stroke="#171717" strokeWidth="2" />
+          </motion.svg>
+
+          <div className="absolute -top-1 left-1/2 z-10 size-0 -translate-x-1/2 border-x-[11px] border-t-[18px] border-x-transparent border-t-[#171717] drop-shadow-sm" />
+          <span className="absolute flex size-14 items-center justify-center rounded-full bg-primary shadow-md">
+            <Sparkles className="size-6 text-white" />
+          </span>
+        </div>
 
           {lastReward !== null && !spinning && (
             <Alert tone="success">Bravo ! +{formatCurrency(lastReward, settings.currencyLabel)} ajoutés à votre solde.</Alert>
@@ -128,3 +181,4 @@ export function SpinPage() {
     </div>
   );
 }
+

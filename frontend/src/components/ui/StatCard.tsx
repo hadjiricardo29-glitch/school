@@ -8,22 +8,34 @@ interface StatCardProps {
   value: ReactNode;
   icon?: LucideIcon;
   trend?: number;
-  tone?: "primary" | "neutral";
+  tone?: "primary" | "neutral" | "success" | "info";
   hint?: string;
+  /** "filled" teinte toute la carte dans la couleur du tone, pour la mettre en avant visuellement. */
+  variant?: "default" | "filled";
 }
 
-export function StatCard({ label, value, icon: Icon, trend, tone = "neutral", hint }: StatCardProps) {
+const FRAME_CLASSES: Record<string, string> = {
+  primary: "bg-primary/5 border-primary/40",
+  success: "bg-success/5 border-success/40",
+  info: "bg-accent/5 border-accent/40",
+  neutral: "bg-surface-alt border-border",
+};
+
+const ICON_CLASSES: Record<string, string> = {
+  primary: "bg-primary/10 text-primary",
+  success: "bg-success/10 text-success",
+  info: "bg-accent/10 text-accent",
+  neutral: "bg-surface-alt text-text-secondary",
+};
+
+export function StatCard({ label, value, icon: Icon, trend, tone = "neutral", hint, variant = "default" }: StatCardProps) {
+  const filled = variant === "filled";
   return (
-    <Card className="flex flex-col gap-2">
+    <Card className={cn("flex flex-col gap-2", filled && cn("border-2", FRAME_CLASSES[tone]))}>
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">{label}</span>
         {Icon && (
-          <span
-            className={cn(
-              "flex size-8 items-center justify-center rounded-full",
-              tone === "primary" ? "bg-primary/10 text-primary" : "bg-surface-alt text-text-secondary",
-            )}
-          >
+          <span className={cn("flex size-8 items-center justify-center rounded-full", ICON_CLASSES[tone])}>
             <Icon className="size-4" />
           </span>
         )}
@@ -37,7 +49,7 @@ export function StatCard({ label, value, icon: Icon, trend, tone = "neutral", hi
               {Math.abs(trend)}%
             </span>
           )}
-          {hint && <span className="text-text-secondary">{hint}</span>}
+          {hint && <span className={filled ? "opacity-80" : "text-text-secondary"}>{hint}</span>}
         </div>
       )}
     </Card>

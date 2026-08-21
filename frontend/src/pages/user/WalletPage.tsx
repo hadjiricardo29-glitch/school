@@ -68,11 +68,26 @@ export function WalletPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Solde disponible" value={formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)} icon={WalletIcon} tone="primary" />
+      <div className="grid grid-cols-2 gap-4">
+        <StatCard
+          label="Solde disponible"
+          value={formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
+          icon={WalletIcon}
+          tone="primary"
+          variant="filled"
+        />
+        <StatCard
+          label="Total retiré"
+          value={formatCurrency(wallet?.total_withdrawn ?? 0, settings.currencyLabel)}
+          icon={TrendingDown}
+          tone="success"
+          variant="filled"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <StatCard label="En attente" value={formatCurrency(wallet?.pending_balance ?? 0, settings.currencyLabel)} />
         <StatCard label="Total gagné" value={formatCurrency(wallet?.total_earned ?? 0, settings.currencyLabel)} icon={TrendingUp} />
-        <StatCard label="Total retiré" value={formatCurrency(wallet?.total_withdrawn ?? 0, settings.currencyLabel)} icon={TrendingDown} />
       </div>
 
       <Card>

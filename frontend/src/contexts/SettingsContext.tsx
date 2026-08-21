@@ -24,6 +24,8 @@ interface Settings {
   spinMinReward: number;
   spinMaxReward: number;
   spinCooldownHours: number;
+  spinMaxPerWindow: number;
+  spinWindowDays: number;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -45,9 +47,11 @@ const DEFAULT_SETTINGS: Settings = {
   communityTelegramUrl: "",
   communityWhatsappUrl: "",
   spinEnabled: true,
-  spinMinReward: 50,
-  spinMaxReward: 500,
+  spinMinReward: 25,
+  spinMaxReward: 275,
   spinCooldownHours: 24,
+  spinMaxPerWindow: 3,
+  spinWindowDays: 5,
 };
 
 const SettingsContext = createContext<{ settings: Settings; loading: boolean; refresh: () => Promise<void> }>({
@@ -89,6 +93,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       spinMinReward: Number(map.get("spin_min_reward") ?? DEFAULT_SETTINGS.spinMinReward),
       spinMaxReward: Number(map.get("spin_max_reward") ?? DEFAULT_SETTINGS.spinMaxReward),
       spinCooldownHours: Number(map.get("spin_cooldown_hours") ?? DEFAULT_SETTINGS.spinCooldownHours),
+      spinMaxPerWindow: Number(map.get("spin_max_per_window") ?? DEFAULT_SETTINGS.spinMaxPerWindow),
+      spinWindowDays: Number(map.get("spin_window_days") ?? DEFAULT_SETTINGS.spinWindowDays),
     });
     setLoading(false);
   }

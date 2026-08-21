@@ -99,6 +99,7 @@ export function DashboardPage() {
           value={formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
           icon={WalletIcon}
           tone="primary"
+          variant="filled"
         />
         <StatCard label="Gains du jour" value={formatCurrency(todayEarnings, settings.currencyLabel)} />
         <StatCard label="Total des gains" value={formatCurrency(wallet?.total_earned ?? 0, settings.currencyLabel)} />
