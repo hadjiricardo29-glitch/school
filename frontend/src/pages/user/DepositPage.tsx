@@ -13,6 +13,7 @@ import { isAccountActivated } from "@/utils/activation";
 import { notify } from "@/utils/toast";
 import { formatCurrency } from "@/utils/format";
 import { COUNTRIES } from "@/config/countries";
+import { getOperatorsForCountry } from "@/config/operators";
 import type { Wallet } from "@/types/domain";
 
 export function DepositPage() {
@@ -21,6 +22,7 @@ export function DepositPage() {
   const { settings } = useSettings();
   const [amount, setAmount] = useState("");
   const [country, setCountry] = useState(COUNTRIES.find((c) => c.name === profile?.country)?.code ?? "CI");
+  const [operator, setOperator] = useState(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -29,6 +31,10 @@ export function DepositPage() {
     if (!profile) return;
     getWallet(profile.id).then(setWallet).catch(() => setWallet(null));
   }, [profile]);
+
+  useEffect(() => {
+    setOperator(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
+  }, [country]);
 
   const needsActivation = !isAccountActivated(wallet, settings);
 
@@ -42,7 +48,7 @@ export function DepositPage() {
     }
     setLoading(true);
     try {
-      await createDepositRequest({ amount: value, method: "mobile_money", provider: "mock" });
+      await createDepositRequest({ amount: value, method: operator, provider: "mock" });
       notify.success(`Dépôt démo de ${formatCurrency(value, settings.currencyLabel)} crédité sur votre solde.`);
       navigate("/wallet");
     } catch (err) {
@@ -90,13 +96,20 @@ export function DepositPage() {
             onChange={(e) => setAmount(e.target.value)}
             placeholder="10000"
           />
-          <Select
-            label="Pays"
-            options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-          />
-          <Input label="Méthode" value="Mobile Money" disabled />
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Pays"
+              options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+            />
+            <Select
+              label="Opérateur"
+              options={getOperatorsForCountry(country)}
+              value={operator}
+              onChange={(e) => setOperator(e.target.value)}
+            />
+          </div>
           <Button type="submit" fullWidth loading={loading}>
             Déposer (démo)
           </Button>

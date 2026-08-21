@@ -8,22 +8,27 @@ import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
-import { createWithdrawalRequest, getWallet } from "@/services/wallet";
+import { createWithdrawalRequest, getWallet, getWalletBalances } from "@/services/wallet";
 import { countActivatedReferrals } from "@/services/referrals";
 import { formatCurrency } from "@/utils/format";
 import { notify } from "@/utils/toast";
-import type { Wallet } from "@/types/domain";
+import type { EarningBucket, Wallet, WalletBalance } from "@/types/domain";
+import { EARNING_BUCKET_LABELS } from "@/types/domain";
 import { isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
 import { COUNTRIES } from "@/config/countries";
+import { getOperatorsForCountry } from "@/config/operators";
 
 export function WithdrawPage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { settings } = useSettings();
   const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [balances, setBalances] = useState<WalletBalance[]>([]);
   const [amount, setAmount] = useState("");
+  const [bucket, setBucket] = useState<EarningBucket>("WALLET");
   const [country, setCountry] = useState(COUNTRIES.find((c) => c.name === profile?.country)?.code ?? "CI");
+  const [operator, setOperator] = useState(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,8 +37,19 @@ export function WithdrawPage() {
   useEffect(() => {
     if (!profile) return;
     getWallet(profile.id).then(setWallet);
+    getWalletBalances(profile.id).then(setBalances).catch(() => setBalances([]));
     countActivatedReferrals(profile.id).then(setActivatedReferrals).catch(() => setActivatedReferrals(0));
   }, [profile]);
+
+  useEffect(() => {
+    setOperator(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
+  }, [country]);
+
+  const bucketOptions = (Object.keys(EARNING_BUCKET_LABELS) as EarningBucket[]).map((b) => {
+    const balance = balances.find((wb) => wb.bucket === b)?.available_balance ?? 0;
+    return { value: b, label: `${EARNING_BUCKET_LABELS[b]} — ${formatCurrency(balance, settings.currencyLabel)}` };
+  });
+  const bucketBalance = balances.find((wb) => wb.bucket === bucket)?.available_balance ?? 0;
 
   const referralsRequired = settings.withdrawalMinReferrals;
   const referralsMissing = referralsRequired > 0 && (activatedReferrals ?? 0) < referralsRequired;
@@ -53,8 +69,8 @@ export function WithdrawPage() {
       setError(`Le montant minimum de retrait est de ${formatCurrency(settings.withdrawalMinAmount, settings.currencyLabel)}`);
       return;
     }
-    if (wallet && numericAmount > wallet.available_balance) {
-      setError("Solde disponible insuffisant");
+    if (numericAmount > bucketBalance) {
+      setError(`Solde insuffisant dans "${EARNING_BUCKET_LABELS[bucket]}" (${formatCurrency(bucketBalance, settings.currencyLabel)} disponible)`);
       return;
     }
     if (!phone) {
@@ -66,8 +82,9 @@ export function WithdrawPage() {
     try {
       await createWithdrawalRequest({
         amount: numericAmount,
-        method: "mobile_money",
-        destination: { phone, country },
+        method: operator,
+        destination: { phone, country, operator },
+        bucket,
       });
       notify.success("Demande de retrait envoyée. Elle sera traitée par notre équipe.");
       navigate("/wallet");
@@ -114,24 +131,39 @@ export function WithdrawPage() {
         <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-4">
           {error && <Alert tone="error">{error}</Alert>}
 
+          <Select
+            label="Retirer depuis"
+            options={bucketOptions}
+            value={bucket}
+            onChange={(e) => setBucket(e.target.value as EarningBucket)}
+            hint="Chaque catégorie de gain a son propre solde retirable"
+          />
+
           <Input
             label={`Montant (${settings.currencyLabel})`}
             type="number"
             min={settings.withdrawalMinAmount}
+            max={bucketBalance}
             required
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            hint={`Minimum ${formatCurrency(settings.withdrawalMinAmount, settings.currencyLabel)}`}
+            hint={`Minimum ${formatCurrency(settings.withdrawalMinAmount, settings.currencyLabel)} · Disponible dans ce bucket : ${formatCurrency(bucketBalance, settings.currencyLabel)}`}
           />
 
-          <Input label="Méthode" value="Mobile Money" disabled />
-
-          <Select
-            label="Pays"
-            options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Pays"
+              options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+            />
+            <Select
+              label="Opérateur"
+              options={getOperatorsForCountry(country)}
+              value={operator}
+              onChange={(e) => setOperator(e.target.value)}
+            />
+          </div>
 
           <Input
             label="Numéro de téléphone"

@@ -77,3 +77,19 @@ export async function countActivatedReferrals(userId: string): Promise<number> {
   if (error) throw error;
   return (data ?? 0) as number;
 }
+
+export interface ReferralWithStatus {
+  id: string;
+  username: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  activated: boolean;
+}
+
+export async function getDirectReferralsWithStatus(userId: string): Promise<ReferralWithStatus[]> {
+  const { data, error } = await supabase.rpc("get_direct_referrals_with_status", { p_user_id: userId });
+  if (error) throw error;
+  return (data ?? []) as ReferralWithStatus[];
+}

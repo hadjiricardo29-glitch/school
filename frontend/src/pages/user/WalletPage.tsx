@@ -11,14 +11,17 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { StatusBadge } from "@/components/ui/Badge";
 import { TransactionRow } from "@/components/shared/TransactionRow";
-import { getDeposits, getTransactions, getWallet, getWithdrawals } from "@/services/wallet";
-import type { Deposit, Transaction, Wallet, WithdrawalRequest } from "@/types/domain";
+import { getDeposits, getTransactions, getWallet, getWalletBalances, getWithdrawals } from "@/services/wallet";
+import type { Deposit, EarningBucket, Transaction, Wallet, WalletBalance, WithdrawalRequest } from "@/types/domain";
+import { EARNING_BUCKET_COLORS, EARNING_BUCKET_LABELS } from "@/types/domain";
+import { cn } from "@/utils/cn";
 import { formatCurrency, formatDateTime } from "@/utils/format";
 
 export function WalletPage() {
   const { profile } = useAuth();
   const { settings } = useSettings();
   const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [balances, setBalances] = useState<WalletBalance[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
@@ -27,15 +30,24 @@ export function WalletPage() {
 
   useEffect(() => {
     if (!profile) return;
-    Promise.all([getWallet(profile.id), getTransactions(profile.id), getDeposits(profile.id), getWithdrawals(profile.id)])
-      .then(([w, tx, d, wd]) => {
+    Promise.all([
+      getWallet(profile.id),
+      getWalletBalances(profile.id),
+      getTransactions(profile.id),
+      getDeposits(profile.id),
+      getWithdrawals(profile.id),
+    ])
+      .then(([w, wb, tx, d, wd]) => {
         setWallet(w);
+        setBalances(wb);
         setTransactions(tx);
         setDeposits(d);
         setWithdrawals(wd);
       })
       .finally(() => setLoading(false));
   }, [profile]);
+
+  const deductions = withdrawals.filter((w) => w.fee > 0 && w.status === "COMPLETED");
 
   if (loading) return <LoadingState />;
 
@@ -48,10 +60,10 @@ export function WalletPage() {
         </div>
         <div className="flex gap-2">
           <Link to="/wallet/deposit">
-            <Button variant="outline" icon={<ArrowDownToLine className="size-4" />}>Déposer</Button>
+            <Button variant="success" icon={<ArrowDownToLine className="size-4" />}>Déposer</Button>
           </Link>
           <Link to="/wallet/withdraw">
-            <Button icon={<ArrowUpFromLine className="size-4" />}>Retirer</Button>
+            <Button variant="info" icon={<ArrowUpFromLine className="size-4" />}>Retirer</Button>
           </Link>
         </div>
       </div>
@@ -63,6 +75,21 @@ export function WalletPage() {
         <StatCard label="Total retiré" value={formatCurrency(wallet?.total_withdrawn ?? 0, settings.currencyLabel)} icon={TrendingDown} />
       </div>
 
+      <Card>
+        <p className="text-sm font-semibold text-text-primary">Répartition par catégorie</p>
+        <p className="mt-0.5 text-xs text-text-secondary">Chaque catégorie de gain a son propre solde retirable.</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {(Object.keys(EARNING_BUCKET_LABELS) as EarningBucket[]).map((b) => (
+            <div key={b} className={cn("rounded-[10px] p-3", EARNING_BUCKET_COLORS[b])}>
+              <p className="text-xs opacity-80">{EARNING_BUCKET_LABELS[b]}</p>
+              <p className="mt-1 text-sm font-semibold">
+                {formatCurrency(balances.find((wb) => wb.bucket === b)?.available_balance ?? 0, settings.currencyLabel)}
+              </p>
+            </div>
+          ))}
+        </div>
+      </Card>
+
       <Card padded={false}>
         <div className="px-5 pt-4">
           <Tabs
@@ -72,6 +99,7 @@ export function WalletPage() {
               { value: "overview", label: "Transactions", count: transactions.length },
               { value: "deposits", label: "Dépôts", count: deposits.length },
               { value: "withdrawals", label: "Retraits", count: withdrawals.length },
+              { value: "deductions", label: "Déductions", count: deductions.length },
             ]}
           />
         </div>
@@ -120,6 +148,23 @@ export function WalletPage() {
                       <StatusBadge status={w.status} />
                       <span className="font-semibold text-text-primary">{formatCurrency(w.amount, settings.currencyLabel)}</span>
                     </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+
+          {tab === "deductions" &&
+            (deductions.length === 0 ? (
+              <EmptyState title="Aucune déduction" description="Les frais prélevés sur vos retraits complétés apparaîtront ici." />
+            ) : (
+              <div className="flex flex-col divide-y divide-border">
+                {deductions.map((w) => (
+                  <div key={w.id} className="flex items-center justify-between py-3 text-sm">
+                    <div>
+                      <p className="font-medium text-text-primary">Frais de retrait · {w.method}</p>
+                      <p className="text-xs text-text-secondary">{formatDateTime(w.created_at)} · sur {formatCurrency(w.amount, settings.currencyLabel)} demandé</p>
+                    </div>
+                    <span className="font-semibold text-error">-{formatCurrency(w.fee, settings.currencyLabel)}</span>
                   </div>
                 ))}
               </div>

@@ -1,10 +1,16 @@
 import { supabase } from "@/services/supabase";
-import type { Deposit, Transaction, Wallet, WithdrawalRequest } from "@/types/domain";
+import type { Deposit, EarningBucket, Transaction, Wallet, WalletBalance, WithdrawalRequest } from "@/types/domain";
 
 export async function getWallet(userId: string): Promise<Wallet | null> {
   const { data, error } = await supabase.from("wallets").select("*").eq("user_id", userId).maybeSingle();
   if (error) throw error;
   return data as Wallet | null;
+}
+
+export async function getWalletBalances(userId: string): Promise<WalletBalance[]> {
+  const { data, error } = await supabase.from("wallet_balances").select("*").eq("user_id", userId);
+  if (error) throw error;
+  return (data ?? []) as WalletBalance[];
 }
 
 export async function getTransactions(userId: string, limit = 50): Promise<Transaction[]> {
@@ -22,11 +28,13 @@ export async function createWithdrawalRequest(params: {
   amount: number;
   method: string;
   destination: Record<string, unknown>;
+  bucket?: EarningBucket;
 }): Promise<string> {
   const { data, error } = await supabase.rpc("create_withdrawal_request", {
     p_amount: params.amount,
     p_method: params.method,
     p_destination: params.destination,
+    p_bucket: params.bucket ?? "WALLET",
   });
   if (error) throw error;
   return data as string;

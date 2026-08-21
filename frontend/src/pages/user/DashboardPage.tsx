@@ -11,18 +11,21 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { getTransactions, getWallet } from "@/services/wallet";
+import { getTransactions, getWallet, getWalletBalances } from "@/services/wallet";
 import { listPublishedTasks } from "@/services/tasks";
 import { getDirectReferrals } from "@/services/referrals";
-import type { Profile, Task, Transaction, Wallet } from "@/types/domain";
+import type { EarningBucket, Profile, Task, Transaction, Wallet, WalletBalance } from "@/types/domain";
+import { EARNING_BUCKET_COLORS, EARNING_BUCKET_LABELS } from "@/types/domain";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
+import { cn } from "@/utils/cn";
 
 export function DashboardPage() {
   const { profile } = useAuth();
   const { settings } = useSettings();
   const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [balances, setBalances] = useState<WalletBalance[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [team, setTeam] = useState<Profile[]>([]);
@@ -32,12 +35,14 @@ export function DashboardPage() {
     if (!profile) return;
     Promise.all([
       getWallet(profile.id),
+      getWalletBalances(profile.id),
       getTransactions(profile.id, 60),
       listPublishedTasks(),
       getDirectReferrals(profile.id),
     ])
-      .then(([w, tx, t, refs]) => {
+      .then(([w, wb, tx, t, refs]) => {
         setWallet(w);
+        setBalances(wb);
         setTransactions(tx);
         setTasks(t.slice(0, 4));
         setTeam(refs.slice(0, 5));
@@ -100,6 +105,20 @@ export function DashboardPage() {
         <StatCard label="Gains de parrainage" value={formatCurrency(referralEarnings, settings.currencyLabel)} icon={Share2} />
       </div>
 
+      <Card>
+        <CardHeader title="Solde par catégorie" subtitle="Ce que vous pouvez retirer, ventilé par source de gain" />
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {(Object.keys(EARNING_BUCKET_LABELS) as EarningBucket[]).map((b) => (
+            <div key={b} className={cn("rounded-[10px] p-3", EARNING_BUCKET_COLORS[b])}>
+              <p className="text-xs opacity-80">{EARNING_BUCKET_LABELS[b]}</p>
+              <p className="mt-1 text-sm font-semibold">
+                {formatCurrency(balances.find((wb) => wb.bucket === b)?.available_balance ?? 0, settings.currencyLabel)}
+              </p>
+            </div>
+          ))}
+        </div>
+      </Card>
+
       <ChartCard title="Évolution des gains" subtitle="14 derniers jours">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
@@ -152,12 +171,12 @@ export function DashboardPage() {
               </Button>
             </Link>
             <Link to="/wallet/withdraw">
-              <Button variant="outline" fullWidth icon={<ArrowDownToLine className="size-4" />}>
+              <Button variant="info" fullWidth icon={<ArrowDownToLine className="size-4" />}>
                 Retirer
               </Button>
             </Link>
             <Link to="/wallet/deposit">
-              <Button variant="outline" fullWidth icon={<WalletIcon className="size-4" />}>
+              <Button variant="success" fullWidth icon={<WalletIcon className="size-4" />}>
                 Déposer
               </Button>
             </Link>

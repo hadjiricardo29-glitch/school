@@ -5,12 +5,13 @@ import { cn } from "@/utils/cn";
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
+  hint?: string;
   options: { value: string; label: string }[];
   placeholder?: string;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, placeholder, className, id, ...props }, ref) => {
+  ({ label, error, hint, options, placeholder, className, id, ...props }, ref) => {
     const autoId = useId();
     const selectId = id ?? autoId;
     return (
@@ -45,7 +46,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </select>
           <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-text-secondary" />
         </div>
-        {error && <span className="text-xs text-error">{error}</span>}
+        {error ? (
+          <span className="text-xs text-error">{error}</span>
+        ) : hint ? (
+          <span className="text-xs text-text-secondary">{hint}</span>
+        ) : null}
       </div>
     );
   },

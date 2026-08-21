@@ -79,6 +79,34 @@ export interface Wallet {
   updated_at: string;
 }
 
+export type EarningBucket = "WALLET" | "TIKTOK" | "VIDEOS" | "ADS" | "SURVEYS";
+
+export interface WalletBalance {
+  id: string;
+  user_id: string;
+  bucket: EarningBucket;
+  available_balance: number;
+  total_earned: number;
+  updated_at: string;
+}
+
+export const EARNING_BUCKET_LABELS: Record<EarningBucket, string> = {
+  WALLET: "Portefeuille",
+  TIKTOK: "TikTok",
+  VIDEOS: "Vidéos",
+  ADS: "Publicités",
+  SURVEYS: "Sondages",
+};
+
+/** Classes Tailwind (fond + texte) pour distinguer visuellement chaque bucket de gain. */
+export const EARNING_BUCKET_COLORS: Record<EarningBucket, string> = {
+  WALLET: "bg-primary/10 text-primary",
+  TIKTOK: "bg-[#171717]/10 text-[#171717]",
+  VIDEOS: "bg-accent/10 text-accent",
+  ADS: "bg-warning/10 text-warning",
+  SURVEYS: "bg-success/10 text-success",
+};
+
 export interface Transaction {
   id: string;
   user_id: string;
