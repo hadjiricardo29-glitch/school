@@ -74,7 +74,7 @@ export function LandingPage() {
             transition={{ duration: 0.6 }}
             className="relative"
           >
-            <Card className="mx-auto max-w-sm shadow-md">
+            <Card className="mx-auto max-w-sm shadow-md ring-1 ring-accent/20">
               <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">Solde disponible</p>
               <p className="mt-1 text-3xl font-semibold text-text-primary">{formatCurrency(125500, settings.currencyLabel)}</p>
               <div className="mt-4 grid grid-cols-2 gap-3">

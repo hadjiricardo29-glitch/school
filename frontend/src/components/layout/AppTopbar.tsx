@@ -11,7 +11,7 @@ export function AppTopbar({ title }: { title?: string }) {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-surface/95 px-4 backdrop-blur sm:px-6">
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-surface/85 px-4 backdrop-blur-md sm:px-6">
       <div className="flex items-center gap-3 lg:hidden">
         <Logo />
       </div>
