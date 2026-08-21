@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -12,12 +11,9 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { listPublishedTasks } from "@/services/tasks";
-import type { Task } from "@/types/domain";
-import { TASK_CATEGORY_LABELS } from "@/types/domain";
-import { formatCurrency } from "@/utils/format";
 import { useSettings } from "@/contexts/SettingsContext";
 import { GradientBackdrop } from "@/components/shared/GradientBackdrop";
+import { formatCurrency } from "@/utils/format";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -32,13 +28,6 @@ const WHY_MOTOSU = [
 
 export function LandingPage() {
   const { settings } = useSettings();
-  const [featured, setFeatured] = useState<Task[]>([]);
-
-  useEffect(() => {
-    listPublishedTasks()
-      .then((tasks) => setFeatured(tasks.slice(0, 6)))
-      .catch(() => setFeatured([]));
-  }, []);
 
   return (
     <div>
@@ -113,35 +102,6 @@ export function LandingPage() {
           </p>
         </motion.div>
       </section>
-
-      {/* FEATURED TASKS */}
-      {featured.length > 0 && (
-        <section className="border-y border-border bg-surface py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="flex items-end justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold text-text-primary sm:text-3xl">Missions en vedette</h2>
-                <p className="mt-2 text-text-secondary">Un aperçu des missions disponibles dès aujourd'hui.</p>
-              </div>
-              <Link to="/tasks" className="hidden text-sm font-medium text-primary hover:underline sm:block">
-                Voir toutes les missions →
-              </Link>
-            </div>
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {featured.map((task) => (
-                <Card key={task.id} className="flex flex-col">
-                  <div className="flex items-center justify-between">
-                    <Badge tone="neutral">{TASK_CATEGORY_LABELS[task.category]}</Badge>
-                    <span className="text-sm font-semibold text-primary">{formatCurrency(task.reward, settings.currencyLabel)}</span>
-                  </div>
-                  <p className="mt-3 text-sm font-semibold text-text-primary">{task.title}</p>
-                  <p className="mt-1.5 line-clamp-2 text-sm text-text-secondary">{task.description}</p>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* WHY MOTOSU */}
       <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
