@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Clock, Users, Calendar, ArrowLeft } from "lucide-react";
+import { Clock, Users, Calendar, ArrowLeft, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -17,6 +17,7 @@ import { formatCurrency, formatDate } from "@/utils/format";
 import { notify } from "@/utils/toast";
 import { isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
+import { extractTiktokVideoId, tiktokEmbedUrl } from "@/utils/video";
 
 export function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -124,6 +125,33 @@ export function TaskDetailPage() {
             <div>
               <h2 className="text-sm font-semibold text-text-primary">Conditions</h2>
               <p className="mt-1.5 whitespace-pre-line text-sm text-text-secondary">{task.requirements}</p>
+            </div>
+          )}
+          {task.video_url && (
+            <div>
+              <h2 className="text-sm font-semibold text-text-primary">Vidéo</h2>
+              {(() => {
+                const videoId = extractTiktokVideoId(task.video_url!);
+                return videoId ? (
+                  <div className="mx-auto mt-2 aspect-[9/16] w-full max-w-xs overflow-hidden rounded-[10px] border border-border">
+                    <iframe
+                      src={tiktokEmbedUrl(videoId)}
+                      allow="encrypted-media; fullscreen"
+                      className="size-full"
+                      title={task.title}
+                    />
+                  </div>
+                ) : (
+                  <a
+                    href={task.video_url!}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                  >
+                    Ouvrir la vidéo <ExternalLink className="size-3.5" />
+                  </a>
+                );
+              })()}
             </div>
           )}
         </div>

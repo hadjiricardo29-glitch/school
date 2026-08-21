@@ -12,6 +12,7 @@ interface Settings {
   withdrawalFeePercentage: number;
   withdrawalFeeFixed: number;
   withdrawalMaxAmount: number;
+  withdrawalMinReferrals: number;
   maintenanceMode: boolean;
   registrationEnabled: boolean;
   accountActivationEnabled: boolean;
@@ -35,6 +36,7 @@ const DEFAULT_SETTINGS: Settings = {
   withdrawalFeePercentage: 5,
   withdrawalFeeFixed: 0,
   withdrawalMaxAmount: 500000,
+  withdrawalMinReferrals: 10,
   maintenanceMode: false,
   registrationEnabled: true,
   accountActivationEnabled: true,
@@ -75,6 +77,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       withdrawalFeePercentage: Number(map.get("withdrawal_fee_percentage") ?? DEFAULT_SETTINGS.withdrawalFeePercentage),
       withdrawalFeeFixed: Number(map.get("withdrawal_fee_fixed") ?? DEFAULT_SETTINGS.withdrawalFeeFixed),
       withdrawalMaxAmount: Number(map.get("withdrawal_max_amount") ?? DEFAULT_SETTINGS.withdrawalMaxAmount),
+      withdrawalMinReferrals: Number(map.get("withdrawal_min_referrals") ?? DEFAULT_SETTINGS.withdrawalMinReferrals),
       maintenanceMode: Boolean(map.get("maintenance_mode") ?? DEFAULT_SETTINGS.maintenanceMode),
       registrationEnabled: Boolean(map.get("registration_enabled") ?? DEFAULT_SETTINGS.registrationEnabled),
       accountActivationEnabled: Boolean(map.get("account_activation_enabled") ?? DEFAULT_SETTINGS.accountActivationEnabled),

@@ -108,6 +108,7 @@ export interface Task {
   single_submission_per_user: boolean;
   deadline: string | null;
   status: TaskStatus;
+  video_url: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

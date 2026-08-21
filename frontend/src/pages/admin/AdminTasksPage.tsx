@@ -37,6 +37,7 @@ const EMPTY_FORM = {
   single_submission_per_user: true,
   deadline: "",
   status: "DRAFT" as TaskStatus,
+  video_url: "",
 };
 
 export function AdminTasksPage() {
@@ -80,6 +81,7 @@ export function AdminTasksPage() {
       single_submission_per_user: task.single_submission_per_user,
       deadline: task.deadline ? task.deadline.slice(0, 10) : "",
       status: task.status,
+      video_url: task.video_url ?? "",
     });
     setModalOpen(true);
   }
@@ -99,6 +101,7 @@ export function AdminTasksPage() {
       single_submission_per_user: task.single_submission_per_user,
       deadline: "",
       status: "DRAFT",
+      video_url: task.video_url ?? "",
     });
     setModalOpen(true);
   }
@@ -123,6 +126,7 @@ export function AdminTasksPage() {
         single_submission_per_user: form.single_submission_per_user,
         deadline: form.deadline ? new Date(form.deadline).toISOString() : null,
         status: form.status,
+        video_url: form.video_url || null,
       };
       if (editing) {
         await updateTask(editing.id, payload);
@@ -218,6 +222,13 @@ export function AdminTasksPage() {
             <Input label="Places max (vide = illimité)" type="number" value={form.max_completions} onChange={(e) => setForm({ ...form, max_completions: e.target.value })} />
             <Input label="Deadline" type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
           </div>
+          <Input
+            label="URL vidéo (optionnel)"
+            value={form.video_url}
+            onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+            placeholder="https://www.tiktok.com/@compte/video/1234567890"
+            hint="Lien TikTok — la vidéo s'affiche directement dans l'application"
+          />
           <Select label="Statut" options={STATUS_OPTIONS} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as TaskStatus })} />
           <label className="flex items-center gap-2 text-sm text-text-primary">
             <input type="checkbox" className="size-4 accent-primary" checked={form.single_submission_per_user} onChange={(e) => setForm({ ...form, single_submission_per_user: e.target.checked })} />

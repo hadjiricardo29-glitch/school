@@ -71,3 +71,9 @@ export async function getLeaderboard(limit = 20): Promise<LeaderboardEntry[]> {
   if (error) throw error;
   return (data ?? []) as LeaderboardEntry[];
 }
+
+export async function countActivatedReferrals(userId: string): Promise<number> {
+  const { data, error } = await supabase.rpc("count_activated_referrals", { p_user_id: userId });
+  if (error) throw error;
+  return (data ?? 0) as number;
+}

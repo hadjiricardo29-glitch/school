@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, Users } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -9,6 +9,7 @@ import { Alert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { createWithdrawalRequest, getWallet } from "@/services/wallet";
+import { countActivatedReferrals } from "@/services/referrals";
 import { formatCurrency } from "@/utils/format";
 import { notify } from "@/utils/toast";
 import type { Wallet } from "@/types/domain";
@@ -26,10 +27,16 @@ export function WithdrawPage() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activatedReferrals, setActivatedReferrals] = useState<number | null>(null);
 
   useEffect(() => {
-    if (profile) getWallet(profile.id).then(setWallet);
+    if (!profile) return;
+    getWallet(profile.id).then(setWallet);
+    countActivatedReferrals(profile.id).then(setActivatedReferrals).catch(() => setActivatedReferrals(0));
   }, [profile]);
+
+  const referralsRequired = settings.withdrawalMinReferrals;
+  const referralsMissing = referralsRequired > 0 && (activatedReferrals ?? 0) < referralsRequired;
 
   const numericAmount = Number(amount) || 0;
   const fee = useMemo(
@@ -86,6 +93,22 @@ export function WithdrawPage() {
         {!isAccountActivated(wallet, settings) ? (
           <div className="mt-5">
             <ActivationBanner />
+          </div>
+        ) : referralsMissing ? (
+          <div className="mt-5 flex flex-col items-start gap-3 rounded-[10px] border border-warning/30 bg-warning-bg p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-3">
+              <Users className="mt-0.5 size-5 shrink-0 text-warning" />
+              <div>
+                <p className="text-sm font-semibold text-text-primary">Parrainage insuffisant</p>
+                <p className="mt-0.5 text-sm text-text-secondary">
+                  Il vous faut au moins {referralsRequired} filleuls activés pour demander un retrait. Vous en avez
+                  actuellement {activatedReferrals ?? 0}.
+                </p>
+              </div>
+            </div>
+            <Link to="/referrals" className="shrink-0">
+              <Button size="sm">Inviter des amis</Button>
+            </Link>
           </div>
         ) : (
         <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-4">
