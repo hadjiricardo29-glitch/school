@@ -12,20 +12,15 @@ import { createDepositRequest, getWallet } from "@/services/wallet";
 import { isAccountActivated } from "@/utils/activation";
 import { notify } from "@/utils/toast";
 import { formatCurrency } from "@/utils/format";
+import { COUNTRIES } from "@/config/countries";
 import type { Wallet } from "@/types/domain";
-
-const METHODS = [
-  { value: "mobile_money", label: "Mobile Money" },
-  { value: "card", label: "Carte bancaire" },
-  { value: "bank_transfer", label: "Virement bancaire" },
-];
 
 export function DepositPage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { settings } = useSettings();
   const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState("mobile_money");
+  const [country, setCountry] = useState(COUNTRIES.find((c) => c.name === profile?.country)?.code ?? "CI");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -47,7 +42,7 @@ export function DepositPage() {
     }
     setLoading(true);
     try {
-      await createDepositRequest({ amount: value, method, provider: "mock" });
+      await createDepositRequest({ amount: value, method: "mobile_money", provider: "mock" });
       notify.success(`Dépôt démo de ${formatCurrency(value, settings.currencyLabel)} crédité sur votre solde.`);
       navigate("/wallet");
     } catch (err) {
@@ -95,7 +90,13 @@ export function DepositPage() {
             onChange={(e) => setAmount(e.target.value)}
             placeholder="10000"
           />
-          <Select label="Méthode" options={METHODS} value={method} onChange={(e) => setMethod(e.target.value)} />
+          <Select
+            label="Pays"
+            options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+          />
+          <Input label="Méthode" value="Mobile Money" disabled />
           <Button type="submit" fullWidth loading={loading}>
             Déposer (démo)
           </Button>

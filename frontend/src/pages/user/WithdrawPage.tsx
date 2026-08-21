@@ -14,11 +14,7 @@ import { notify } from "@/utils/toast";
 import type { Wallet } from "@/types/domain";
 import { isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
-
-const METHODS = [
-  { value: "mobile_money", label: "Mobile Money" },
-  { value: "bank_transfer", label: "Virement bancaire" },
-];
+import { COUNTRIES } from "@/config/countries";
 
 export function WithdrawPage() {
   const navigate = useNavigate();
@@ -26,9 +22,8 @@ export function WithdrawPage() {
   const { settings } = useSettings();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState("mobile_money");
+  const [country, setCountry] = useState(COUNTRIES.find((c) => c.name === profile?.country)?.code ?? "CI");
   const [phone, setPhone] = useState("");
-  const [accountName, setAccountName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,12 +50,8 @@ export function WithdrawPage() {
       setError("Solde disponible insuffisant");
       return;
     }
-    if (method === "mobile_money" && !phone) {
+    if (!phone) {
       setError("Le numéro de téléphone est requis");
-      return;
-    }
-    if (method === "bank_transfer" && !accountName) {
-      setError("Le nom du titulaire du compte est requis");
       return;
     }
 
@@ -68,8 +59,8 @@ export function WithdrawPage() {
     try {
       await createWithdrawalRequest({
         amount: numericAmount,
-        method,
-        destination: method === "mobile_money" ? { phone } : { account_name: accountName },
+        method: "mobile_money",
+        destination: { phone, country },
       });
       notify.success("Demande de retrait envoyée. Elle sera traitée par notre équipe.");
       navigate("/wallet");
@@ -110,13 +101,22 @@ export function WithdrawPage() {
             hint={`Minimum ${formatCurrency(settings.withdrawalMinAmount, settings.currencyLabel)}`}
           />
 
-          <Select label="Méthode" options={METHODS} value={method} onChange={(e) => setMethod(e.target.value)} />
+          <Input label="Méthode" value="Mobile Money" disabled />
 
-          {method === "mobile_money" ? (
-            <Input label="Numéro de téléphone" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+225 00 00 00 00" />
-          ) : (
-            <Input label="Nom du titulaire" required value={accountName} onChange={(e) => setAccountName(e.target.value)} />
-          )}
+          <Select
+            label="Pays"
+            options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+          />
+
+          <Input
+            label="Numéro de téléphone"
+            required
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder={`${COUNTRIES.find((c) => c.code === country)?.phoneCode ?? ""} 00 00 00 00`}
+          />
 
           {numericAmount > 0 && (
             <div className="flex flex-col gap-1.5 rounded-[10px] bg-surface-alt p-4 text-sm">
