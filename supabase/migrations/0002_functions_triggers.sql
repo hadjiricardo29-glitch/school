@@ -1,5 +1,7 @@
 -- Motosu — fonctions utilitaires + triggers
 
+create extension if not exists moddatetime schema extensions;
+
 -- ============================================================
 -- current_role(): rôle du user authentifié courant (utilisé par RLS)
 -- ============================================================
