@@ -31,7 +31,8 @@ export type TransactionType =
   | "WITHDRAWAL"
   | "BONUS"
   | "REFUND"
-  | "ADJUSTMENT";
+  | "ADJUSTMENT"
+  | "COURSE_PURCHASE";
 export type TransactionStatus = "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED";
 
 export type WithdrawalStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "REJECTED" | "CANCELLED";
@@ -250,6 +251,31 @@ export interface FraudFlag {
   resolved_at: string | null;
   created_at: string;
   user?: Profile;
+}
+
+export type CourseStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+
+export interface Course {
+  id: string;
+  title: string;
+  description: string;
+  category: string | null;
+  price: number;
+  thumbnail_url: string | null;
+  content_url: string | null;
+  duration_minutes: number | null;
+  status: CourseStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CourseEnrollment {
+  id: string;
+  user_id: string;
+  course_id: string;
+  amount_paid: number;
+  purchased_at: string;
 }
 
 export interface SystemSetting {

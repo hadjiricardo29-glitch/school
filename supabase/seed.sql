@@ -111,6 +111,15 @@ insert into public.tasks (id, title, description, category, reward, estimated_ti
   ('b0000000-0000-4000-8000-000000000012', 'Quiz culture générale digitale', 'Répondez correctement à 10 questions sur le digital et les réseaux sociaux.', 'QUIZ', 40, '5 min', 'EASY', 'Score minimum de 7/10 requis pour valider.', 'Aucun', null, true, 'PUBLISHED', 'a0000000-0000-4000-8000-000000000001');
 
 -- ------------------------------------------------------------
+-- 3b. Formations (gratuites et payantes)
+-- ------------------------------------------------------------
+insert into public.courses (title, description, category, price, duration_minutes, status, created_by) values
+  ('Les bases du trading en ligne', 'Introduction aux marchés financiers, gestion du risque et vocabulaire essentiel pour débuter.', 'Trading', 0, 25, 'PUBLISHED', 'a0000000-0000-4000-8000-000000000001'),
+  ('Créer du contenu qui rapporte', 'Stratégies pour produire des vidéos et publications qui génèrent de l''engagement sur les réseaux sociaux.', 'Marketing', 0, 20, 'PUBLISHED', 'a0000000-0000-4000-8000-000000000001'),
+  ('Trading avancé : analyse technique', 'Lecture de graphiques, indicateurs techniques et construction d''une stratégie personnelle.', 'Trading', 1500, 60, 'PUBLISHED', 'a0000000-0000-4000-8000-000000000001'),
+  ('Développer son réseau de parrainage', 'Techniques concrètes pour recruter et fidéliser une équipe active sur la plateforme.', 'Marketing', 1000, 35, 'PUBLISHED', 'a0000000-0000-4000-8000-000000000001');
+
+-- ------------------------------------------------------------
 -- 4. Soumissions (insertion directe : les triggers de garde-fou
 --    s'appliquent quand même car ce sont des BEFORE INSERT triggers)
 -- ------------------------------------------------------------

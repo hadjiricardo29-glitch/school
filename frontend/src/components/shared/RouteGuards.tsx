@@ -23,18 +23,20 @@ export function RequireActivation({ children }: { children: ReactNode }) {
   const { settings, loading: settingsLoading } = useSettings();
   const location = useLocation();
   const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [walletLoading, setWalletLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
     if (!profile) return;
-    setWalletLoading(true);
+    // Se rafraîchit en arrière-plan à chaque navigation pour détecter un dépôt
+    // qui vient d'activer le compte — mais ne réaffiche l'écran de chargement
+    // plein écran qu'une seule fois (au montage), pas à chaque changement de
+    // page, sinon toute navigation dans l'app clignote.
     getWallet(profile.id)
       .then(setWallet)
-      .finally(() => setWalletLoading(false));
-    // Se rafraîchit à chaque navigation pour détecter un dépôt qui vient d'activer le compte.
+      .finally(() => setInitialLoading(false));
   }, [profile, location.pathname]);
 
-  if (settingsLoading || walletLoading) {
+  if (settingsLoading || initialLoading) {
     return <LoadingState className="min-h-dvh" label="Vérification de votre compte..." />;
   }
 

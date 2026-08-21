@@ -1,6 +1,7 @@
 import { supabase } from "@/services/supabase";
 import type {
   AuditLogEntry,
+  Course,
   Deposit,
   FraudFlag,
   Profile,
@@ -62,6 +63,30 @@ export async function updateTask(id: string, patch: Partial<Task>) {
 
 export async function deleteTask(id: string) {
   const { error } = await supabase.from("tasks").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ---------- Courses ----------
+export async function listAllCourses(): Promise<Course[]> {
+  const { data, error } = await supabase.from("courses").select("*").order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as Course[];
+}
+
+export async function createCourse(course: Partial<Course>) {
+  const { data, error } = await supabase.from("courses").insert(course).select("*").single();
+  if (error) throw error;
+  return data as Course;
+}
+
+export async function updateCourse(id: string, patch: Partial<Course>) {
+  const { data, error } = await supabase.from("courses").update(patch).eq("id", id).select("*").single();
+  if (error) throw error;
+  return data as Course;
+}
+
+export async function deleteCourse(id: string) {
+  const { error } = await supabase.from("courses").delete().eq("id", id);
   if (error) throw error;
 }
 

@@ -33,6 +33,8 @@ import { AnalyticsPage } from "@/pages/user/AnalyticsPage";
 import { ProfilePage } from "@/pages/user/ProfilePage";
 import { SettingsPage } from "@/pages/user/SettingsPage";
 import { NotificationsPage } from "@/pages/user/NotificationsPage";
+import { CoursesPage } from "@/pages/user/CoursesPage";
+import { CourseDetailPage } from "@/pages/user/CourseDetailPage";
 
 import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage";
 import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
@@ -44,6 +46,7 @@ import { AdminReferralsPage } from "@/pages/admin/AdminReferralsPage";
 import { AdminFraudPage } from "@/pages/admin/AdminFraudPage";
 import { AdminSettingsPage } from "@/pages/admin/AdminSettingsPage";
 import { AdminAuditLogsPage } from "@/pages/admin/AdminAuditLogsPage";
+import { AdminCoursesPage } from "@/pages/admin/AdminCoursesPage";
 
 export default function App() {
   return (
@@ -78,6 +81,8 @@ export default function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/tasks/:id" element={<TaskDetailPage />} />
               <Route path="/my-tasks" element={<MyTasksPage />} />
+              <Route path="/courses" element={<CoursesPage />} />
+              <Route path="/courses/:id" element={<CourseDetailPage />} />
               <Route path="/wallet" element={<WalletPage />} />
               <Route path="/wallet/deposit" element={<DepositPage />} />
               <Route path="/wallet/withdraw" element={<WithdrawPage />} />
@@ -104,6 +109,7 @@ export default function App() {
               <Route index element={<AdminDashboardPage />} />
               <Route path="users" element={<AdminUsersPage />} />
               <Route path="tasks" element={<AdminTasksPage />} />
+              <Route path="courses" element={<AdminCoursesPage />} />
               <Route path="submissions" element={<AdminSubmissionsPage />} />
               <Route path="deposits" element={<AdminDepositsPage />} />
               <Route path="withdrawals" element={<AdminWithdrawalsPage />} />
