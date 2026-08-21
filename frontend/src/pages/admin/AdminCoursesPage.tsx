@@ -27,6 +27,7 @@ const EMPTY_FORM = {
   category: "",
   price: "",
   content_url: "",
+  thumbnail_url: "",
   duration_minutes: "",
   status: "DRAFT" as CourseStatus,
 };
@@ -65,6 +66,7 @@ export function AdminCoursesPage() {
       category: course.category ?? "",
       price: String(course.price),
       content_url: course.content_url ?? "",
+      thumbnail_url: course.thumbnail_url ?? "",
       duration_minutes: course.duration_minutes ? String(course.duration_minutes) : "",
       status: course.status,
     });
@@ -84,6 +86,7 @@ export function AdminCoursesPage() {
         category: form.category || null,
         price: form.price ? Number(form.price) : 0,
         content_url: form.content_url || null,
+        thumbnail_url: form.thumbnail_url || null,
         duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
         status: form.status,
       };
@@ -168,11 +171,18 @@ export function AdminCoursesPage() {
             <Select label="Statut" options={STATUS_OPTIONS} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as CourseStatus })} />
           </div>
           <Input
-            label="URL du contenu"
+            label="Image (URL)"
+            value={form.thumbnail_url}
+            onChange={(e) => setForm({ ...form, thumbnail_url: e.target.value })}
+            placeholder="https://..."
+            hint="Affichée sur la carte et la page de la formation"
+          />
+          <Input
+            label="Lien du produit"
             value={form.content_url}
             onChange={(e) => setForm({ ...form, content_url: e.target.value })}
-            placeholder="https://www.tiktok.com/@compte/video/... ou lien externe"
-            hint="Lien TikTok affiché en vidéo intégrée, sinon lien externe classique"
+            placeholder="https://..."
+            hint='Le bouton "Obtenir" redirige vers cette URL'
           />
         </div>
       </Modal>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Clock, ExternalLink, GraduationCap, Lock, PlayCircle } from "lucide-react";
+import { ArrowLeft, Clock, ExternalLink, GraduationCap, Lock } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -13,7 +13,6 @@ import { getWallet } from "@/services/wallet";
 import type { Course, CourseEnrollment, Wallet } from "@/types/domain";
 import { formatCurrency } from "@/utils/format";
 import { notify } from "@/utils/toast";
-import { extractTiktokVideoId, tiktokEmbedUrl } from "@/utils/video";
 
 export function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -46,7 +45,6 @@ export function CourseDetailPage() {
 
   const isFree = course.price <= 0;
   const owned = isFree || enrollments.some((e) => e.course_id === course.id);
-  const videoId = course.content_url ? extractTiktokVideoId(course.content_url) : null;
 
   async function handlePurchase() {
     if (!course) return;
@@ -68,7 +66,15 @@ export function CourseDetailPage() {
         <ArrowLeft className="size-4" /> Retour
       </button>
 
-      <Card>
+      <Card padded={false} className="overflow-hidden">
+        {course.thumbnail_url ? (
+          <img src={course.thumbnail_url} alt={course.title} className="h-48 w-full object-cover sm:h-64" />
+        ) : (
+          <div className="flex h-48 w-full items-center justify-center bg-purple/10 sm:h-64">
+            <GraduationCap className="size-16 text-purple" />
+          </div>
+        )}
+        <div className="p-5">
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone="neutral">{course.category ?? "Formation"}</Badge>
           {isFree ? <Badge tone="success">Gratuite</Badge> : <Badge tone="warning"><Lock className="size-3" /> Payante</Badge>}
@@ -97,20 +103,11 @@ export function CourseDetailPage() {
         <div className="mt-6 border-t border-border pt-6">
           {owned ? (
             course.content_url ? (
-              videoId ? (
-                <div className="mx-auto aspect-[9/16] w-full max-w-xs overflow-hidden rounded-[10px] border border-border">
-                  <iframe src={tiktokEmbedUrl(videoId)} allow="encrypted-media; fullscreen" className="size-full" title={course.title} />
-                </div>
-              ) : (
-                <a
-                  href={course.content_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-                >
-                  <PlayCircle className="size-4" /> Accéder au contenu <ExternalLink className="size-3.5" />
-                </a>
-              )
+              <a href={course.content_url} target="_blank" rel="noreferrer" className="block">
+                <Button size="lg" fullWidth icon={<ExternalLink className="size-4" />}>
+                  Obtenir
+                </Button>
+              </a>
             ) : (
               <Alert tone="info">Le contenu de cette formation sera bientôt disponible.</Alert>
             )
@@ -129,6 +126,7 @@ export function CourseDetailPage() {
               </Button>
             </div>
           )}
+        </div>
         </div>
       </Card>
     </div>
