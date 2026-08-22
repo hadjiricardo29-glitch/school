@@ -1,52 +1,58 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import { RequireActivation, RequireAuth, RequireRole, RequireStaff } from "@/components/shared/RouteGuards";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { AppLayout } from "@/layouts/AppLayout";
 import { AdminLayout } from "@/layouts/AdminLayout";
 
-import { LandingPage } from "@/pages/public/LandingPage";
-import { LoginPage } from "@/pages/public/LoginPage";
-import { RegisterPage } from "@/pages/public/RegisterPage";
-import { ForgotPasswordPage } from "@/pages/public/ForgotPasswordPage";
-import { ResetPasswordPage } from "@/pages/public/ResetPasswordPage";
-import { TermsPage } from "@/pages/public/TermsPage";
-import { PrivacyPage } from "@/pages/public/PrivacyPage";
-import { NotFoundPage } from "@/pages/public/NotFoundPage";
+const LandingPage = lazy(() => import("@/pages/public/LandingPage").then((m) => ({ default: m.LandingPage })));
+const LoginPage = lazy(() => import("@/pages/public/LoginPage").then((m) => ({ default: m.LoginPage })));
+const RegisterPage = lazy(() => import("@/pages/public/RegisterPage").then((m) => ({ default: m.RegisterPage })));
+const ForgotPasswordPage = lazy(() => import("@/pages/public/ForgotPasswordPage").then((m) => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import("@/pages/public/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })));
+const TermsPage = lazy(() => import("@/pages/public/TermsPage").then((m) => ({ default: m.TermsPage })));
+const PrivacyPage = lazy(() => import("@/pages/public/PrivacyPage").then((m) => ({ default: m.PrivacyPage })));
+const NotFoundPage = lazy(() => import("@/pages/public/NotFoundPage").then((m) => ({ default: m.NotFoundPage })));
 
-import { DashboardPage } from "@/pages/user/DashboardPage";
-import { TasksPage } from "@/pages/user/TasksPage";
-import { TaskDetailPage } from "@/pages/user/TaskDetailPage";
-import { MyTasksPage } from "@/pages/user/MyTasksPage";
-import { WalletPage } from "@/pages/user/WalletPage";
-import { DepositPage } from "@/pages/user/DepositPage";
-import { WithdrawPage } from "@/pages/user/WithdrawPage";
-import { TransactionsPage } from "@/pages/user/TransactionsPage";
-import { ReferralsPage } from "@/pages/user/ReferralsPage";
-import { TeamPage } from "@/pages/user/TeamPage";
-import { LeaderboardPage } from "@/pages/user/LeaderboardPage";
-import { SpinPage } from "@/pages/user/SpinPage";
-import { AnalyticsPage } from "@/pages/user/AnalyticsPage";
-import { ProfilePage } from "@/pages/user/ProfilePage";
-import { SettingsPage } from "@/pages/user/SettingsPage";
-import { NotificationsPage } from "@/pages/user/NotificationsPage";
-import { CoursesPage } from "@/pages/user/CoursesPage";
-import { CourseDetailPage } from "@/pages/user/CourseDetailPage";
+const DashboardPage = lazy(() => import("@/pages/user/DashboardPage").then((m) => ({ default: m.DashboardPage })));
+const TasksPage = lazy(() => import("@/pages/user/TasksPage").then((m) => ({ default: m.TasksPage })));
+const TaskDetailPage = lazy(() => import("@/pages/user/TaskDetailPage").then((m) => ({ default: m.TaskDetailPage })));
+const MyTasksPage = lazy(() => import("@/pages/user/MyTasksPage").then((m) => ({ default: m.MyTasksPage })));
+const WalletPage = lazy(() => import("@/pages/user/WalletPage").then((m) => ({ default: m.WalletPage })));
+const DepositPage = lazy(() => import("@/pages/user/DepositPage").then((m) => ({ default: m.DepositPage })));
+const WithdrawPage = lazy(() => import("@/pages/user/WithdrawPage").then((m) => ({ default: m.WithdrawPage })));
+const TransactionsPage = lazy(() => import("@/pages/user/TransactionsPage").then((m) => ({ default: m.TransactionsPage })));
+const ReferralsPage = lazy(() => import("@/pages/user/ReferralsPage").then((m) => ({ default: m.ReferralsPage })));
+const TeamPage = lazy(() => import("@/pages/user/TeamPage").then((m) => ({ default: m.TeamPage })));
+const LeaderboardPage = lazy(() => import("@/pages/user/LeaderboardPage").then((m) => ({ default: m.LeaderboardPage })));
+const SpinPage = lazy(() => import("@/pages/user/SpinPage").then((m) => ({ default: m.SpinPage })));
+const AnalyticsPage = lazy(() => import("@/pages/user/AnalyticsPage").then((m) => ({ default: m.AnalyticsPage })));
+const ProfilePage = lazy(() => import("@/pages/user/ProfilePage").then((m) => ({ default: m.ProfilePage })));
+const SettingsPage = lazy(() => import("@/pages/user/SettingsPage").then((m) => ({ default: m.SettingsPage })));
+const NotificationsPage = lazy(() => import("@/pages/user/NotificationsPage").then((m) => ({ default: m.NotificationsPage })));
+const CoursesPage = lazy(() => import("@/pages/user/CoursesPage").then((m) => ({ default: m.CoursesPage })));
+const CourseDetailPage = lazy(() => import("@/pages/user/CourseDetailPage").then((m) => ({ default: m.CourseDetailPage })));
 
-import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage";
-import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
-import { AdminTasksPage } from "@/pages/admin/AdminTasksPage";
-import { AdminSubmissionsPage } from "@/pages/admin/AdminSubmissionsPage";
-import { AdminDepositsPage } from "@/pages/admin/AdminDepositsPage";
-import { AdminWithdrawalsPage } from "@/pages/admin/AdminWithdrawalsPage";
-import { AdminReferralsPage } from "@/pages/admin/AdminReferralsPage";
-import { AdminFraudPage } from "@/pages/admin/AdminFraudPage";
-import { AdminSettingsPage } from "@/pages/admin/AdminSettingsPage";
-import { AdminAuditLogsPage } from "@/pages/admin/AdminAuditLogsPage";
-import { AdminCoursesPage } from "@/pages/admin/AdminCoursesPage";
+const AdminDashboardPage = lazy(() => import("@/pages/admin/AdminDashboardPage").then((m) => ({ default: m.AdminDashboardPage })));
+const AdminUsersPage = lazy(() => import("@/pages/admin/AdminUsersPage").then((m) => ({ default: m.AdminUsersPage })));
+const AdminTasksPage = lazy(() => import("@/pages/admin/AdminTasksPage").then((m) => ({ default: m.AdminTasksPage })));
+const AdminSubmissionsPage = lazy(() => import("@/pages/admin/AdminSubmissionsPage").then((m) => ({ default: m.AdminSubmissionsPage })));
+const AdminDepositsPage = lazy(() => import("@/pages/admin/AdminDepositsPage").then((m) => ({ default: m.AdminDepositsPage })));
+const AdminWithdrawalsPage = lazy(() => import("@/pages/admin/AdminWithdrawalsPage").then((m) => ({ default: m.AdminWithdrawalsPage })));
+const AdminReferralsPage = lazy(() => import("@/pages/admin/AdminReferralsPage").then((m) => ({ default: m.AdminReferralsPage })));
+const AdminFraudPage = lazy(() => import("@/pages/admin/AdminFraudPage").then((m) => ({ default: m.AdminFraudPage })));
+const AdminSettingsPage = lazy(() => import("@/pages/admin/AdminSettingsPage").then((m) => ({ default: m.AdminSettingsPage })));
+const AdminAuditLogsPage = lazy(() => import("@/pages/admin/AdminAuditLogsPage").then((m) => ({ default: m.AdminAuditLogsPage })));
+const AdminCoursesPage = lazy(() => import("@/pages/admin/AdminCoursesPage").then((m) => ({ default: m.AdminCoursesPage })));
+
+function RouteFallback() {
+  return <LoadingState className="min-h-dvh" label="Chargement..." />;
+}
 
 export default function App() {
   return (
@@ -54,6 +60,7 @@ export default function App() {
       <AuthProvider>
         <SettingsProvider>
           <ToastProvider />
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
             {/* Public */}
             <Route element={<PublicLayout />}>
@@ -129,6 +136,7 @@ export default function App() {
             <Route path="/404" element={<NotFoundPage />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
+          </Suspense>
         </SettingsProvider>
       </AuthProvider>
     </BrowserRouter>
