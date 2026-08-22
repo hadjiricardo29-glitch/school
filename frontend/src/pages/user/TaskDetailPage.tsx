@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Clock, Users, Calendar, ArrowLeft, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -22,6 +22,7 @@ import { extractTiktokVideoId, tiktokEmbedUrl } from "@/utils/video";
 export function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { profile } = useAuth();
   const { settings } = useSettings();
   const [task, setTask] = useState<Task | null>(null);
@@ -35,12 +36,18 @@ export function TaskDetailPage() {
   const [submitting, setSubmitting] = useState(false);
 
   async function load() {
-    if (!id || !profile) return;
+    if (!id) return;
     setLoading(true);
-    const [t, mine, w] = await Promise.all([getTask(id), getMySubmissions(profile.id), getWallet(profile.id)]);
+    const t = await getTask(id);
     setTask(t);
-    setSubmission(mine.find((s) => s.task_id === id) ?? null);
-    setWallet(w);
+    // Visible sans compte — on ne charge la soumission/le solde que si
+    // quelqu'un est connecté, pour laisser les visiteurs anonymes voir la
+    // mission avant de s'inscrire (au lieu d'être renvoyés vers /login).
+    if (profile) {
+      const [mine, w] = await Promise.all([getMySubmissions(profile.id), getWallet(profile.id)]);
+      setSubmission(mine.find((s) => s.task_id === id) ?? null);
+      setWallet(w);
+    }
     setLoading(false);
   }
 
@@ -157,9 +164,23 @@ export function TaskDetailPage() {
         </div>
 
         <div className="mt-6 border-t border-border pt-6">
-          {!submission && !isAccountActivated(wallet, settings, profile?.role) && <ActivationBanner />}
+          {!profile && (
+            <div className="flex flex-col items-center gap-3 text-center">
+              <p className="text-sm text-text-secondary">Connectez-vous pour démarrer cette mission et être payé.</p>
+              <div className="flex w-full flex-col gap-2 sm:flex-row">
+                <Link to="/register" className="flex-1">
+                  <Button fullWidth>Créer un compte</Button>
+                </Link>
+                <Link to="/login" state={{ from: location }} className="flex-1">
+                  <Button fullWidth variant="outline">Se connecter</Button>
+                </Link>
+              </div>
+            </div>
+          )}
 
-          {!submission && isAccountActivated(wallet, settings, profile?.role) && (
+          {profile && !submission && !isAccountActivated(wallet, settings, profile?.role) && <ActivationBanner />}
+
+          {profile && !submission && isAccountActivated(wallet, settings, profile?.role) && (
             <Button fullWidth size="lg" loading={starting} onClick={handleStart} disabled={slotsLeft === 0}>
               {slotsLeft === 0 ? "Plus de places disponibles" : "START TASK"}
             </Button>

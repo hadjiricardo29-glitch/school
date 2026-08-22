@@ -66,6 +66,7 @@ export default function App() {
             <Route element={<PublicLayout />}>
               <Route path="/accueil" element={<LandingPage />} />
               <Route path="/tasks" element={<TasksPage />} />
+              <Route path="/tasks/:id" element={<TaskDetailPage />} />
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
             </Route>
@@ -90,7 +91,6 @@ export default function App() {
               }
             >
               <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/tasks/:id" element={<TaskDetailPage />} />
               <Route path="/my-tasks" element={<MyTasksPage />} />
               <Route path="/courses" element={<CoursesPage />} />
               <Route path="/courses/:id" element={<CourseDetailPage />} />
