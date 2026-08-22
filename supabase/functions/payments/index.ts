@@ -64,10 +64,13 @@ Deno.serve(async (req: Request) => {
 
       // La mutation atomique du wallet reste dans Postgres (create_deposit_request),
       // qui auto-crédite immédiatement pour le provider "mock" et laisse PENDING sinon.
+      // p_reference = la référence du FOURNISSEUR (ex: l'id de paiement SASpay) —
+      // indispensable pour que le webhook retrouve ce dépôt via .eq("reference", ...).
       const { data: depositId, error: rpcError } = await supabase.rpc("create_deposit_request", {
         p_amount: amount,
         p_method: method,
         p_provider: provider.name,
+        p_reference: intent.reference,
       });
       if (rpcError) throw rpcError;
 

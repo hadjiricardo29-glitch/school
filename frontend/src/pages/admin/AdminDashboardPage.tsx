@@ -52,7 +52,9 @@ export function AdminDashboardPage() {
         <CardHeader title="Rappels" />
         <ul className="list-inside list-disc space-y-1.5 text-sm text-text-secondary">
           <li>Toute modification financière ou de rôle est enregistrée dans le journal d'audit.</li>
-          <li>Les paiements sont en mode démonstration tant qu'aucun fournisseur réel n'est configuré.</li>
+          {settings.paymentProvider === "mock" && (
+            <li>Les paiements sont en mode démonstration tant qu'aucun fournisseur réel n'est configuré.</li>
+          )}
           <li>Les barèmes de commission et frais de retrait sont modifiables depuis Paramètres.</li>
         </ul>
       </Card>

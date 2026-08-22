@@ -19,7 +19,7 @@ const SECTIONS = [
   },
   {
     title: "5. Retraits",
-    body: "Les retraits sont soumis à un montant minimum, à des frais et à un délai de traitement affichés avant confirmation. En environnement de démonstration, les paiements sont simulés et clairement identifiés comme tels.",
+    body: "Les retraits sont soumis à un montant minimum, à des frais et à un délai de traitement affichés avant confirmation.",
   },
   {
     title: "6. Suspension et fraude",

@@ -85,7 +85,11 @@ export function AdminDepositsPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-xl font-semibold text-text-primary">Dépôts</h1>
-        <p className="mt-1 text-sm text-text-secondary">Les dépôts en mode démo (Mock) sont crédités instantanément.</p>
+        <p className="mt-1 text-sm text-text-secondary">
+          {settings.paymentProvider === "mock"
+            ? "Les dépôts en mode démo (Mock) sont crédités instantanément."
+            : "Dépôts traités via SASpay — confirmés automatiquement par webhook."}
+        </p>
       </div>
 
       <Tabs tabs={TABS} value={tab} onChange={setTab} />
