@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -35,6 +36,7 @@ export function AdminSettingsPage() {
   const [spinCooldown, setSpinCooldown] = useState("");
   const [spinMaxPerWindow, setSpinMaxPerWindow] = useState("");
   const [spinWindowDays, setSpinWindowDays] = useState("");
+  const [paymentProvider, setPaymentProvider] = useState<"mock" | "saspay">("mock");
   const [rules, setRules] = useState<CommissionRule[]>([]);
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export function AdminSettingsPage() {
     setSpinCooldown(String(settings.spinCooldownHours));
     setSpinMaxPerWindow(String(settings.spinMaxPerWindow));
     setSpinWindowDays(String(settings.spinWindowDays));
+    setPaymentProvider(settings.paymentProvider);
   }, [settings]);
 
   async function saveGeneral() {
@@ -152,6 +155,19 @@ export function AdminSettingsPage() {
     }
   }
 
+  async function savePaymentProvider() {
+    setSaving(true);
+    try {
+      await updateSetting("payment_provider", paymentProvider);
+      await refresh();
+      notify.success("Fournisseur de paiement mis à jour");
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : "Enregistrement impossible");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   function updateRuleField(index: number, field: keyof CommissionRule, value: string | boolean) {
     setRules((prev) => prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)));
   }
@@ -206,6 +222,28 @@ export function AdminSettingsPage() {
           </label>
           {maintenanceMode && <Alert tone="warning">Le mode maintenance masque la plateforme aux utilisateurs non-admin (à brancher sur le middleware applicatif).</Alert>}
           <Button className="self-start" loading={saving} onClick={saveGeneral}>Enregistrer</Button>
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader title="Paiement" subtitle="Fournisseur utilisé pour les dépôts" />
+        <div className="flex flex-col gap-4">
+          <Select
+            label="Fournisseur"
+            options={[
+              { value: "mock", label: "Démo (aucun paiement réel)" },
+              { value: "saspay", label: "SASpay (réel)" },
+            ]}
+            value={paymentProvider}
+            onChange={(e) => setPaymentProvider(e.target.value as "mock" | "saspay")}
+          />
+          {paymentProvider === "saspay" && (
+            <Alert tone="warning">
+              Vérifie d'abord que SASPAY_API_KEY et SASPAY_WEBHOOK_SECRET sont bien configurés dans les secrets de
+              l'Edge Function "payments" — sans ça, tous les dépôts échoueront dès l'activation.
+            </Alert>
+          )}
+          <Button className="self-start" loading={saving} onClick={savePaymentProvider}>Enregistrer</Button>
         </div>
       </Card>
 

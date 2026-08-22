@@ -51,12 +51,17 @@ export async function getWithdrawals(userId: string): Promise<WithdrawalRequest[
   return (data ?? []) as WithdrawalRequest[];
 }
 
-export async function createDepositRequest(params: { amount: number; method: string; provider?: string }): Promise<string> {
+export async function createDepositRequest(params: {
+  amount: number;
+  method: string;
+  provider?: string;
+  country?: string;
+}): Promise<string> {
   // Passe par l'Edge Function "payments" (abstraction PaymentProvider) plutôt que
   // par le RPC directement, pour que l'intégration d'un vrai fournisseur plus tard
   // (Mobile Money, carte, virement) n'ait besoin de changer que cette seule couche.
   const { data, error } = await supabase.functions.invoke("payments/deposit", {
-    body: { amount: params.amount, method: params.method, provider: params.provider ?? "mock" },
+    body: { amount: params.amount, method: params.method, provider: params.provider ?? "mock", country: params.country },
   });
   if (error) {
     // Le SDK ne remonte que "Edge Function returned a non-2xx status code" par

@@ -8,13 +8,30 @@ export interface PaymentIntent {
   reference: string;
   status: "PENDING" | "COMPLETED" | "FAILED";
   providerMetadata?: Record<string, unknown>;
+  checkoutUrl?: string;
+}
+
+export interface CreatePaymentParams {
+  amount: number;
+  method: string;
+  userId: string;
+  country?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+}
+
+export interface WebhookHeaders {
+  signature?: string | null;
+  timestamp?: string | null;
 }
 
 export interface PaymentProvider {
   readonly name: string;
-  createPayment(params: { amount: number; method: string; userId: string }): Promise<PaymentIntent>;
+  createPayment(params: CreatePaymentParams): Promise<PaymentIntent>;
   verifyPayment(reference: string): Promise<PaymentIntent>;
-  handleWebhook(payload: unknown, signature?: string | null): Promise<{ reference: string; status: PaymentIntent["status"] }>;
+  handleWebhook(payload: unknown, headers: WebhookHeaders): Promise<{ reference: string; status: PaymentIntent["status"] }>;
   refundPayment(reference: string): Promise<{ success: boolean }>;
 }
 
@@ -26,7 +43,7 @@ export interface PaymentProvider {
 export class MockPaymentProvider implements PaymentProvider {
   readonly name = "mock";
 
-  async createPayment(params: { amount: number; method: string; userId: string }): Promise<PaymentIntent> {
+  async createPayment(params: CreatePaymentParams): Promise<PaymentIntent> {
     return {
       reference: `MOCK-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
       status: "COMPLETED",
@@ -39,7 +56,7 @@ export class MockPaymentProvider implements PaymentProvider {
   }
 
   async handleWebhook(payload: unknown): Promise<{ reference: string; status: PaymentIntent["status"] }> {
-    const body = payload as { reference?: string };
+    const body = (typeof payload === "string" ? JSON.parse(payload) : payload) as { reference?: string };
     return { reference: body.reference ?? "unknown", status: "COMPLETED" };
   }
 
@@ -57,7 +74,7 @@ export class MockPaymentProvider implements PaymentProvider {
 export class ManualPaymentProvider implements PaymentProvider {
   readonly name = "manual";
 
-  async createPayment(params: { amount: number; method: string; userId: string }): Promise<PaymentIntent> {
+  async createPayment(params: CreatePaymentParams): Promise<PaymentIntent> {
     return {
       reference: `MANUAL-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
       status: "PENDING",
@@ -78,6 +95,149 @@ export class ManualPaymentProvider implements PaymentProvider {
   }
 }
 
+const SASPAY_BASE_URL = "https://api.saspay.me/api/v1";
+
+/**
+ * Fournisseur réel — encaissement (dépôt) via SASpay softpay (push Mobile
+ * Money direct sur le téléphone du client). Le décaissement (retrait) n'est
+ * PAS branché ici : POST /payouts/initialize/ exige une IP fixe en liste
+ * blanche que les Edge Functions Supabase ne fournissent pas (chaque
+ * invocation peut sortir par une IP différente) — voir la note de
+ * l'utilisateur là-dessus. Tant qu'un relais à IP fixe (type QuotaGuard/
+ * Fixie) n'est pas en place, les retraits restent approuvés manuellement
+ * via /admin/withdrawals, ce qui reste un flux valide.
+ *
+ * ⚠️ Non testé en conditions réelles au moment de l'écriture (aucune clé
+ * API valide disponible) : les codes réseau ci-dessous (network) sont
+ * transmis tels quels depuis la valeur choisie côté app (ex:
+ * "orange_money_ci") — SASpay documente ses propres codes ("orange_ci",
+ * "mtn_bj"...) via GET /networks/, qui ne correspondent probablement PAS
+ * exactement. Premier test réel : appeler /networks/ pour confirmer/adapter
+ * ce mapping avant d'activer ce fournisseur en production.
+ */
+export class SASpayProvider implements PaymentProvider {
+  readonly name = "saspay";
+
+  private apiKey(): string {
+    const key = Deno.env.get("SASPAY_API_KEY");
+    if (!key) throw new Error("SASPAY_API_KEY is not configured");
+    return key;
+  }
+
+  private headers(): HeadersInit {
+    return {
+      Authorization: `Bearer ${this.apiKey()}`,
+      "Content-Type": "application/json",
+    };
+  }
+
+  async createPayment(params: CreatePaymentParams): Promise<PaymentIntent> {
+    const idempotencyKey = crypto.randomUUID();
+    const res = await fetch(`${SASPAY_BASE_URL}/payments/softpay/`, {
+      method: "POST",
+      headers: { ...this.headers(), "Idempotency-Key": idempotencyKey },
+      body: JSON.stringify({
+        amount: params.amount.toFixed(2),
+        currency: "XOF",
+        country: params.country ?? "CI",
+        network: params.method,
+        customer: {
+          email: params.email,
+          first_name: params.firstName,
+          last_name: params.lastName,
+          phone: params.phone,
+        },
+        metadata: { userId: params.userId },
+      }),
+    });
+
+    const body = await res.json();
+    if (!res.ok) {
+      throw new Error(body?.message ?? body?.code ?? `SASpay softpay failed with status ${res.status}`);
+    }
+
+    return {
+      reference: body.id,
+      status: body.status === "COMPLETED" ? "COMPLETED" : "PENDING",
+      checkoutUrl: body.checkout_url,
+      providerMetadata: body,
+    };
+  }
+
+  async verifyPayment(reference: string): Promise<PaymentIntent> {
+    const res = await fetch(`${SASPAY_BASE_URL}/payments/${reference}/verify/`, {
+      headers: this.headers(),
+    });
+    const body = await res.json();
+    if (!res.ok) {
+      throw new Error(body?.message ?? body?.code ?? `SASpay verify failed with status ${res.status}`);
+    }
+    return {
+      reference,
+      status: body.status === "COMPLETED" ? "COMPLETED" : body.status === "FAILED" ? "FAILED" : "PENDING",
+      providerMetadata: body,
+    };
+  }
+
+  async handleWebhook(payload: unknown, headers: WebhookHeaders): Promise<{ reference: string; status: PaymentIntent["status"] }> {
+    const rawBody = typeof payload === "string" ? payload : JSON.stringify(payload);
+    await this.verifyWebhookSignature(rawBody, headers);
+
+    const envelope = (typeof payload === "string" ? JSON.parse(payload) : payload) as {
+      event?: string;
+      data?: { id?: string; status?: string };
+    };
+    const status = envelope.data?.status === "COMPLETED" ? "COMPLETED" : envelope.data?.status === "FAILED" ? "FAILED" : "PENDING";
+    return { reference: envelope.data?.id ?? "unknown", status };
+  }
+
+  private async verifyWebhookSignature(rawBody: string, headers: WebhookHeaders): Promise<void> {
+    const secret = Deno.env.get("SASPAY_WEBHOOK_SECRET");
+    if (!secret) throw new Error("SASPAY_WEBHOOK_SECRET is not configured");
+    if (!headers.signature || !headers.timestamp) {
+      throw new Error("Missing webhook signature/timestamp headers");
+    }
+
+    const timestampSeconds = Number(headers.timestamp);
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    if (!Number.isFinite(timestampSeconds) || Math.abs(nowSeconds - timestampSeconds) > 300) {
+      throw new Error("Webhook timestamp outside the 5 minute replay-protection window");
+    }
+
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+    const signatureBytes = await crypto.subtle.sign("HMAC", key, encoder.encode(`${headers.timestamp}.${rawBody}`));
+    const expectedHex = Array.from(new Uint8Array(signatureBytes))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    if (!timingSafeEqual(expectedHex, headers.signature)) {
+      throw new Error("Invalid webhook signature");
+    }
+  }
+
+  async refundPayment(): Promise<{ success: boolean }> {
+    // Aucun endpoint de remboursement documenté dans les pages lues —
+    // échoue explicitement plutôt que de prétendre réussir.
+    throw new Error("SASpay refund is not implemented — no documented refund endpoint");
+  }
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 /**
  * Point d'extension pour un vrai fournisseur (Mobile Money, carte, virement) :
  * implémenter PaymentProvider en appelant l'API officielle du fournisseur,
@@ -88,6 +248,8 @@ export function getPaymentProvider(name: string): PaymentProvider {
   switch (name) {
     case "manual":
       return new ManualPaymentProvider();
+    case "saspay":
+      return new SASpayProvider();
     case "mock":
     default:
       return new MockPaymentProvider();

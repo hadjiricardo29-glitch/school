@@ -26,6 +26,7 @@ interface Settings {
   spinCooldownHours: number;
   spinMaxPerWindow: number;
   spinWindowDays: number;
+  paymentProvider: "mock" | "saspay";
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -52,6 +53,7 @@ const DEFAULT_SETTINGS: Settings = {
   spinCooldownHours: 24,
   spinMaxPerWindow: 2,
   spinWindowDays: 7,
+  paymentProvider: "mock",
 };
 
 const SettingsContext = createContext<{ settings: Settings; loading: boolean; refresh: () => Promise<void> }>({
@@ -95,6 +97,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       spinCooldownHours: Number(map.get("spin_cooldown_hours") ?? DEFAULT_SETTINGS.spinCooldownHours),
       spinMaxPerWindow: Number(map.get("spin_max_per_window") ?? DEFAULT_SETTINGS.spinMaxPerWindow),
       spinWindowDays: Number(map.get("spin_window_days") ?? DEFAULT_SETTINGS.spinWindowDays),
+      paymentProvider: (map.get("payment_provider") as "mock" | "saspay") ?? DEFAULT_SETTINGS.paymentProvider,
     });
     setLoading(false);
   }

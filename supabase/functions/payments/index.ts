@@ -37,13 +37,29 @@ Deno.serve(async (req: Request) => {
       const amount = Number(body.amount);
       const method = String(body.method ?? "mobile_money");
       const providerName = String(body.provider ?? "mock");
+      const country = body.country ? String(body.country) : undefined;
 
       if (!amount || amount <= 0) {
         return json({ error: "Invalid amount" }, 400);
       }
 
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, phone")
+        .eq("id", userData.user.id)
+        .maybeSingle();
+
       const provider = getPaymentProvider(providerName);
-      const intent = await provider.createPayment({ amount, method, userId: userData.user.id });
+      const intent = await provider.createPayment({
+        amount,
+        method,
+        userId: userData.user.id,
+        country,
+        email: userData.user.email,
+        firstName: profile?.first_name ?? undefined,
+        lastName: profile?.last_name ?? undefined,
+        phone: profile?.phone ?? undefined,
+      });
 
       // La mutation atomique du wallet reste dans Postgres (create_deposit_request),
       // qui auto-crédite immédiatement pour le provider "mock" et laisse PENDING sinon.
@@ -58,9 +74,13 @@ Deno.serve(async (req: Request) => {
     }
 
     if (route === "webhook") {
-      const body = await req.json();
+      const rawBody = await req.text();
+      const body = JSON.parse(rawBody);
       const provider = getPaymentProvider(String(body.provider ?? "manual"));
-      const result = await provider.handleWebhook(body, req.headers.get("x-webhook-signature"));
+      const result = await provider.handleWebhook(rawBody, {
+        signature: req.headers.get("x-webhook-signature"),
+        timestamp: req.headers.get("x-webhook-timestamp"),
+      });
 
       if (result.status === "COMPLETED") {
         const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);

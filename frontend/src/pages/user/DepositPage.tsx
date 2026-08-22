@@ -56,8 +56,12 @@ export function DepositPage() {
     }
     setLoading(true);
     try {
-      await createDepositRequest({ amount: value, method: operator, provider: "mock" });
-      notify.success(`Dépôt démo de ${formatCurrency(value, settings.currencyLabel)} crédité sur votre solde.`);
+      await createDepositRequest({ amount: value, method: operator, provider: settings.paymentProvider, country });
+      if (settings.paymentProvider === "mock") {
+        notify.success(`Dépôt démo de ${formatCurrency(value, settings.currencyLabel)} crédité sur votre solde.`);
+      } else {
+        notify.success("Confirmez le paiement reçu sur votre téléphone pour créditer votre solde.");
+      }
       navigate("/wallet");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Dépôt impossible");
@@ -110,10 +114,17 @@ export function DepositPage() {
               </div>
             </div>
           )}
-          <Alert tone="warning">
-            Environnement de démonstration — aucun paiement réel n'est effectué. Le montant est crédité instantanément à
-            titre de test ("Demo payment").
-          </Alert>
+          {settings.paymentProvider === "mock" ? (
+            <Alert tone="warning">
+              Environnement de démonstration — aucun paiement réel n'est effectué. Le montant est crédité instantanément
+              à titre de test ("Demo payment").
+            </Alert>
+          ) : (
+            <Alert tone="info">
+              Vous allez recevoir une demande de paiement directement sur votre téléphone — confirmez-la pour que votre
+              solde soit crédité.
+            </Alert>
+          )}
         </div>
 
         <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-4">
@@ -142,7 +153,7 @@ export function DepositPage() {
             />
           </div>
           <Button type="submit" fullWidth loading={loading}>
-            Déposer (démo)
+            {settings.paymentProvider === "mock" ? "Déposer (démo)" : "Déposer"}
           </Button>
         </form>
       </Card>
