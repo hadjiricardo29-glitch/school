@@ -26,21 +26,16 @@ export async function startTask(taskId: string, userId: string): Promise<TaskSub
   return data as TaskSubmission;
 }
 
-export async function submitTaskProof(
-  submissionId: string,
-  proof: { proofText?: string; proofUrl?: string; proofFilePath?: string },
-): Promise<void> {
-  const { error } = await supabase
-    .from("task_submissions")
-    .update({
-      status: "SUBMITTED",
-      submitted_at: new Date().toISOString(),
-      proof_text: proof.proofText ?? null,
-      proof_url: proof.proofUrl ?? null,
-      proof_file_path: proof.proofFilePath ?? null,
-    })
-    .eq("id", submissionId);
+export interface WatchHeartbeatResult {
+  watched_seconds: number;
+  required_seconds: number;
+  completed: boolean;
+}
+
+export async function recordWatchHeartbeat(submissionId: string): Promise<WatchHeartbeatResult> {
+  const { data, error } = await supabase.rpc("record_watch_heartbeat", { p_submission_id: submissionId });
   if (error) throw error;
+  return (data as WatchHeartbeatResult[])[0];
 }
 
 export async function getMySubmissions(userId: string): Promise<TaskSubmission[]> {
@@ -51,11 +46,4 @@ export async function getMySubmissions(userId: string): Promise<TaskSubmission[]
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as unknown as TaskSubmission[];
-}
-
-export async function uploadTaskProofFile(userId: string, submissionId: string, file: File): Promise<string> {
-  const path = `${userId}/${submissionId}/${file.name}`;
-  const { error } = await supabase.storage.from("task-proofs").upload(path, file, { upsert: true });
-  if (error) throw error;
-  return path;
 }

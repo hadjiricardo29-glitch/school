@@ -38,6 +38,7 @@ const EMPTY_FORM = {
   deadline: "",
   status: "DRAFT" as TaskStatus,
   video_url: "",
+  auto_verify_seconds: "30",
 };
 
 export function AdminTasksPage() {
@@ -82,6 +83,7 @@ export function AdminTasksPage() {
       deadline: task.deadline ? task.deadline.slice(0, 10) : "",
       status: task.status,
       video_url: task.video_url ?? "",
+      auto_verify_seconds: String(task.auto_verify_seconds),
     });
     setModalOpen(true);
   }
@@ -102,6 +104,7 @@ export function AdminTasksPage() {
       deadline: "",
       status: "DRAFT",
       video_url: task.video_url ?? "",
+      auto_verify_seconds: String(task.auto_verify_seconds),
     });
     setModalOpen(true);
   }
@@ -109,6 +112,10 @@ export function AdminTasksPage() {
   async function onSave() {
     if (!form.title || !form.description || !form.reward) {
       notify.error("Titre, description et récompense sont requis");
+      return;
+    }
+    if (!form.auto_verify_seconds || Number(form.auto_verify_seconds) <= 0) {
+      notify.error("La durée de vérification doit être supérieure à 0");
       return;
     }
     setSaving(true);
@@ -127,6 +134,7 @@ export function AdminTasksPage() {
         deadline: form.deadline ? new Date(form.deadline).toISOString() : null,
         status: form.status,
         video_url: form.video_url || null,
+        auto_verify_seconds: Number(form.auto_verify_seconds),
       };
       if (editing) {
         await updateTask(editing.id, payload);
@@ -228,6 +236,14 @@ export function AdminTasksPage() {
             onChange={(e) => setForm({ ...form, video_url: e.target.value })}
             placeholder="https://www.tiktok.com/@compte/video/1234567890"
             hint="Lien TikTok — la vidéo s'affiche directement dans l'application"
+          />
+          <Input
+            label="Durée de vérification (secondes)"
+            type="number"
+            min={1}
+            value={form.auto_verify_seconds}
+            onChange={(e) => setForm({ ...form, auto_verify_seconds: e.target.value })}
+            hint="Temps que l'utilisateur doit rester sur la page pour être crédité automatiquement — aucune preuve à envoyer"
           />
           <Select label="Statut" options={STATUS_OPTIONS} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as TaskStatus })} />
           <label className="flex items-center gap-2 text-sm text-text-primary">

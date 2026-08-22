@@ -141,6 +141,7 @@ export interface Task {
   deadline: string | null;
   status: TaskStatus;
   video_url: string | null;
+  auto_verify_seconds: number;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -156,6 +157,8 @@ export interface TaskSubmission {
   proof_text: string | null;
   proof_url: string | null;
   proof_file_path: string | null;
+  watched_seconds: number;
+  last_heartbeat_at: string | null;
   reviewed_by: string | null;
   reviewed_at: string | null;
   review_note: string | null;
