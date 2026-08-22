@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ArrowRight, ListChecks, Share2, Wallet as WalletIcon, ArrowDownToLine, Sparkles } from "lucide-react";
-import logoImage from "@/assets/logo.svg";
+import motosuImage from "@/assets/motosu.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { StatCard } from "@/components/ui/StatCard";
@@ -87,6 +87,10 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex justify-center">
+        <img src={motosuImage} alt={settings.platformName} className="h-24 w-24 rounded-2xl object-cover shadow-md sm:h-28 sm:w-28" />
+      </div>
+
       <div>
         <h1 className="text-xl font-semibold text-text-primary">Bonjour, {profile?.first_name ?? profile?.username} 👋</h1>
         <p className="mt-1 text-sm text-text-secondary">Voici un aperçu de votre activité sur {settings.platformName}.</p>
@@ -98,14 +102,14 @@ export function DashboardPage() {
         <StatCard
           label="Solde disponible"
           value={formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
-          iconImage={logoImage}
+          icon={WalletIcon}
           tone="primary"
           variant="filled"
         />
         <StatCard
           label="Total retiré"
           value={formatCurrency(wallet?.total_withdrawn ?? 0, settings.currencyLabel)}
-          iconImage={logoImage}
+          icon={ArrowDownToLine}
           tone="success"
           variant="filled"
         />

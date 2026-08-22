@@ -18,11 +18,15 @@ interface StatCardProps {
 
 // Fond plein, même couleur que les boutons pleins (Button variant="primary"/"success"/"info") —
 // pas une simple teinte légère, une vraie carte colorée comme demandé.
+// `!` (important) force la couleur pleine à l'emporter sur le bg-surface par
+// défaut de <Card> — deux classes bg-* de même poids en CSS, sinon c'est
+// l'ordre de génération de Tailwind (pas l'ordre dans le className) qui
+// décide laquelle gagne, ce qui rendait la carte "transparente"/blanche.
 const SOLID_CLASSES: Record<string, string> = {
-  primary: "bg-primary text-white",
-  success: "bg-success text-white",
-  info: "bg-accent text-white",
-  neutral: "bg-surface-alt text-text-primary",
+  primary: "!bg-primary !border-primary text-white",
+  success: "!bg-success !border-success text-white",
+  info: "!bg-accent !border-accent text-white",
+  neutral: "!bg-surface-alt text-text-primary",
 };
 
 const ICON_CLASSES: Record<string, string> = {
