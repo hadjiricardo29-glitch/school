@@ -19,6 +19,7 @@ export type TaskCategory =
   | "ADS"
   | "VIDEOS"
   | "TIKTOK"
+  | "YOUTUBE"
   | "QUIZ"
   | "OTHER";
 
@@ -80,7 +81,7 @@ export interface Wallet {
   updated_at: string;
 }
 
-export type EarningBucket = "WALLET" | "TIKTOK" | "VIDEOS" | "ADS" | "SURVEYS";
+export type EarningBucket = "WALLET" | "TIKTOK" | "YOUTUBE" | "VIDEOS" | "ADS" | "SURVEYS";
 
 export interface WalletBalance {
   id: string;
@@ -94,6 +95,7 @@ export interface WalletBalance {
 export const EARNING_BUCKET_LABELS: Record<EarningBucket, string> = {
   WALLET: "Portefeuille",
   TIKTOK: "TikTok",
+  YOUTUBE: "YouTube",
   VIDEOS: "Vidéos",
   ADS: "Publicités",
   SURVEYS: "Sondages",
@@ -103,6 +105,7 @@ export const EARNING_BUCKET_LABELS: Record<EarningBucket, string> = {
 export const EARNING_BUCKET_COLORS: Record<EarningBucket, string> = {
   WALLET: "bg-primary/10 text-primary",
   TIKTOK: "bg-[#171717]/10 text-[#171717]",
+  YOUTUBE: "bg-error/10 text-error",
   VIDEOS: "bg-accent/10 text-accent",
   ADS: "bg-warning/10 text-warning",
   SURVEYS: "bg-success/10 text-success",
@@ -304,6 +307,7 @@ export const TASK_CATEGORY_LABELS: Record<TaskCategory, string> = {
   ADS: "Publicités",
   VIDEOS: "Vidéos",
   TIKTOK: "TikTok",
+  YOUTUBE: "YouTube",
   QUIZ: "Quiz",
   OTHER: "Autre",
 };

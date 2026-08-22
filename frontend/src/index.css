@@ -35,7 +35,10 @@
 
 html,
 body {
-  background-color: var(--color-surface-alt);
+  /* Fond de page en blanc pur — --color-surface-alt reste un gris très
+     léger, réservé aux petites zones à l'intérieur des cartes (pas au
+     fond général de la page). */
+  background-color: #ffffff;
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Plus, Pencil, Trash2, UploadCloud, X } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Table, type Column } from "@/components/ui/Table";
 import { Badge, StatusBadge } from "@/components/ui/Badge";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { createCourse, deleteCourse, listAllCourses, updateCourse } from "@/services/admin";
+import { createCourse, deleteCourse, listAllCourses, updateCourse, uploadCourseThumbnail } from "@/services/admin";
 import type { Course, CourseStatus } from "@/types/domain";
 import { useSettings } from "@/contexts/SettingsContext";
 import { formatCurrency } from "@/utils/format";
@@ -41,6 +41,8 @@ export function AdminCoursesPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [toDelete, setToDelete] = useState<Course | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     setLoading(true);
@@ -103,6 +105,21 @@ export function AdminCoursesPage() {
       notify.error(err instanceof Error ? err.message : "Enregistrement impossible");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function onThumbnailChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadCourseThumbnail(file);
+      setForm((f) => ({ ...f, thumbnail_url: url }));
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : "Envoi de l'image impossible");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -170,13 +187,34 @@ export function AdminCoursesPage() {
             <Input label="Durée (minutes)" type="number" value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: e.target.value })} />
             <Select label="Statut" options={STATUS_OPTIONS} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as CourseStatus })} />
           </div>
-          <Input
-            label="Image (URL)"
-            value={form.thumbnail_url}
-            onChange={(e) => setForm({ ...form, thumbnail_url: e.target.value })}
-            placeholder="https://..."
-            hint="Affichée sur la carte et la page de la formation"
-          />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-text-primary">Image</label>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onThumbnailChange} />
+            {form.thumbnail_url ? (
+              <div className="relative w-fit">
+                <img src={form.thumbnail_url} alt="" className="h-28 w-28 rounded-[10px] object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, thumbnail_url: "" }))}
+                  className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full bg-error text-white shadow-sm"
+                  aria-label="Retirer l'image"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                loading={uploading}
+                icon={<UploadCloud className="size-4" />}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Choisir une image
+              </Button>
+            )}
+            <p className="text-xs text-text-secondary">Envoyée depuis votre ordinateur, affichée sur la carte et la page de la formation</p>
+          </div>
           <Input
             label="Lien du produit"
             value={form.content_url}

@@ -4,7 +4,7 @@ import { PublicFooter } from "@/components/layout/PublicFooter";
 
 export function PublicLayout() {
   return (
-    <div className="flex min-h-dvh flex-col bg-surface-alt">
+    <div className="flex min-h-dvh flex-col bg-white">
       <PublicHeader />
       <main className="flex-1">
         <Outlet />

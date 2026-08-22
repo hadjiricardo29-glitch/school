@@ -90,6 +90,13 @@ export async function deleteCourse(id: string) {
   if (error) throw error;
 }
 
+export async function uploadCourseThumbnail(file: File): Promise<string> {
+  const path = `${crypto.randomUUID()}-${file.name}`;
+  const { error } = await supabase.storage.from("course-thumbnails").upload(path, file, { upsert: true });
+  if (error) throw error;
+  return supabase.storage.from("course-thumbnails").getPublicUrl(path).data.publicUrl;
+}
+
 // ---------- Submissions ----------
 export async function listSubmissions(status?: string): Promise<TaskSubmission[]> {
   let query = supabase
