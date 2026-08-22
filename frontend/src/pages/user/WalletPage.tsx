@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowDownToLine, ArrowUpFromLine, Wallet as WalletIcon, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, TrendingUp } from "lucide-react";
+import logoImage from "@/assets/logo.svg";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { StatCard } from "@/components/ui/StatCard";
@@ -72,14 +73,14 @@ export function WalletPage() {
         <StatCard
           label="Solde disponible"
           value={formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
-          icon={WalletIcon}
+          iconImage={logoImage}
           tone="primary"
           variant="filled"
         />
         <StatCard
           label="Total retiré"
           value={formatCurrency(wallet?.total_withdrawn ?? 0, settings.currencyLabel)}
-          icon={TrendingDown}
+          iconImage={logoImage}
           tone="success"
           variant="filled"
         />

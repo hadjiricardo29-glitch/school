@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ArrowRight, ListChecks, Share2, Wallet as WalletIcon, ArrowDownToLine, Sparkles } from "lucide-react";
+import logoImage from "@/assets/logo.svg";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { StatCard } from "@/components/ui/StatCard";
@@ -93,16 +94,26 @@ export function DashboardPage() {
 
       {!isAccountActivated(wallet, settings, profile?.role) && <ActivationBanner />}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4">
         <StatCard
           label="Solde disponible"
           value={formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
-          icon={WalletIcon}
+          iconImage={logoImage}
           tone="primary"
           variant="filled"
         />
+        <StatCard
+          label="Total retiré"
+          value={formatCurrency(wallet?.total_withdrawn ?? 0, settings.currencyLabel)}
+          iconImage={logoImage}
+          tone="success"
+          variant="filled"
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Gains du jour" value={formatCurrency(todayEarnings, settings.currencyLabel)} />
-        <StatCard label="Total des gains" value={formatCurrency(wallet?.total_earned ?? 0, settings.currencyLabel)} />
+        <StatCard label="Total des gains" value={formatCurrency(wallet?.total_earned ?? 0, settings.currencyLabel)} icon={WalletIcon} />
         <StatCard label="Gains de parrainage" value={formatCurrency(referralEarnings, settings.currencyLabel)} icon={Share2} />
       </div>
 
