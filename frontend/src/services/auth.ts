@@ -28,7 +28,16 @@ export async function registerUser(input: RegisterInput) {
       },
     },
   });
-  if (error) throw error;
+  if (error) {
+    // GoTrue masque toujours la vraie cause d'une exception levée par le
+    // trigger handle_new_user() derrière ce message générique — dans notre
+    // trigger, le seul `raise exception` du chemin normal est un code de
+    // parrainage introuvable, donc c'est quasi toujours l'explication réelle.
+    if (error.message.toLowerCase().includes("database error saving new user")) {
+      throw new Error("Code de parrainage invalide. Vérifiez le code saisi ou utilisez un lien d'invitation valide.");
+    }
+    throw error;
+  }
   return data;
 }
 
