@@ -157,9 +157,9 @@ export function TaskDetailPage() {
         </div>
 
         <div className="mt-6 border-t border-border pt-6">
-          {!submission && !isAccountActivated(wallet, settings) && <ActivationBanner />}
+          {!submission && !isAccountActivated(wallet, settings, profile?.role) && <ActivationBanner />}
 
-          {!submission && isAccountActivated(wallet, settings) && (
+          {!submission && isAccountActivated(wallet, settings, profile?.role) && (
             <Button fullWidth size="lg" loading={starting} onClick={handleStart} disabled={slotsLeft === 0}>
               {slotsLeft === 0 ? "Plus de places disponibles" : "START TASK"}
             </Button>

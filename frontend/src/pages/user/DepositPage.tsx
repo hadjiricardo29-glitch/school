@@ -36,7 +36,7 @@ export function DepositPage() {
     setOperator(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
   }, [country]);
 
-  const needsActivation = !isAccountActivated(wallet, settings);
+  const needsActivation = !isAccountActivated(wallet, settings, profile?.role);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();

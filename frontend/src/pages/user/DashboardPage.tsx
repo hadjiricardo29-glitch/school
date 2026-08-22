@@ -91,7 +91,7 @@ export function DashboardPage() {
         <p className="mt-1 text-sm text-text-secondary">Voici un aperçu de votre activité sur {settings.platformName}.</p>
       </div>
 
-      {!isAccountActivated(wallet, settings) && <ActivationBanner />}
+      {!isAccountActivated(wallet, settings, profile?.role) && <ActivationBanner />}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard

@@ -98,7 +98,7 @@ export function SpinPage() {
 
       {!settings.spinEnabled ? (
         <Alert tone="info">La roue de la chance n'est pas disponible pour le moment.</Alert>
-      ) : !isAccountActivated(wallet, settings) ? (
+      ) : !isAccountActivated(wallet, settings, profile?.role) ? (
         <ActivationBanner />
       ) : (
         <Card className="flex flex-col items-center gap-6 py-10">

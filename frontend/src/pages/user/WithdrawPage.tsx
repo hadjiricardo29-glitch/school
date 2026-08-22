@@ -107,7 +107,7 @@ export function WithdrawPage() {
           Solde disponible : <strong className="text-text-primary">{formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}</strong>
         </p>
 
-        {!isAccountActivated(wallet, settings) ? (
+        {!isAccountActivated(wallet, settings, profile?.role) ? (
           <div className="mt-5">
             <ActivationBanner />
           </div>

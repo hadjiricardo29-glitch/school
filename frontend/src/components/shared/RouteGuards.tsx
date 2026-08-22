@@ -40,7 +40,7 @@ export function RequireActivation({ children }: { children: ReactNode }) {
     return <LoadingState className="min-h-dvh" label="Vérification de votre compte..." />;
   }
 
-  if (!isAccountActivated(wallet, settings) && !ACTIVATION_EXEMPT_PATHS.includes(location.pathname)) {
+  if (!isAccountActivated(wallet, settings, profile?.role) && !ACTIVATION_EXEMPT_PATHS.includes(location.pathname)) {
     return <Navigate to="/wallet/deposit" replace />;
   }
 
