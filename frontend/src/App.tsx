@@ -9,6 +9,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { AppLayout } from "@/layouts/AppLayout";
 import { AdminLayout } from "@/layouts/AdminLayout";
+import { AuthAwareLayout } from "@/layouts/AuthAwareLayout";
 
 const LandingPage = lazy(() => import("@/pages/public/LandingPage").then((m) => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import("@/pages/public/LoginPage").then((m) => ({ default: m.LoginPage })));
@@ -65,10 +66,15 @@ export default function App() {
             {/* Public */}
             <Route element={<PublicLayout />}>
               <Route path="/accueil" element={<LandingPage />} />
-              <Route path="/tasks" element={<TasksPage />} />
-              <Route path="/tasks/:id" element={<TaskDetailPage />} />
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
+            </Route>
+
+            {/* Missions publiques : visitable sans compte (chrome public),
+                mais garde le chrome de l'app pour qui est déjà connecté. */}
+            <Route element={<AuthAwareLayout />}>
+              <Route path="/tasks" element={<TasksPage />} />
+              <Route path="/tasks/:id" element={<TaskDetailPage />} />
             </Route>
 
             {/* "/" ne montre plus la landing marketing — elle mène directement au
