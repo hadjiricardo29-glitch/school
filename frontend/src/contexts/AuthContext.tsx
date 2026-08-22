@@ -39,9 +39,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       if (newSession?.user.id) {
-        loadProfile(newSession.user.id);
+        // Repasse par `loading` le temps du fetch, sinon les gardes de route
+        // (RequireStaff, RequireActivation...) évaluent avec un profil encore
+        // null juste après la connexion et redirigent avant de connaître le
+        // vrai rôle — `loading` ne bougeait ici qu'au tout premier montage.
+        setLoading(true);
+        loadProfile(newSession.user.id).finally(() => setLoading(false));
       } else {
         setProfile(null);
+        setLoading(false);
       }
     });
 
