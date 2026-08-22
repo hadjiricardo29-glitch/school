@@ -13,7 +13,7 @@ import { createDepositRequest, getDeposits, getWallet } from "@/services/wallet"
 import { hasUsedDeposit, isAccountActivated } from "@/utils/activation";
 import { notify } from "@/utils/toast";
 import { formatCurrency } from "@/utils/format";
-import { COUNTRIES } from "@/config/countries";
+import { WEST_AFRICA_COUNTRIES } from "@/config/countries";
 import { getOperatorsForCountry } from "@/config/operators";
 import type { Deposit, Wallet } from "@/types/domain";
 
@@ -22,7 +22,7 @@ export function DepositPage() {
   const { profile } = useAuth();
   const { settings } = useSettings();
   const [amount, setAmount] = useState("");
-  const [country, setCountry] = useState(COUNTRIES.find((c) => c.name === profile?.country)?.code ?? "CI");
+  const [country, setCountry] = useState(WEST_AFRICA_COUNTRIES.find((c) => c.name === profile?.country)?.code ?? "CI");
   const [operator, setOperator] = useState(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -141,7 +141,7 @@ export function DepositPage() {
           <div className="grid grid-cols-2 gap-3">
             <Select
               label="Pays"
-              options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
+              options={WEST_AFRICA_COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
               value={country}
               onChange={(e) => setCountry(e.target.value)}
             />

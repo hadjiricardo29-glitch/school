@@ -107,13 +107,15 @@ const SASPAY_BASE_URL = "https://api.saspay.me/api/v1";
  * Fixie) n'est pas en place, les retraits restent approuvés manuellement
  * via /admin/withdrawals, ce qui reste un flux valide.
  *
- * ⚠️ Non testé en conditions réelles au moment de l'écriture (aucune clé
- * API valide disponible) : les codes réseau ci-dessous (network) sont
- * transmis tels quels depuis la valeur choisie côté app (ex:
- * "orange_money_ci") — SASpay documente ses propres codes ("orange_ci",
- * "mtn_bj"...) via GET /networks/, qui ne correspondent probablement PAS
- * exactement. Premier test réel : appeler /networks/ pour confirmer/adapter
- * ce mapping avant d'activer ce fournisseur en production.
+ * Couverture actuelle : Afrique de l'Ouest uniquement (CI, SN, ML, BF, BJ,
+ * TG, NE, GN, GH, NG) — les codes `network` du frontend
+ * (config/operators.ts) sont désormais les codes exacts confirmés via
+ * docs.saspay.me/api-reference/reference/formats, pas une supposition.
+ *
+ * ⚠️ Toujours non testé contre un vrai paiement (aucune clé API valide
+ * disponible au moment de l'écriture) — le SHAPE de la requête/réponse
+ * softpay est documenté et suivi ici, mais un premier dépôt réel de test
+ * reste nécessaire avant d'activer ce fournisseur en production.
  */
 export class SASpayProvider implements PaymentProvider {
   readonly name = "saspay";

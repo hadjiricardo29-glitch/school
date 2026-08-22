@@ -26,3 +26,8 @@ export const COUNTRIES: Country[] = [
   { code: "FR", name: "France", phoneCode: "+33" },
   { code: "OTHER", name: "Autre", phoneCode: "+" },
 ];
+
+/** Pays couverts par SASpay (payin) pour l'instant — Afrique de l'Ouest
+ * uniquement, confirmé via docs.saspay.me/api-reference/reference/formats. */
+const WEST_AFRICA_CODES = ["CI", "SN", "ML", "BF", "BJ", "TG", "NE", "GN", "GH", "NG"];
+export const WEST_AFRICA_COUNTRIES: Country[] = COUNTRIES.filter((c) => WEST_AFRICA_CODES.includes(c.code));
