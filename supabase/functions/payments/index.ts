@@ -81,9 +81,18 @@ Deno.serve(async (req: Request) => {
 
     return json({ error: "Not found" }, 404);
   } catch (err) {
-    return json({ error: err instanceof Error ? err.message : "Unexpected error" }, 500);
+    return json({ error: extractErrorMessage(err) }, 500);
   }
 });
+
+// supabase.rpc(...) rejette avec un PostgrestError (objet brut { message, ... }),
+// pas une instance d'Error — `err instanceof Error` seul le rate et remplace le
+// vrai message Postgres (ex: contrainte violée) par un générique "Unexpected error".
+function extractErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object" && err !== null && "message" in err) return String((err as { message: unknown }).message);
+  return "Unexpected error";
+}
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {

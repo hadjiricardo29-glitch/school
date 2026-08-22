@@ -1,3 +1,4 @@
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { supabase } from "@/services/supabase";
 import type { Deposit, EarningBucket, Transaction, Wallet, WalletBalance, WithdrawalRequest } from "@/types/domain";
 
@@ -57,7 +58,15 @@ export async function createDepositRequest(params: { amount: number; method: str
   const { data, error } = await supabase.functions.invoke("payments/deposit", {
     body: { amount: params.amount, method: params.method, provider: params.provider ?? "mock" },
   });
-  if (error) throw error;
+  if (error) {
+    // Le SDK ne remonte que "Edge Function returned a non-2xx status code" par
+    // défaut — le vrai message ({ error }) vit dans le corps de la réponse HTTP.
+    if (error instanceof FunctionsHttpError) {
+      const body = await error.context.json().catch(() => null);
+      throw new Error(body?.error ?? error.message);
+    }
+    throw error;
+  }
   return (data as { depositId: string }).depositId;
 }
 
