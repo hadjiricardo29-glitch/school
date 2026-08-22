@@ -20,7 +20,7 @@ export function AppSidebar() {
             to={item.to}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-surface-alt hover:text-text-primary",
               )
             }
@@ -33,7 +33,7 @@ export function AppSidebar() {
       <div className="border-t border-border p-3">
         <button
           onClick={signOut}
-          className="flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium text-text-secondary hover:bg-surface-alt hover:text-text-primary"
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-secondary hover:bg-surface-alt hover:text-text-primary"
         >
           <LogOut className="size-[18px]" />
           Déconnexion

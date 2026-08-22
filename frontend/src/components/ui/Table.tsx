@@ -58,7 +58,7 @@ export function Table<T>({ columns, data, rowKey, emptyMessage = "Aucune donnée
           <div
             key={rowKey(row)}
             onClick={() => onRowClick?.(row)}
-            className={cn("rounded-[10px] border border-border p-4", onRowClick && "cursor-pointer active:bg-surface-alt")}
+            className={cn("rounded-md border border-border p-4", onRowClick && "cursor-pointer active:bg-surface-alt")}
           >
             {columns.map((col) => (
               <div key={col.key} className="flex items-center justify-between gap-3 py-1 text-sm">

@@ -14,7 +14,7 @@ const config: Record<Tone, { icon: typeof Info; classes: string }> = {
 export function Alert({ tone = "info", title, children }: { tone?: Tone; title?: string; children: ReactNode }) {
   const { icon: Icon, classes } = config[tone];
   return (
-    <div className={cn("flex gap-3 rounded-[10px] border p-4 text-sm", classes)}>
+    <div className={cn("flex gap-3 rounded-md border p-4 text-sm", classes)}>
       <Icon className="mt-0.5 size-4 shrink-0" />
       <div>
         {title && <p className="font-medium">{title}</p>}

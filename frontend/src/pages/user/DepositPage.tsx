@@ -68,7 +68,7 @@ export function DepositPage() {
         <h1 className="text-lg font-semibold text-text-primary">Effectuer un dépôt</h1>
         <div className="mt-4 flex flex-col gap-3">
           {needsActivation && (
-            <div className="flex items-start gap-3 rounded-[10px] border border-warning/30 bg-warning-bg p-4">
+            <div className="flex items-start gap-3 rounded-md border border-warning/30 bg-warning-bg p-4">
               <ShieldAlert className="mt-0.5 size-5 shrink-0 text-warning" />
               <div>
                 <p className="text-sm font-semibold text-text-primary">Activation de compte requise</p>

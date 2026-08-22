@@ -95,7 +95,7 @@ export function WalletPage() {
         <p className="mt-0.5 text-xs text-text-secondary">Chaque catégorie de gain a son propre solde retirable.</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {(Object.keys(EARNING_BUCKET_LABELS) as EarningBucket[]).map((b) => (
-            <div key={b} className={cn("rounded-[10px] p-3", EARNING_BUCKET_COLORS[b])}>
+            <div key={b} className={cn("rounded-md p-3", EARNING_BUCKET_COLORS[b])}>
               <p className="text-xs opacity-80">{EARNING_BUCKET_LABELS[b]}</p>
               <p className="mt-1 text-sm font-semibold">
                 {formatCurrency(balances.find((wb) => wb.bucket === b)?.available_balance ?? 0, settings.currencyLabel)}

@@ -24,7 +24,7 @@ export function Dropdown({ trigger, items }: { trigger: ReactNode; items: Dropdo
     <div className="relative" ref={ref}>
       <div onClick={() => setOpen((v) => !v)}>{trigger}</div>
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-[10px] border border-border bg-surface py-1 shadow-md">
+        <div className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-md border border-border bg-surface py-1 shadow-md">
           {items.map((item) => (
             <button
               key={item.label}

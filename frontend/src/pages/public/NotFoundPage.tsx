@@ -6,7 +6,7 @@ export function NotFoundPage() {
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-surface-alt px-4 text-center">
       <p className="text-6xl font-bold text-primary">404</p>
       <p className="text-text-secondary">Cette page n'existe pas ou plus.</p>
-      <Link to="/">
+      <Link to="/accueil">
         <Button>Retour à l'accueil</Button>
       </Link>
     </div>

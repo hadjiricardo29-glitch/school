@@ -87,32 +87,35 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-center">
-        <img src={motosuImage} alt={settings.platformName} className="h-24 w-24 rounded-2xl object-cover shadow-md sm:h-28 sm:w-28" />
-      </div>
-
       <div>
         <h1 className="text-xl font-semibold text-text-primary">Bonjour, {profile?.first_name ?? profile?.username} 👋</h1>
-        <p className="mt-1 text-sm text-text-secondary">Voici un aperçu de votre activité sur {settings.platformName}.</p>
+        <p className="mt-1 text-sm text-text-secondary">Votre activité en un coup d'œil.</p>
       </div>
 
       {!isAccountActivated(wallet, settings, profile?.role) && <ActivationBanner />}
 
-      <div className="grid grid-cols-2 gap-4">
-        <StatCard
-          label="Solde disponible"
-          value={formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
-          icon={WalletIcon}
-          tone="primary"
-          variant="filled"
+      <div className="flex items-center gap-3 sm:gap-4">
+        <img
+          src={motosuImage}
+          alt={settings.platformName}
+          className="h-16 w-16 shrink-0 object-cover sm:h-24 sm:w-24"
         />
-        <StatCard
-          label="Total retiré"
-          value={formatCurrency(wallet?.total_withdrawn ?? 0, settings.currencyLabel)}
-          icon={ArrowDownToLine}
-          tone="success"
-          variant="filled"
-        />
+        <div className="grid flex-1 grid-cols-2 gap-3 sm:gap-4">
+          <StatCard
+            label="Solde disponible"
+            value={formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
+            icon={WalletIcon}
+            tone="primary"
+            variant="filled"
+          />
+          <StatCard
+            label="Total retiré"
+            value={formatCurrency(wallet?.total_withdrawn ?? 0, settings.currencyLabel)}
+            icon={ArrowDownToLine}
+            tone="success"
+            variant="filled"
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -125,7 +128,7 @@ export function DashboardPage() {
         <CardHeader title="Solde par catégorie" subtitle="Ce que vous pouvez retirer, ventilé par source de gain" />
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {(Object.keys(EARNING_BUCKET_LABELS) as EarningBucket[]).map((b) => (
-            <div key={b} className={cn("rounded-[10px] p-3", EARNING_BUCKET_COLORS[b])}>
+            <div key={b} className={cn("rounded-md p-3", EARNING_BUCKET_COLORS[b])}>
               <p className="text-xs opacity-80">{EARNING_BUCKET_LABELS[b]}</p>
               <p className="mt-1 text-sm font-semibold">
                 {formatCurrency(balances.find((wb) => wb.bucket === b)?.available_balance ?? 0, settings.currencyLabel)}
@@ -220,7 +223,7 @@ export function DashboardPage() {
           ) : (
             <div className="flex flex-col gap-3">
               {tasks.map((task) => (
-                <Link key={task.id} to={`/tasks/${task.id}`} className="flex items-center justify-between rounded-[10px] border border-border p-3 hover:bg-surface-alt">
+                <Link key={task.id} to={`/tasks/${task.id}`} className="flex items-center justify-between rounded-md border border-border p-3 hover:bg-surface-alt">
                   <div>
                     <p className="text-sm font-medium text-text-primary">{task.title}</p>
                     <Badge tone="neutral" className="mt-1">{task.difficulty}</Badge>

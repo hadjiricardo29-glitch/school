@@ -32,7 +32,7 @@ export function Modal({ open, onClose, title, children, size = "md", footer }: M
             exit={{ opacity: 0, y: 24 }}
             transition={{ duration: 0.15 }}
             className={cn(
-              "relative z-10 w-full rounded-t-[10px] sm:rounded-[10px] bg-surface shadow-md max-h-[90vh] overflow-y-auto",
+              "relative z-10 w-full rounded-t-[10px] sm:rounded-md bg-surface shadow-md max-h-[90vh] overflow-y-auto",
               sizeClasses[size],
             )}
           >

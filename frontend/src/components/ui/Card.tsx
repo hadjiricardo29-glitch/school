@@ -10,7 +10,7 @@ export function Card({ children, padded = true, className, ...props }: CardProps
   return (
     <div
       className={cn(
-        "rounded-[10px] border border-border bg-surface shadow-xs",
+        "rounded-md border border-border bg-surface shadow-xs",
         padded && "p-5",
         className,
       )}

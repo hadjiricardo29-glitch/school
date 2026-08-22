@@ -19,6 +19,8 @@
   --color-warning-bg: #fef3c7;
   --color-purple: #7c3aed;
   --color-purple-bg: #ede9fe;
+  --color-oled-blue: #00d9ff;
+  --color-oled-blue-bg: #e0fbff;
 
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
@@ -29,8 +31,14 @@
   --shadow-md: 0 4px 12px -2px rgb(23 23 23 / 0.06), 0 2px 4px -2px rgb(23 23 23 / 0.04);
 }
 
-* {
-  border-color: var(--color-border);
+/* Doit être dans @layer base : une règle hors layer passe toujours devant
+   les utilitaires Tailwind (qui vivent dans @layer utilities), peu importe
+   la spécificité — border-primary/20, border-oled-blue/40 etc. se
+   retrouvaient sinon silencieusement écrasés par ce reset gris. */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
 }
 
 html,

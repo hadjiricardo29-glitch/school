@@ -64,12 +64,16 @@ export default function App() {
           <Routes>
             {/* Public */}
             <Route element={<PublicLayout />}>
-              <Route path="/" element={<LandingPage />} />
+              <Route path="/accueil" element={<LandingPage />} />
               <Route path="/tasks" element={<TasksPage />} />
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
             </Route>
 
+            {/* "/" ne montre plus la landing marketing — elle mène directement au
+                login pour tout le monde (visiteurs compris) ; la landing reste
+                accessible en tapant explicitement /accueil. */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />

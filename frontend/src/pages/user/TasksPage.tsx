@@ -18,6 +18,8 @@ const CATEGORY_OPTIONS: { value: string; label: string }[] = [
   ...(Object.keys(TASK_CATEGORY_LABELS) as TaskCategory[]).map((c) => ({ value: c, label: TASK_CATEGORY_LABELS[c] })),
 ];
 
+const SOCIAL_CATEGORIES: TaskCategory[] = ["TIKTOK", "YOUTUBE"];
+
 export function TasksPage() {
   const { settings } = useSettings();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -41,7 +43,7 @@ export function TasksPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-xl font-semibold text-text-primary">Missions disponibles</h1>
-        <p className="mt-1 text-sm text-text-secondary">Choisissez une mission et commencez à gagner.</p>
+        <p className="mt-1 text-sm text-text-secondary">Choisissez, réalisez, gagnez.</p>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -67,7 +69,9 @@ export function TasksPage() {
               <Link key={task.id} to={`/tasks/${task.id}`}>
                 <Card className="flex h-full flex-col transition-shadow hover:shadow-md">
                   <div className="flex items-center justify-between">
-                    <Badge tone="neutral">{TASK_CATEGORY_LABELS[task.category]}</Badge>
+                    <Badge tone={SOCIAL_CATEGORIES.includes(task.category) ? "oled" : "neutral"}>
+                      {TASK_CATEGORY_LABELS[task.category]}
+                    </Badge>
                     <Badge tone="primary">{TASK_DIFFICULTY_LABELS[task.difficulty]}</Badge>
                   </div>
                   <p className="mt-3 text-sm font-semibold text-text-primary">{task.title}</p>

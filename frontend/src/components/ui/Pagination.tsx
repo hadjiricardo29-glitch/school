@@ -19,7 +19,7 @@ export function Pagination({ page, totalPages, onChange }: PaginationProps) {
       <button
         onClick={() => onChange(Math.max(1, page - 1))}
         disabled={page === 1}
-        className="flex size-8 items-center justify-center rounded-[10px] text-text-secondary hover:bg-surface-alt disabled:opacity-40"
+        className="flex size-8 items-center justify-center rounded-md text-text-secondary hover:bg-surface-alt disabled:opacity-40"
         aria-label="Page précédente"
       >
         <ChevronLeft className="size-4" />
@@ -31,7 +31,7 @@ export function Pagination({ page, totalPages, onChange }: PaginationProps) {
           <button
             onClick={() => onChange(p)}
             className={cn(
-              "flex size-8 items-center justify-center rounded-[10px] text-sm font-medium",
+              "flex size-8 items-center justify-center rounded-md text-sm font-medium",
               p === page ? "bg-primary text-white" : "text-text-primary hover:bg-surface-alt",
             )}
           >
@@ -43,7 +43,7 @@ export function Pagination({ page, totalPages, onChange }: PaginationProps) {
       <button
         onClick={() => onChange(Math.min(totalPages, page + 1))}
         disabled={page === totalPages}
-        className="flex size-8 items-center justify-center rounded-[10px] text-text-secondary hover:bg-surface-alt disabled:opacity-40"
+        className="flex size-8 items-center justify-center rounded-md text-text-secondary hover:bg-surface-alt disabled:opacity-40"
         aria-label="Page suivante"
       >
         <ChevronRight className="size-4" />

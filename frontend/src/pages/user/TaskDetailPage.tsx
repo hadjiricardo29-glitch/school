@@ -133,7 +133,7 @@ export function TaskDetailPage() {
               {(() => {
                 const videoId = extractTiktokVideoId(task.video_url!);
                 return videoId ? (
-                  <div className="mx-auto mt-2 aspect-[9/16] w-full max-w-xs overflow-hidden rounded-[10px] border border-border">
+                  <div className="mx-auto mt-2 aspect-[9/16] w-full max-w-xs overflow-hidden rounded-md border border-border">
                     <iframe
                       src={tiktokEmbedUrl(videoId)}
                       allow="encrypted-media; fullscreen"
@@ -172,7 +172,7 @@ export function TaskDetailPage() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-text-primary">Description / preuve texte</label>
                 <textarea
-                  className="min-h-24 w-full rounded-[10px] border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  className="min-h-24 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                   value={proofText}
                   onChange={(e) => setProofText(e.target.value)}
                   placeholder="Décrivez comment vous avez complété la mission..."
@@ -183,7 +183,7 @@ export function TaskDetailPage() {
                 <input
                   type="file"
                   onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
-                  className="text-sm text-text-secondary file:mr-3 file:rounded-[10px] file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-primary"
+                  className="text-sm text-text-secondary file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-primary"
                 />
               </div>
               <Button fullWidth loading={submitting} onClick={handleSubmitProof}>

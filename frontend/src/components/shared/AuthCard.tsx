@@ -11,14 +11,14 @@ export function AuthCard({ title, subtitle, children, footer }: { title: string;
         <div className="mb-8 flex justify-center">
           <Logo />
         </div>
-        <div className="rounded-[10px] border border-border bg-surface p-6 shadow-sm sm:p-8">
+        <div className="rounded-md border border-border bg-surface p-6 shadow-sm sm:p-8">
           <h1 className="text-xl font-semibold text-text-primary">{title}</h1>
           {subtitle && <p className="mt-1 text-sm text-text-secondary">{subtitle}</p>}
           <div className="mt-6">{children}</div>
         </div>
         {footer && <div className="mt-6 text-center text-sm text-text-secondary">{footer}</div>}
         <p className="mt-8 text-center text-xs text-text-secondary">
-          <Link to="/" className="hover:text-text-primary">
+          <Link to="/accueil" className="hover:text-text-primary">
             ← Retour à l'accueil
           </Link>
         </p>

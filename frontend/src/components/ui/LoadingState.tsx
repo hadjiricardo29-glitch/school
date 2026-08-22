@@ -11,5 +11,5 @@ export function LoadingState({ label = "Chargement...", className }: { label?: s
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-[10px] bg-surface-alt", className)} />;
+  return <div className={cn("animate-pulse rounded-md bg-surface-alt", className)} />;
 }

@@ -112,7 +112,7 @@ export function WithdrawPage() {
             <ActivationBanner />
           </div>
         ) : referralsMissing ? (
-          <div className="mt-5 flex flex-col items-start gap-3 rounded-[10px] border border-warning/30 bg-warning-bg p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-5 flex flex-col items-start gap-3 rounded-md border border-warning/30 bg-warning-bg p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex gap-3">
               <Users className="mt-0.5 size-5 shrink-0 text-warning" />
               <div>
@@ -174,7 +174,7 @@ export function WithdrawPage() {
           />
 
           {numericAmount > 0 && (
-            <div className="flex flex-col gap-1.5 rounded-[10px] bg-surface-alt p-4 text-sm">
+            <div className="flex flex-col gap-1.5 rounded-md bg-surface-alt p-4 text-sm">
               <div className="flex justify-between text-text-secondary">
                 <span>Demandé</span>
                 <span>{formatCurrency(numericAmount, settings.currencyLabel)}</span>

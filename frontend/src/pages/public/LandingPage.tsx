@@ -7,6 +7,9 @@ import {
   TrendingUp,
   Sparkles,
   Clock,
+  UserPlus,
+  ListChecks,
+  Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -21,9 +24,15 @@ const fadeUp = {
 };
 
 const WHY_MOTOSU = [
-  { icon: Sparkles, title: "Missions variées", body: "Réseaux sociaux, contenu, sondages, tests d'applications et plus encore, mises à jour régulièrement." },
-  { icon: TrendingUp, title: "Parrainage multi-niveaux", body: "Un barème de commissions transparent et configurable, visible directement depuis votre tableau de bord." },
-  { icon: Clock, title: "Suivi en temps réel", body: "Statistiques de gains, historique des transactions et progression de votre équipe, toujours à jour." },
+  { icon: Sparkles, title: "Missions variées", body: "TikTok, YouTube, sondages, tests d'appli... de nouvelles missions chaque semaine." },
+  { icon: TrendingUp, title: "Parrainage multi-niveaux", body: "Invitez vos amis, touchez une commission sur leurs gains." },
+  { icon: Clock, title: "Suivi en temps réel", body: "Vos gains, votre équipe, tout en un coup d'œil." },
+];
+
+const HOW_IT_WORKS = [
+  { icon: UserPlus, step: "1", title: "Créez votre compte", body: "Gratuit, en 2 minutes." },
+  { icon: ListChecks, step: "2", title: "Faites une mission", body: "Envoyez votre preuve, c'est payé direct." },
+  { icon: Share2, step: "3", title: "Invitez vos amis", body: "Touchez une commission sur leurs gains." },
 ];
 
 export function LandingPage() {
@@ -38,10 +47,10 @@ export function LandingPage() {
           <motion.div initial="hidden" animate="show" variants={fadeUp}>
             <Badge tone="primary">Missions • Récompenses • Parrainage</Badge>
             <h1 className="mt-4 text-4xl font-semibold tracking-tight text-text-primary sm:text-5xl">
-              Transformez votre temps en récompenses digitales.
+              Gagnez de l'argent, simplement.
             </h1>
             <p className="mt-4 max-w-lg text-base text-text-secondary sm:text-lg">
-              Accomplissez des missions, développez votre réseau et suivez vos récompenses depuis une seule plateforme.
+              Des missions faciles, payées vite. Invitez vos amis pour gagner encore plus.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link to="/register">
@@ -67,11 +76,11 @@ export function LandingPage() {
               <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">Solde disponible</p>
               <p className="mt-1 text-3xl font-semibold text-text-primary">{formatCurrency(125500, settings.currencyLabel)}</p>
               <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="rounded-[10px] bg-surface-alt p-3">
+                <div className="rounded-md bg-surface-alt p-3">
                   <p className="text-xs text-text-secondary">Gains du jour</p>
                   <p className="mt-1 text-sm font-semibold text-success">+{formatCurrency(5000, settings.currencyLabel)}</p>
                 </div>
-                <div className="rounded-[10px] bg-surface-alt p-3">
+                <div className="rounded-md bg-surface-alt p-3">
                   <p className="text-xs text-text-secondary">Équipe</p>
                   <p className="mt-1 text-sm font-semibold text-text-primary">24 membres</p>
                 </div>
@@ -86,21 +95,17 @@ export function LandingPage() {
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="text-center">
           <h2 className="text-2xl font-semibold text-text-primary sm:text-3xl">Comment ça marche</h2>
         </motion.div>
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-          variants={fadeUp}
-          className="mx-auto mt-8 max-w-3xl text-center text-base leading-relaxed text-text-secondary sm:text-lg"
-        >
-          <p>
-            Créez votre compte en moins de deux minutes, avec ou sans lien de parrainage. Choisissez une mission
-            parmi celles disponibles, réalisez-la et soumettez votre preuve : votre récompense est créditée
-            automatiquement dès qu'elle est validée. Partagez ensuite votre lien pour faire grandir votre équipe et
-            percevoir des commissions sur plusieurs niveaux de parrainage. Une fois votre solde disponible, demandez
-            un retrait selon la méthode qui vous convient le mieux.
-          </p>
-        </motion.div>
+        <div className="mt-12 grid gap-6 sm:grid-cols-3">
+          {HOW_IT_WORKS.map((item) => (
+            <Card key={item.step} className="text-center sm:text-left">
+              <span className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <item.icon className="size-5" />
+              </span>
+              <p className="mt-4 text-sm font-semibold text-text-primary">{item.step}. {item.title}</p>
+              <p className="mt-1.5 text-sm text-text-secondary">{item.body}</p>
+            </Card>
+          ))}
+        </div>
       </section>
 
       {/* WHY MOTOSU */}
@@ -130,9 +135,7 @@ export function LandingPage() {
           <div>
             <h2 className="text-2xl font-semibold text-text-primary">Sécurisé et transparent</h2>
             <p className="mt-2 max-w-2xl text-text-secondary">
-              Chaque mouvement financier — récompense, commission, dépôt ou retrait — est enregistré dans un registre
-              détaillé et vérifiable. Nos règles de parrainage empêchent l'auto-parrainage et les abus, pour un
-              système équitable pour tous.
+              Chaque transaction est enregistrée et vérifiable. Zéro triche, la même chance pour tous.
             </p>
           </div>
         </div>
@@ -147,8 +150,7 @@ export function LandingPage() {
             </span>
             <h2 className="mt-4 text-2xl font-semibold text-text-primary sm:text-3xl">Programme de parrainage</h2>
             <p className="mt-3 text-text-secondary">
-              Partagez votre lien unique et percevez des commissions sur plusieurs niveaux de votre réseau, à chaque
-              fois qu'un filleul complète une mission. Votre équipe grandit, vos revenus aussi.
+              Partagez votre lien. Chaque mission faite par vos filleuls vous rapporte une commission.
             </p>
             <Link to="/register" className="mt-6 inline-block">
               <Button icon={<ArrowRight className="size-4" />}>Créer mon lien de parrainage</Button>

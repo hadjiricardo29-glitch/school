@@ -177,7 +177,7 @@ export function AdminCoursesPage() {
           <Input label="Titre" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-text-primary">Description</label>
-            <textarea className="min-h-20 w-full rounded-[10px] border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <textarea className="min-h-20 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Input label="Catégorie" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Trading, Marketing..." />
@@ -192,7 +192,7 @@ export function AdminCoursesPage() {
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onThumbnailChange} />
             {form.thumbnail_url ? (
               <div className="relative w-fit">
-                <img src={form.thumbnail_url} alt="" className="h-28 w-28 rounded-[10px] object-cover" />
+                <img src={form.thumbnail_url} alt="" className="h-28 w-28 rounded-md object-cover" />
                 <button
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, thumbnail_url: "" }))}

@@ -89,7 +89,7 @@ export function ReferralsPage() {
       <Card>
         <CardHeader title="Mon lien de parrainage" subtitle={`Code : ${profile?.referral_code}`} />
         <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="flex-1 truncate rounded-[10px] border border-border bg-surface-alt px-3.5 py-2.5 text-sm text-text-secondary">
+          <div className="flex-1 truncate rounded-md border border-border bg-surface-alt px-3.5 py-2.5 text-sm text-text-secondary">
             {referralLink}
           </div>
           <Button onClick={copyLink} icon={copied ? <Check className="size-4" /> : <Copy className="size-4" />}>
