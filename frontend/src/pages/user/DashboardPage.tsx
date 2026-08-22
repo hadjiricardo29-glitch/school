@@ -100,36 +100,37 @@ export function DashboardPage() {
 
       {!isAccountActivated(wallet, settings, profile?.role) && <ActivationBanner />}
 
-      <div className="flex items-center gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <img
           src={motosuImage}
           alt={settings.platformName}
-          className="h-16 w-16 shrink-0 object-cover sm:h-24 sm:w-24"
+          className="aspect-square w-full object-cover"
         />
-        <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
-          <StatCard
-            label="Solde disponible"
-            value={formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
-            icon={WalletIcon}
-            tone="primary"
-            variant="filled"
-          />
-          <StatCard
-            label="Total retiré"
-            value={formatCurrency(wallet?.total_withdrawn ?? 0, settings.currencyLabel)}
-            icon={ArrowDownToLine}
-            tone="success"
-            variant="filled"
-          />
-          <StatCard
-            label="Mon rang"
-            value={myRank ? `#${myRank.rank}` : "—"}
-            icon={Trophy}
-            tone="purple"
-            variant="filled"
-            hint={myRank ? "Top gains cumulés" : "Pas encore classé"}
-          />
-        </div>
+        <StatCard
+          className="aspect-square"
+          label="Solde disponible"
+          value={formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
+          icon={WalletIcon}
+          tone="primary"
+          variant="filled"
+        />
+        <StatCard
+          className="aspect-square"
+          label="Total retiré"
+          value={formatCurrency(wallet?.total_withdrawn ?? 0, settings.currencyLabel)}
+          icon={ArrowDownToLine}
+          tone="success"
+          variant="filled"
+        />
+        <StatCard
+          className="aspect-square"
+          label="Mon rang"
+          value={myRank ? `#${myRank.rank}` : "—"}
+          icon={Trophy}
+          tone="purple"
+          variant="filled"
+          hint={myRank ? "Top gains cumulés" : "Pas encore classé"}
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

@@ -14,6 +14,7 @@ interface StatCardProps {
   hint?: string;
   /** "filled" teinte toute la carte dans la couleur du tone, pour la mettre en avant visuellement. */
   variant?: "default" | "filled";
+  className?: string;
 }
 
 // Verre noir "OLED" — fond quasi opaque pour un vrai noir profond, avec un
@@ -46,10 +47,10 @@ const GLASS_ICON_CLASSES: Record<string, string> = {
   neutral: "bg-white/15 text-white",
 };
 
-export function StatCard({ label, value, icon: Icon, iconImage, trend, tone = "neutral", hint, variant = "default" }: StatCardProps) {
+export function StatCard({ label, value, icon: Icon, iconImage, trend, tone = "neutral", hint, variant = "default", className }: StatCardProps) {
   const filled = variant === "filled";
   return (
-    <Card className={cn("flex flex-col gap-2", filled && cn("border", GLASS_CLASSES[tone]))}>
+    <Card className={cn("flex flex-col gap-2", filled && cn("border", GLASS_CLASSES[tone]), className)}>
       <div className="flex items-center justify-between">
         <span className={cn("text-xs font-medium uppercase tracking-wide", filled ? "text-white/80" : "text-text-secondary")}>
           {label}
