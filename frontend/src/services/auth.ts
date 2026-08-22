@@ -38,6 +38,13 @@ export async function loginUser(email: string, password: string) {
   return data;
 }
 
+const STAFF_ROLES = ["ADMIN", "MODERATOR", "FINANCE_ADMIN", "TASK_MANAGER"];
+
+export async function isStaffUser(userId: string): Promise<boolean> {
+  const { data } = await supabase.from("profiles").select("role").eq("id", userId).single();
+  return !!data && STAFF_ROLES.includes(data.role);
+}
+
 export async function requestPasswordReset(email: string) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password`,

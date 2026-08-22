@@ -1,14 +1,17 @@
 import { useNavigate } from "react-router-dom";
-import { LogOut, Settings, UserCircle } from "lucide-react";
+import { LayoutDashboard, LogOut, Settings, UserCircle } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { Avatar } from "@/components/ui/Avatar";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "@/components/shared/Logo";
 
+const STAFF_ROLES = ["ADMIN", "MODERATOR", "FINANCE_ADMIN", "TASK_MANAGER"];
+
 export function AppTopbar({ title }: { title?: string }) {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const isStaff = !!profile && STAFF_ROLES.includes(profile.role);
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-surface/85 px-4 backdrop-blur-md sm:px-6">
@@ -25,6 +28,9 @@ export function AppTopbar({ title }: { title?: string }) {
             </button>
           }
           items={[
+            ...(isStaff
+              ? [{ label: "Administration", icon: <LayoutDashboard className="size-4" />, onClick: () => navigate("/admin") }]
+              : []),
             { label: "Mon profil", icon: <UserCircle className="size-4" />, onClick: () => navigate("/profile") },
             { label: "Paramètres", icon: <Settings className="size-4" />, onClick: () => navigate("/settings") },
             { label: "Déconnexion", icon: <LogOut className="size-4" />, onClick: signOut, danger: true },

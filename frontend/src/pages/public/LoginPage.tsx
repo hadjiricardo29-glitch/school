@@ -5,7 +5,7 @@ import { AuthCard } from "@/components/shared/AuthCard";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
-import { loginUser } from "@/services/auth";
+import { isStaffUser, loginUser } from "@/services/auth";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -20,9 +20,14 @@ export function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      await loginUser(email, password);
-      const from = (location.state as { from?: Location })?.from?.pathname ?? "/dashboard";
-      navigate(from, { replace: true });
+      const { user } = await loginUser(email, password);
+      const stateFrom = (location.state as { from?: Location })?.from?.pathname;
+      if (stateFrom) {
+        navigate(stateFrom, { replace: true });
+      } else {
+        const staff = user ? await isStaffUser(user.id) : false;
+        navigate(staff ? "/admin" : "/dashboard", { replace: true });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Connexion impossible");
     } finally {
