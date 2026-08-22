@@ -186,7 +186,7 @@ export function DashboardPage() {
           <div className="flex flex-col gap-2">
             <Link to="/tasks">
               <Button variant="outline" fullWidth icon={<ListChecks className="size-4" />}>
-                Parcourir les missions
+                Parcourir les tâches
               </Button>
             </Link>
             <Link to="/wallet/withdraw">
@@ -217,9 +217,9 @@ export function DashboardPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Missions disponibles" action={<Link to="/tasks" className="text-xs font-medium text-primary hover:underline">Voir tout</Link>} />
+          <CardHeader title="Tâches journalières" action={<Link to="/tasks" className="text-xs font-medium text-primary hover:underline">Voir tout</Link>} />
           {tasks.length === 0 ? (
-            <EmptyState title="Aucune mission publiée pour le moment" />
+            <EmptyState title="Aucune tâche publiée pour le moment" />
           ) : (
             <div className="flex flex-col gap-3">
               {tasks.map((task) => (

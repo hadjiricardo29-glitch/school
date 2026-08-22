@@ -42,14 +42,14 @@ export function TasksPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Missions disponibles</h1>
+        <h1 className="text-xl font-semibold text-text-primary">Tâches journalières</h1>
         <p className="mt-1 text-sm text-text-secondary">Choisissez, réalisez, gagnez.</p>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <Input
           leftIcon={<Search className="size-4" />}
-          placeholder="Rechercher une mission..."
+          placeholder="Rechercher une tâche..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-xs"
@@ -60,7 +60,7 @@ export function TasksPage() {
       {loading ? (
         <LoadingState />
       ) : tasks.length === 0 ? (
-        <EmptyState title="Aucune mission trouvée" description="Essayez une autre catégorie ou revenez plus tard." />
+        <EmptyState title="Aucune tâche trouvée" description="Essayez une autre catégorie ou revenez plus tard." />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {tasks.map((task) => {

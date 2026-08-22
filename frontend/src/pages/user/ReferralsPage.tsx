@@ -83,7 +83,7 @@ export function ReferralsPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-xl font-semibold text-text-primary">Parrainage</h1>
-        <p className="mt-1 text-sm text-text-secondary">Invitez votre réseau et gagnez des commissions à chaque mission complétée.</p>
+        <p className="mt-1 text-sm text-text-secondary">Invitez votre réseau et gagnez des commissions à chaque tâche complétée.</p>
       </div>
 
       <Card>

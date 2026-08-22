@@ -70,7 +70,7 @@ export default function App() {
               <Route path="/privacy" element={<PrivacyPage />} />
             </Route>
 
-            {/* Missions publiques : visitable sans compte (chrome public),
+            {/* Tâches journalières publiques : visitable sans compte (chrome public),
                 mais garde le chrome de l'app pour qui est déjà connecté. */}
             <Route element={<AuthAwareLayout />}>
               <Route path="/tasks" element={<TasksPage />} />

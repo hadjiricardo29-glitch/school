@@ -323,5 +323,5 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: "Administrateur",
   MODERATOR: "Modérateur",
   FINANCE_ADMIN: "Admin finance",
-  TASK_MANAGER: "Gestionnaire missions",
+  TASK_MANAGER: "Gestionnaire tâches",
 };

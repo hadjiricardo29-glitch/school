@@ -72,7 +72,7 @@ export function AdminSubmissionsPage() {
 
   const columns: Column<TaskSubmission>[] = [
     { key: "user", header: "Utilisateur", render: (s) => <span className="font-medium text-text-primary">@{s.user?.username ?? "—"}</span> },
-    { key: "task", header: "Mission", render: (s) => s.task?.title ?? "—" },
+    { key: "task", header: "Tâche", render: (s) => s.task?.title ?? "—" },
     { key: "reward", header: "Récompense", render: (s) => (s.task ? formatCurrency(s.task.reward, settings.currencyLabel) : "—") },
     { key: "date", header: "Soumise le", render: (s) => (s.submitted_at ? formatDateTime(s.submitted_at) : "—") },
     { key: "status", header: "Statut", render: (s) => <StatusBadge status={s.status} /> },
@@ -81,7 +81,7 @@ export function AdminSubmissionsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Soumissions de missions</h1>
+        <h1 className="text-xl font-semibold text-text-primary">Soumissions de tâches</h1>
         <p className="mt-1 text-sm text-text-secondary">Validez les preuves envoyées par les utilisateurs.</p>
       </div>
 

@@ -30,7 +30,7 @@ export interface NavItem {
 
 export const USER_SIDEBAR_NAV: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-  { label: "Missions", to: "/tasks", icon: ListChecks },
+  { label: "Tâches journalières", to: "/tasks", icon: ListChecks },
   { label: "Formations", to: "/courses", icon: GraduationCap },
   { label: "Portefeuille", to: "/wallet", icon: Wallet },
   { label: "Transactions", to: "/transactions", icon: Receipt },
@@ -44,7 +44,7 @@ export const USER_SIDEBAR_NAV: NavItem[] = [
 
 export const USER_BOTTOM_NAV: NavItem[] = [
   { label: "Accueil", to: "/dashboard", icon: Home },
-  { label: "Missions", to: "/tasks", icon: ListChecks },
+  { label: "Tâches", to: "/tasks", icon: ListChecks },
   { label: "Formations", to: "/courses", icon: GraduationCap },
   { label: "Wallet", to: "/wallet", icon: Wallet },
   { label: "Équipe", to: "/team", icon: Users },
@@ -54,7 +54,7 @@ export const USER_BOTTOM_NAV: NavItem[] = [
 export const ADMIN_SIDEBAR_NAV: NavItem[] = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
   { label: "Utilisateurs", to: "/admin/users", icon: Users },
-  { label: "Missions", to: "/admin/tasks", icon: ClipboardList },
+  { label: "Tâches journalières", to: "/admin/tasks", icon: ClipboardList },
   { label: "Formations", to: "/admin/courses", icon: GraduationCap },
   { label: "Soumissions", to: "/admin/submissions", icon: ListChecks },
   { label: "Dépôts", to: "/admin/deposits", icon: ArrowDownToLine },

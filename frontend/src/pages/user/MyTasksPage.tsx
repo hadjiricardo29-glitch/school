@@ -27,16 +27,16 @@ export function MyTasksPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Mes missions</h1>
-        <p className="mt-1 text-sm text-text-secondary">Historique de vos missions commencées et soumises.</p>
+        <h1 className="text-xl font-semibold text-text-primary">Mes tâches</h1>
+        <p className="mt-1 text-sm text-text-secondary">Historique de vos tâches commencées et soumises.</p>
       </div>
 
       {submissions.length === 0 ? (
         <EmptyState
-          title="Vous n'avez pas encore commencé de mission"
+          title="Vous n'avez pas encore commencé de tâche"
           action={
             <Link to="/tasks">
-              <Button size="sm">Parcourir les missions</Button>
+              <Button size="sm">Parcourir les tâches</Button>
             </Link>
           }
         />
@@ -46,7 +46,7 @@ export function MyTasksPage() {
             <Link key={s.id} to={`/tasks/${s.task_id}`}>
               <Card className="flex items-center justify-between gap-4 transition-shadow hover:shadow-md">
                 <div>
-                  <p className="text-sm font-semibold text-text-primary">{s.task?.title ?? "Mission"}</p>
+                  <p className="text-sm font-semibold text-text-primary">{s.task?.title ?? "Tâche"}</p>
                   <p className="mt-1 text-xs text-text-secondary">Démarrée le {formatDate(s.started_at)}</p>
                 </div>
                 <div className="flex items-center gap-3">

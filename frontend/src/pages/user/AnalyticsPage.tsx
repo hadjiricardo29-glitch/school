@@ -102,7 +102,7 @@ export function AnalyticsPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Missions complétées" value={tasksCompleted} />
+        <StatCard label="Tâches complétées" value={tasksCompleted} />
         <StatCard label="Taux de réussite" value={`${successRate}%`} />
         <StatCard label="Gains de parrainage" value={formatCurrency(referralStats?.totalCommissions ?? 0, settings.currencyLabel)} />
         <StatCard label="Taille de l'équipe" value={referralStats?.networkSize ?? 0} />

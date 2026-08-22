@@ -89,7 +89,7 @@ export function SettingsPage() {
         <Card>
           <CardHeader title="Préférences de notification" subtitle="Bientôt disponible" />
           <Alert tone="info">
-            Les notifications importantes (missions, retraits, commissions) sont toujours envoyées dans l'application.
+            Les notifications importantes (tâches, retraits, commissions) sont toujours envoyées dans l'application.
             La configuration fine par canal (email, SMS) arrivera dans une prochaine mise à jour.
           </Alert>
         </Card>

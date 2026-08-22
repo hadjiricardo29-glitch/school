@@ -42,7 +42,7 @@ export function TaskDetailPage() {
     setTask(t);
     // Visible sans compte — on ne charge la soumission/le solde que si
     // quelqu'un est connecté, pour laisser les visiteurs anonymes voir la
-    // mission avant de s'inscrire (au lieu d'être renvoyés vers /login).
+    // tâche avant de s'inscrire (au lieu d'être renvoyés vers /login).
     if (profile) {
       const [mine, w] = await Promise.all([getMySubmissions(profile.id), getWallet(profile.id)]);
       setSubmission(mine.find((s) => s.task_id === id) ?? null);
@@ -62,9 +62,9 @@ export function TaskDetailPage() {
     try {
       const s = await startTask(id, profile.id);
       setSubmission(s);
-      notify.success("Mission démarrée ! Complétez-la puis soumettez votre preuve.");
+      notify.success("Tâche démarrée ! Complétez-la puis soumettez votre preuve.");
     } catch (err) {
-      notify.error(err instanceof Error ? err.message : "Impossible de démarrer cette mission");
+      notify.error(err instanceof Error ? err.message : "Impossible de démarrer cette tâche");
     } finally {
       setStarting(false);
     }
@@ -92,8 +92,8 @@ export function TaskDetailPage() {
     }
   }
 
-  if (loading) return <LoadingState label="Chargement de la mission..." />;
-  if (!task) return <Alert tone="error">Mission introuvable.</Alert>;
+  if (loading) return <LoadingState label="Chargement de la tâche..." />;
+  if (!task) return <Alert tone="error">Tâche introuvable.</Alert>;
 
   const slotsLeft = task.max_completions ? Math.max(task.max_completions - task.completions_count, 0) : null;
 
@@ -166,7 +166,7 @@ export function TaskDetailPage() {
         <div className="mt-6 border-t border-border pt-6">
           {!profile && (
             <div className="flex flex-col items-center gap-3 text-center">
-              <p className="text-sm text-text-secondary">Connectez-vous pour démarrer cette mission et être payé.</p>
+              <p className="text-sm text-text-secondary">Connectez-vous pour démarrer cette tâche et être payé.</p>
               <div className="flex w-full flex-col gap-2 sm:flex-row">
                 <Link to="/register" className="flex-1">
                   <Button fullWidth>Créer un compte</Button>
@@ -188,7 +188,7 @@ export function TaskDetailPage() {
 
           {submission?.status === "STARTED" && (
             <div className="flex flex-col gap-3">
-              <Alert tone="info">Mission démarrée. Envoyez votre preuve de réalisation ci-dessous.</Alert>
+              <Alert tone="info">Tâche démarrée. Envoyez votre preuve de réalisation ci-dessous.</Alert>
               <Input label="Lien (URL)" placeholder="https://..." value={proofUrl} onChange={(e) => setProofUrl(e.target.value)} />
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-text-primary">Description / preuve texte</label>
@@ -196,7 +196,7 @@ export function TaskDetailPage() {
                   className="min-h-24 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                   value={proofText}
                   onChange={(e) => setProofText(e.target.value)}
-                  placeholder="Décrivez comment vous avez complété la mission..."
+                  placeholder="Décrivez comment vous avez complété la tâche..."
                 />
               </div>
               <div className="flex flex-col gap-1.5">

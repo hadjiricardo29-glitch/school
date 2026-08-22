@@ -3,7 +3,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 const SECTIONS = [
   {
     title: "1. Données collectées",
-    body: "Nous collectons les informations que vous fournissez à l'inscription (nom, email, téléphone, pays), les données liées à votre activité (missions réalisées, transactions, parrainages) et des informations techniques limitées (adresse IP, journal de connexion) à des fins de sécurité.",
+    body: "Nous collectons les informations que vous fournissez à l'inscription (nom, email, téléphone, pays), les données liées à votre activité (tâches réalisées, transactions, parrainages) et des informations techniques limitées (adresse IP, journal de connexion) à des fins de sécurité.",
   },
   {
     title: "2. Utilisation des données",

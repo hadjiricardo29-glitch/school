@@ -12,13 +12,13 @@ export function PublicFooter() {
           <div>
             <Logo />
             <p className="mt-3 max-w-xs text-sm text-text-secondary">
-              La plateforme qui transforme votre temps en missions rémunérées et récompenses digitales.
+              La plateforme qui transforme votre temps en tâches journalières rémunérées et récompenses digitales.
             </p>
           </div>
           <div>
             <h4 className="text-sm font-semibold text-text-primary">Plateforme</h4>
             <ul className="mt-3 space-y-2 text-sm text-text-secondary">
-              <li><Link to="/tasks" className="hover:text-text-primary">Missions</Link></li>
+              <li><Link to="/tasks" className="hover:text-text-primary">Tâches journalières</Link></li>
               <li><Link to="/register" className="hover:text-text-primary">Créer un compte</Link></li>
               <li><Link to="/login" className="hover:text-text-primary">Connexion</Link></li>
             </ul>

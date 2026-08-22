@@ -24,14 +24,14 @@ const fadeUp = {
 };
 
 const WHY_MOTOSU = [
-  { icon: Sparkles, title: "Missions variées", body: "TikTok, YouTube, sondages, tests d'appli... de nouvelles missions chaque semaine." },
+  { icon: Sparkles, title: "Tâches variées", body: "TikTok, YouTube, sondages, tests d'appli... de nouvelles tâches chaque semaine." },
   { icon: TrendingUp, title: "Parrainage multi-niveaux", body: "Invitez vos amis, touchez une commission sur leurs gains." },
   { icon: Clock, title: "Suivi en temps réel", body: "Vos gains, votre équipe, tout en un coup d'œil." },
 ];
 
 const HOW_IT_WORKS = [
   { icon: UserPlus, step: "1", title: "Créez votre compte", body: "Gratuit, en 2 minutes." },
-  { icon: ListChecks, step: "2", title: "Faites une mission", body: "Envoyez votre preuve, c'est payé direct." },
+  { icon: ListChecks, step: "2", title: "Faites une tâche", body: "Envoyez votre preuve, c'est payé direct." },
   { icon: Share2, step: "3", title: "Invitez vos amis", body: "Touchez une commission sur leurs gains." },
 ];
 
@@ -45,12 +45,12 @@ export function LandingPage() {
         <GradientBackdrop />
         <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-28">
           <motion.div initial="hidden" animate="show" variants={fadeUp}>
-            <Badge tone="primary">Missions • Récompenses • Parrainage</Badge>
+            <Badge tone="primary">Tâches • Récompenses • Parrainage</Badge>
             <h1 className="mt-4 text-4xl font-semibold tracking-tight text-text-primary sm:text-5xl">
               Gagnez de l'argent, simplement.
             </h1>
             <p className="mt-4 max-w-lg text-base text-text-secondary sm:text-lg">
-              Des missions faciles, payées vite. Invitez vos amis pour gagner encore plus.
+              Des tâches faciles, payées vite. Invitez vos amis pour gagner encore plus.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link to="/register">
@@ -60,7 +60,7 @@ export function LandingPage() {
               </Link>
               <Link to="/tasks">
                 <Button size="lg" variant="outline" fullWidth>
-                  Découvrir les missions
+                  Découvrir les tâches
                 </Button>
               </Link>
             </div>
@@ -150,7 +150,7 @@ export function LandingPage() {
             </span>
             <h2 className="mt-4 text-2xl font-semibold text-text-primary sm:text-3xl">Programme de parrainage</h2>
             <p className="mt-3 text-text-secondary">
-              Partagez votre lien. Chaque mission faite par vos filleuls vous rapporte une commission.
+              Partagez votre lien. Chaque tâche faite par vos filleuls vous rapporte une commission.
             </p>
             <Link to="/register" className="mt-6 inline-block">
               <Button icon={<ArrowRight className="size-4" />}>Créer mon lien de parrainage</Button>
@@ -182,7 +182,7 @@ export function LandingPage() {
           <div className="mt-10 flex flex-col divide-y divide-border">
             {[
               ["L'inscription est-elle gratuite ?", "Oui, la création de compte est entièrement gratuite, avec ou sans lien de parrainage."],
-              ["Quand suis-je payé pour une mission ?", "Dès que votre soumission est validée par notre équipe, la récompense est créditée immédiatement sur votre portefeuille."],
+              ["Quand suis-je payé pour une tâche ?", "Dès que votre soumission est validée par notre équipe, la récompense est créditée immédiatement sur votre portefeuille."],
               ["Puis-je me parrainer moi-même ?", "Non, le système empêche techniquement l'auto-parrainage et toute tentative de contournement du réseau."],
               ["Comment fonctionnent les retraits ?", "Vous demandez un retrait depuis votre portefeuille ; le montant, les frais et le délai sont affichés avant confirmation."],
             ].map(([q, a]) => (

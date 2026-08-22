@@ -4,7 +4,7 @@ import type { Transaction } from "@/types/domain";
 import { formatCurrency, formatDateTime } from "@/utils/format";
 
 const TYPE_LABELS: Record<string, string> = {
-  TASK_REWARD: "Récompense mission",
+  TASK_REWARD: "Récompense tâche",
   REFERRAL_COMMISSION: "Commission de parrainage",
   DEPOSIT: "Dépôt",
   WITHDRAWAL: "Retrait",

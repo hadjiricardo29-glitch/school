@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
 
 const LINKS = [
-  { label: "Missions", to: "/tasks" },
+  { label: "Tâches journalières", to: "/tasks" },
   { label: "Comment ça marche", to: "/#how-it-works" },
   { label: "Parrainage", to: "/#referral" },
   { label: "FAQ", to: "/#faq" },

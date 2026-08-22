@@ -6,7 +6,7 @@
  */
 export const BRANDING = {
   platformName: "Motosu",
-  tagline: "Missions digitales, récompenses et parrainage",
+  tagline: "Tâches journalières, récompenses et parrainage",
   primaryColor: "#820000",
   secondaryColor: "#A00000",
   currency: "XOF",

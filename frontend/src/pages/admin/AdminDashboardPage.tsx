@@ -28,7 +28,7 @@ export function AdminDashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard label="Utilisateurs" value={stats.totalUsers} icon={Users} tone="primary" />
-        <StatCard label="Missions" value={stats.totalTasks} icon={ClipboardList} />
+        <StatCard label="Tâches" value={stats.totalTasks} icon={ClipboardList} />
         <StatCard label="Soumissions en attente" value={stats.pendingSubmissions} icon={ListChecks} />
         <StatCard label="Retraits en attente" value={stats.pendingWithdrawals} icon={ArrowUpFromLine} />
         <StatCard label="Total des dépôts" value={formatCurrency(stats.totalDeposits, settings.currencyLabel)} icon={ArrowDownToLine} />
@@ -39,7 +39,7 @@ export function AdminDashboardPage() {
         {[
           { label: "Approuver des soumissions", to: "/admin/submissions" },
           { label: "Traiter les retraits", to: "/admin/withdrawals" },
-          { label: "Gérer les missions", to: "/admin/tasks" },
+          { label: "Gérer les tâches", to: "/admin/tasks" },
           { label: "Gérer les utilisateurs", to: "/admin/users" },
         ].map((action) => (
           <Link key={action.to} to={action.to}>

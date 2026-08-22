@@ -221,7 +221,7 @@ export function AdminSettingsPage() {
       </Card>
 
       <Card>
-        <CardHeader title="Activation de compte" subtitle="Exige un dépôt minimum avant de pouvoir réclamer une mission ou retirer" />
+        <CardHeader title="Activation de compte" subtitle="Exige un dépôt minimum avant de pouvoir réclamer une tâche ou retirer" />
         <div className="flex flex-col gap-4">
           <label className="flex items-center gap-2 text-sm text-text-primary">
             <input type="checkbox" className="size-4 accent-primary" checked={activationEnabled} onChange={(e) => setActivationEnabled(e.target.checked)} />
@@ -236,7 +236,7 @@ export function AdminSettingsPage() {
             />
           )}
           <Alert tone="info">
-            Le dashboard, les missions et l'équipe restent visibles pour tous — seules la réclamation d'une mission et
+            Le dashboard, les tâches et l'équipe restent visibles pour tous — seules la réclamation d'une tâche et
             la demande de retrait sont bloquées tant que le compte n'est pas activé. Vérifié côté serveur, pas
             seulement dans l'interface.
           </Alert>

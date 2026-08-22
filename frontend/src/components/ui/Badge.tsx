@@ -9,7 +9,7 @@ const toneClasses: Record<Tone, string> = {
   success: "bg-success-bg text-success border border-success/20",
   error: "bg-error-bg text-error border border-error/20",
   warning: "bg-warning-bg text-warning border border-warning/20",
-  // Néon bleu sur noir — réservé aux missions réseaux sociaux (TikTok, YouTube)
+  // Néon bleu sur noir — réservé aux tâches réseaux sociaux (TikTok, YouTube)
   // pour les distinguer visuellement des autres catégories.
   oled: "bg-black text-oled-blue border border-oled-blue/40 shadow-[0_0_10px_-2px_rgba(0,217,255,0.55)]",
 };

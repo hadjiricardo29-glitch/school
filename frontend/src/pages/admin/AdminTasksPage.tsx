@@ -130,10 +130,10 @@ export function AdminTasksPage() {
       };
       if (editing) {
         await updateTask(editing.id, payload);
-        notify.success("Mission mise à jour");
+        notify.success("Tâche mise à jour");
       } else {
         await createTask(payload);
-        notify.success("Mission créée");
+        notify.success("Tâche créée");
       }
       setModalOpen(false);
       await load();
@@ -149,7 +149,7 @@ export function AdminTasksPage() {
     setSaving(true);
     try {
       await deleteTask(toDelete.id);
-      notify.success("Mission supprimée");
+      notify.success("Tâche supprimée");
       setToDelete(null);
       await load();
     } catch (err) {
@@ -160,7 +160,7 @@ export function AdminTasksPage() {
   }
 
   const columns: Column<Task>[] = [
-    { key: "title", header: "Mission", render: (t) => <span className="font-medium text-text-primary">{t.title}</span> },
+    { key: "title", header: "Tâche", render: (t) => <span className="font-medium text-text-primary">{t.title}</span> },
     { key: "category", header: "Catégorie", render: (t) => <Badge tone="neutral">{TASK_CATEGORY_LABELS[t.category]}</Badge> },
     { key: "reward", header: "Récompense", render: (t) => formatCurrency(t.reward, settings.currencyLabel) },
     { key: "completions", header: "Places", render: (t) => (t.max_completions ? `${t.completions_count}/${t.max_completions}` : "Illimité") },
@@ -182,15 +182,15 @@ export function AdminTasksPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-text-primary">Missions</h1>
-          <p className="mt-1 text-sm text-text-secondary">{tasks.length} missions au total</p>
+          <h1 className="text-xl font-semibold text-text-primary">Tâches journalières</h1>
+          <p className="mt-1 text-sm text-text-secondary">{tasks.length} tâches au total</p>
         </div>
-        <Button icon={<Plus className="size-4" />} onClick={openCreate}>Nouvelle mission</Button>
+        <Button icon={<Plus className="size-4" />} onClick={openCreate}>Nouvelle tâche</Button>
       </div>
 
-      <Card>{loading ? <LoadingState /> : <Table columns={columns} data={tasks} rowKey={(t) => t.id} onRowClick={openEdit} emptyMessage="Aucune mission" />}</Card>
+      <Card>{loading ? <LoadingState /> : <Table columns={columns} data={tasks} rowKey={(t) => t.id} onRowClick={openEdit} emptyMessage="Aucune tâche" />}</Card>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? "Modifier la mission" : "Nouvelle mission"} size="lg" footer={
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? "Modifier la tâche" : "Nouvelle tâche"} size="lg" footer={
         <>
           <Button variant="outline" onClick={() => setModalOpen(false)}>Annuler</Button>
           <Button onClick={onSave} loading={saving}>Enregistrer</Button>
@@ -239,7 +239,7 @@ export function AdminTasksPage() {
 
       <ConfirmDialog
         open={!!toDelete}
-        title="Supprimer cette mission ?"
+        title="Supprimer cette tâche ?"
         description={`"${toDelete?.title}" sera définitivement supprimée.`}
         danger
         loading={saving}

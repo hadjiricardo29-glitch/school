@@ -3,15 +3,15 @@ import { useSettings } from "@/contexts/SettingsContext";
 const SECTIONS = [
   {
     title: "1. Objet",
-    body: "Ces conditions régissent l'utilisation de la plateforme, qui permet à ses membres d'accomplir des missions digitales rémunérées, de développer un réseau de parrainage et de gérer un portefeuille de récompenses.",
+    body: "Ces conditions régissent l'utilisation de la plateforme, qui permet à ses membres d'accomplir des tâches journalières rémunérées, de développer un réseau de parrainage et de gérer un portefeuille de récompenses.",
   },
   {
     title: "2. Compte utilisateur",
     body: "Chaque personne ne peut créer qu'un seul compte. Les informations fournies à l'inscription doivent être exactes. Toute tentative de création de comptes multiples, d'auto-parrainage ou de fraude au parrainage entraîne la suspension du compte.",
   },
   {
-    title: "3. Missions",
-    body: "Les récompenses sont versées uniquement après vérification et approbation de la preuve de réalisation par notre équipe. Une mission à participation unique ne peut être réclamée qu'une seule fois par utilisateur.",
+    title: "3. Tâches journalières",
+    body: "Les récompenses sont versées uniquement après vérification et approbation de la preuve de réalisation par notre équipe. Une tâche à participation unique ne peut être réclamée qu'une seule fois par utilisateur.",
   },
   {
     title: "4. Parrainage et commissions",
@@ -23,7 +23,7 @@ const SECTIONS = [
   },
   {
     title: "6. Suspension et fraude",
-    body: "Nous nous réservons le droit de suspendre tout compte présentant une activité frauduleuse (comptes multiples, missions falsifiées, abus du système de parrainage) après examen par notre équipe.",
+    body: "Nous nous réservons le droit de suspendre tout compte présentant une activité frauduleuse (comptes multiples, tâches falsifiées, abus du système de parrainage) après examen par notre équipe.",
   },
   {
     title: "7. Modification des conditions",
