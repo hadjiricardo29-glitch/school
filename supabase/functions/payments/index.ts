@@ -1,6 +1,7 @@
 // Edge Function "payments" — point d'entrée unique pour l'abstraction PaymentProvider.
-// POST /payments/deposit  { amount, method, provider? }   (JWT utilisateur requis)
-// POST /payments/webhook  { reference, status, ... }       (appelé par le fournisseur réel, pas de JWT utilisateur)
+// POST /payments/deposit         { amount, method, provider? }  (JWT utilisateur requis)
+// POST /payments/webhook         { reference, status, ... }      (appelé par le fournisseur réel, pas de JWT utilisateur)
+// POST /payments/test-connection {}                              (staff uniquement, lecture seule, aucun mouvement d'argent)
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getPaymentProvider } from "../_shared/payment-provider.ts";
@@ -71,6 +72,51 @@ Deno.serve(async (req: Request) => {
       if (rpcError) throw rpcError;
 
       return json({ depositId, reference: intent.reference, status: intent.status });
+    }
+
+    if (route === "test-connection") {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) {
+        return json({ error: "Missing Authorization header" }, 401);
+      }
+
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        return json({ error: "Invalid session" }, 401);
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userData.user.id)
+        .maybeSingle();
+      if (!profile || !["ADMIN", "FINANCE_ADMIN"].includes(profile.role)) {
+        return json({ error: "Not authorized" }, 403);
+      }
+
+      const apiKey = Deno.env.get("SASPAY_API_KEY");
+      if (!apiKey) {
+        return json({ configured: false, error: "SASPAY_API_KEY is not configured" });
+      }
+
+      // GET /networks/ est en lecture seule — confirme que la clé
+      // s'authentifie sans jamais déclencher de paiement réel.
+      const res = await fetch("https://api.saspay.me/api/v1/networks/", {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      const body = await res.json().catch(() => null);
+
+      return json({
+        configured: true,
+        apiKeyValid: res.ok,
+        status: res.status,
+        networks: res.ok ? body : undefined,
+        error: res.ok ? undefined : (body?.message ?? body?.code ?? `HTTP ${res.status}`),
+      });
     }
 
     if (route === "webhook") {
