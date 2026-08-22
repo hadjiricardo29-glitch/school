@@ -195,15 +195,26 @@ export async function resolveFraudFlag(id: string, status: "RESOLVED" | "DISMISS
 
 // ---------- Referrals (admin overview) ----------
 export async function getTopReferrers(limit = 10): Promise<{ profile: Profile; directCount: number }[]> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*, referrals:profiles!profiles_referred_by_fkey(count)")
-    .order("created_at", { ascending: false })
-    .limit(500);
-  if (error) throw error;
-  const withCounts = (data ?? []).map((p) => ({
+  // Un embed profiles!profiles_referred_by_fkey (auto-jointure sur profiles)
+  // renvoie systématiquement PGRST200 "Could not find a relationship between
+  // 'profiles' and 'profiles'" côté PostgREST malgré la contrainte réelle —
+  // deux requêtes + comptage côté client évitent complètement ce problème.
+  const [{ data: profiles, error: profilesError }, { data: referred, error: referredError }] = await Promise.all([
+    supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(500),
+    supabase.from("profiles").select("referred_by").not("referred_by", "is", null),
+  ]);
+  if (profilesError) throw profilesError;
+  if (referredError) throw referredError;
+
+  const counts = new Map<string, number>();
+  for (const row of referred ?? []) {
+    const referrerId = (row as { referred_by: string }).referred_by;
+    counts.set(referrerId, (counts.get(referrerId) ?? 0) + 1);
+  }
+
+  const withCounts = (profiles ?? []).map((p) => ({
     profile: p as unknown as Profile,
-    directCount: ((p as unknown as { referrals: { count: number }[] }).referrals?.[0]?.count as number) ?? 0,
+    directCount: counts.get((p as unknown as Profile).id) ?? 0,
   }));
   return withCounts.sort((a, b) => b.directCount - a.directCount).slice(0, limit);
 }
