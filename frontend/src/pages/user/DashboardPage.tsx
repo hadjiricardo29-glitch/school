@@ -12,13 +12,13 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { getTransactions, getWallet, getWalletBalances } from "@/services/wallet";
+import { getDeposits, getTransactions, getWallet, getWalletBalances } from "@/services/wallet";
 import { listPublishedTasks } from "@/services/tasks";
 import { getDirectReferrals } from "@/services/referrals";
-import type { EarningBucket, Profile, Task, Transaction, Wallet, WalletBalance } from "@/types/domain";
+import type { Deposit, EarningBucket, Profile, Task, Transaction, Wallet, WalletBalance } from "@/types/domain";
 import { EARNING_BUCKET_COLORS, EARNING_BUCKET_LABELS } from "@/types/domain";
 import { formatCurrency, formatDate } from "@/utils/format";
-import { isAccountActivated } from "@/utils/activation";
+import { hasUsedDeposit, isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
 import { cn } from "@/utils/cn";
 
@@ -30,6 +30,7 @@ export function DashboardPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [team, setTeam] = useState<Profile[]>([]);
+  const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,13 +41,15 @@ export function DashboardPage() {
       getTransactions(profile.id, 60),
       listPublishedTasks(),
       getDirectReferrals(profile.id),
+      getDeposits(profile.id),
     ])
-      .then(([w, wb, tx, t, refs]) => {
+      .then(([w, wb, tx, t, refs, d]) => {
         setWallet(w);
         setBalances(wb);
         setTransactions(tx);
         setTasks(t.slice(0, 4));
         setTeam(refs.slice(0, 5));
+        setDeposits(d);
       })
       .finally(() => setLoading(false));
   }, [profile]);
@@ -194,11 +197,13 @@ export function DashboardPage() {
                 Retirer
               </Button>
             </Link>
-            <Link to="/wallet/deposit">
-              <Button variant="success" fullWidth icon={<WalletIcon className="size-4" />}>
-                Déposer
-              </Button>
-            </Link>
+            {!hasUsedDeposit(deposits) && (
+              <Link to="/wallet/deposit">
+                <Button variant="success" fullWidth icon={<WalletIcon className="size-4" />}>
+                  Déposer
+                </Button>
+              </Link>
+            )}
             <Link to="/referrals">
               <Button variant="outline" fullWidth icon={<Share2 className="size-4" />}>
                 Inviter des amis

@@ -1,20 +1,21 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ShieldAlert } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, CheckCircle2, ShieldAlert } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
-import { createDepositRequest, getWallet } from "@/services/wallet";
-import { isAccountActivated } from "@/utils/activation";
+import { createDepositRequest, getDeposits, getWallet } from "@/services/wallet";
+import { hasUsedDeposit, isAccountActivated } from "@/utils/activation";
 import { notify } from "@/utils/toast";
 import { formatCurrency } from "@/utils/format";
 import { COUNTRIES } from "@/config/countries";
 import { getOperatorsForCountry } from "@/config/operators";
-import type { Wallet } from "@/types/domain";
+import type { Deposit, Wallet } from "@/types/domain";
 
 export function DepositPage() {
   const navigate = useNavigate();
@@ -26,10 +27,17 @@ export function DepositPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [deposits, setDeposits] = useState<Deposit[]>([]);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     if (!profile) return;
-    getWallet(profile.id).then(setWallet).catch(() => setWallet(null));
+    Promise.all([getWallet(profile.id), getDeposits(profile.id)])
+      .then(([w, d]) => {
+        setWallet(w);
+        setDeposits(d);
+      })
+      .finally(() => setChecking(false));
   }, [profile]);
 
   useEffect(() => {
@@ -56,6 +64,29 @@ export function DepositPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (checking) return <LoadingState label="Vérification de votre dépôt..." />;
+
+  if (hasUsedDeposit(deposits)) {
+    return (
+      <div className="mx-auto flex max-w-lg flex-col gap-6">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary">
+          <ArrowLeft className="size-4" /> Retour
+        </button>
+        <Card className="flex flex-col items-center gap-3 py-10 text-center">
+          <CheckCircle2 className="size-10 text-success" />
+          <h1 className="text-lg font-semibold text-text-primary">Dépôt déjà effectué</h1>
+          <p className="max-w-sm text-sm text-text-secondary">
+            Un seul dépôt est autorisé par compte. Le vôtre est fait — la suite se passe du côté des retraits, une fois
+            les conditions atteintes.
+          </p>
+          <Link to="/wallet" className="mt-2">
+            <Button>Retour au portefeuille</Button>
+          </Link>
+        </Card>
+      </div>
+    );
   }
 
   return (

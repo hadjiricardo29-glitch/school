@@ -1,4 +1,4 @@
-import type { Profile, Wallet } from "@/types/domain";
+import type { Deposit, Profile, Wallet } from "@/types/domain";
 
 const STAFF_ROLES: Profile["role"][] = ["ADMIN", "MODERATOR", "FINANCE_ADMIN", "TASK_MANAGER"];
 
@@ -13,4 +13,13 @@ export function isAccountActivated(
   if (role && STAFF_ROLES.includes(role)) return true;
   if (!settings.accountActivationEnabled) return true;
   return (wallet?.total_deposited ?? 0) >= settings.accountActivationMinDeposit;
+}
+
+/**
+ * Un seul dépôt est autorisé à vie par compte (voir create_deposit_request
+ * côté serveur, migration 0022) — même condition ici pour masquer la page/
+ * les boutons "Déposer" une fois que ce dépôt unique a été fait.
+ */
+export function hasUsedDeposit(deposits: Pick<Deposit, "status">[]): boolean {
+  return deposits.some((d) => d.status === "PENDING" || d.status === "COMPLETED");
 }

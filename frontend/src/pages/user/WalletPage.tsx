@@ -16,6 +16,7 @@ import type { Deposit, EarningBucket, Transaction, Wallet, WalletBalance, Withdr
 import { EARNING_BUCKET_COLORS, EARNING_BUCKET_LABELS } from "@/types/domain";
 import { cn } from "@/utils/cn";
 import { formatCurrency, formatDateTime } from "@/utils/format";
+import { hasUsedDeposit } from "@/utils/activation";
 
 export function WalletPage() {
   const { profile } = useAuth();
@@ -59,9 +60,11 @@ export function WalletPage() {
           <p className="mt-1 text-sm text-text-secondary">Gérez votre solde, vos dépôts et vos retraits.</p>
         </div>
         <div className="flex gap-2">
-          <Link to="/wallet/deposit">
-            <Button variant="success" icon={<ArrowDownToLine className="size-4" />}>Déposer</Button>
-          </Link>
+          {!hasUsedDeposit(deposits) && (
+            <Link to="/wallet/deposit">
+              <Button variant="success" icon={<ArrowDownToLine className="size-4" />}>Déposer</Button>
+            </Link>
+          )}
           <Link to="/wallet/withdraw">
             <Button variant="info" icon={<ArrowUpFromLine className="size-4" />}>Retirer</Button>
           </Link>
