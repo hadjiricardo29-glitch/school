@@ -9,7 +9,7 @@ export function AdminSidebar() {
   const { signOut } = useAuth();
 
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-l border-border bg-surface lg:flex">
+    <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex">
       <div className="flex h-16 items-center border-b border-border px-6">
         <Logo />
         <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">

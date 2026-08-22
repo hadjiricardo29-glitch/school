@@ -45,6 +45,7 @@ export const USER_SIDEBAR_NAV: NavItem[] = [
 export const USER_BOTTOM_NAV: NavItem[] = [
   { label: "Accueil", to: "/dashboard", icon: Home },
   { label: "Missions", to: "/tasks", icon: ListChecks },
+  { label: "Formations", to: "/courses", icon: GraduationCap },
   { label: "Wallet", to: "/wallet", icon: Wallet },
   { label: "Équipe", to: "/team", icon: Users },
   { label: "Profil", to: "/profile", icon: UserCircle },

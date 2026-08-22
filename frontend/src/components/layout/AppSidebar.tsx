@@ -9,7 +9,7 @@ export function AppSidebar() {
   const { signOut } = useAuth();
 
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-l border-border bg-surface lg:flex">
+    <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex">
       <div className="flex h-16 items-center border-b border-border px-6">
         <Logo />
       </div>
