@@ -10,7 +10,7 @@ interface StatCardProps {
   /** Logo/image affiché à la place de `icon` (ex: le logo Motosu) en haut de la carte. */
   iconImage?: string;
   trend?: number;
-  tone?: "primary" | "neutral" | "success" | "info";
+  tone?: "primary" | "neutral" | "success" | "info" | "purple";
   hint?: string;
   /** "filled" teinte toute la carte dans la couleur du tone, pour la mettre en avant visuellement. */
   variant?: "default" | "filled";
@@ -22,9 +22,10 @@ interface StatCardProps {
 // sur le bg-surface par défaut de <Card> (même poids CSS sinon, l'ordre de
 // génération de Tailwind déciderait, pas l'ordre dans le className).
 const GLASS_CLASSES: Record<string, string> = {
-  primary: "!bg-black/90 !border-primary/50 text-white backdrop-blur-xl shadow-[0_0_28px_-6px_rgba(220,38,38,0.65)]",
-  success: "!bg-black/90 !border-success/50 text-white backdrop-blur-xl shadow-[0_0_28px_-6px_rgba(21,163,74,0.65)]",
-  info: "!bg-black/90 !border-accent/50 text-white backdrop-blur-xl shadow-[0_0_28px_-6px_rgba(14,165,233,0.65)]",
+  primary: "!bg-black/90 !border-primary/50 text-white backdrop-blur-xl !shadow-[0_0_28px_-6px_rgba(220,38,38,0.65)]",
+  success: "!bg-black/90 !border-success/50 text-white backdrop-blur-xl !shadow-[0_0_28px_-6px_rgba(21,163,74,0.65)]",
+  info: "!bg-black/90 !border-accent/50 text-white backdrop-blur-xl !shadow-[0_0_28px_-6px_rgba(14,165,233,0.65)]",
+  purple: "!bg-black/90 !border-purple/50 text-white backdrop-blur-xl !shadow-[0_0_28px_-6px_rgba(124,58,237,0.65)]",
   neutral: "!bg-black/90 !border-white/10 text-white backdrop-blur-xl",
 };
 
@@ -32,6 +33,7 @@ const ICON_CLASSES: Record<string, string> = {
   primary: "bg-primary/10 text-primary",
   success: "bg-success/10 text-success",
   info: "bg-accent/10 text-accent",
+  purple: "bg-purple/10 text-purple",
   neutral: "bg-surface-alt text-text-secondary",
 };
 
@@ -40,6 +42,7 @@ const GLASS_ICON_CLASSES: Record<string, string> = {
   primary: "bg-primary text-white",
   success: "bg-success text-white",
   info: "bg-accent text-white",
+  purple: "bg-purple text-white",
   neutral: "bg-white/15 text-white",
 };
 

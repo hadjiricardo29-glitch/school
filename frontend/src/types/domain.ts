@@ -296,6 +296,11 @@ export interface LeaderboardEntry {
   total_earned: number;
 }
 
+export interface MyRank {
+  rank: number;
+  total_earned: number;
+}
+
 export const TASK_CATEGORY_LABELS: Record<TaskCategory, string> = {
   SOCIAL_MEDIA: "Réseaux sociaux",
   CONTENT: "Contenu",

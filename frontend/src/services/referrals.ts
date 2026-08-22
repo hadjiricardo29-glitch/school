@@ -1,5 +1,5 @@
 import { supabase } from "@/services/supabase";
-import type { CommissionRule, LeaderboardEntry, Profile } from "@/types/domain";
+import type { CommissionRule, LeaderboardEntry, MyRank, Profile } from "@/types/domain";
 
 export interface ReferralStats {
   directCount: number;
@@ -70,6 +70,12 @@ export async function getLeaderboard(limit = 20): Promise<LeaderboardEntry[]> {
   const { data, error } = await supabase.rpc("get_leaderboard", { p_limit: limit });
   if (error) throw error;
   return (data ?? []) as LeaderboardEntry[];
+}
+
+export async function getMyRank(): Promise<MyRank | null> {
+  const { data, error } = await supabase.rpc("get_my_rank");
+  if (error) throw error;
+  return ((data as MyRank[])?.[0]) ?? null;
 }
 
 export async function countActivatedReferrals(userId: string): Promise<number> {

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowRight, ListChecks, Share2, Wallet as WalletIcon, ArrowDownToLine, Sparkles } from "lucide-react";
+import { ArrowRight, ListChecks, Share2, Wallet as WalletIcon, ArrowDownToLine, Sparkles, Trophy } from "lucide-react";
 import motosuImage from "@/assets/motosu.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -14,8 +14,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { getDeposits, getTransactions, getWallet, getWalletBalances } from "@/services/wallet";
 import { listPublishedTasks } from "@/services/tasks";
-import { getDirectReferrals } from "@/services/referrals";
-import type { Deposit, EarningBucket, Profile, Task, Transaction, Wallet, WalletBalance } from "@/types/domain";
+import { getDirectReferrals, getMyRank } from "@/services/referrals";
+import type { Deposit, EarningBucket, MyRank, Profile, Task, Transaction, Wallet, WalletBalance } from "@/types/domain";
 import { EARNING_BUCKET_COLORS, EARNING_BUCKET_LABELS } from "@/types/domain";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { hasUsedDeposit, isAccountActivated } from "@/utils/activation";
@@ -31,6 +31,7 @@ export function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [team, setTeam] = useState<Profile[]>([]);
   const [deposits, setDeposits] = useState<Deposit[]>([]);
+  const [myRank, setMyRank] = useState<MyRank | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,14 +43,16 @@ export function DashboardPage() {
       listPublishedTasks(),
       getDirectReferrals(profile.id),
       getDeposits(profile.id),
+      getMyRank(),
     ])
-      .then(([w, wb, tx, t, refs, d]) => {
+      .then(([w, wb, tx, t, refs, d, rank]) => {
         setWallet(w);
         setBalances(wb);
         setTransactions(tx);
         setTasks(t.slice(0, 4));
         setTeam(refs.slice(0, 5));
         setDeposits(d);
+        setMyRank(rank);
       })
       .finally(() => setLoading(false));
   }, [profile]);
@@ -103,7 +106,7 @@ export function DashboardPage() {
           alt={settings.platformName}
           className="h-16 w-16 shrink-0 object-cover sm:h-24 sm:w-24"
         />
-        <div className="grid flex-1 grid-cols-2 gap-3 sm:gap-4">
+        <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
           <StatCard
             label="Solde disponible"
             value={formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
@@ -117,6 +120,14 @@ export function DashboardPage() {
             icon={ArrowDownToLine}
             tone="success"
             variant="filled"
+          />
+          <StatCard
+            label="Mon rang"
+            value={myRank ? `#${myRank.rank}` : "—"}
+            icon={Trophy}
+            tone="purple"
+            variant="filled"
+            hint={myRank ? "Top gains cumulés" : "Pas encore classé"}
           />
         </div>
       </div>
