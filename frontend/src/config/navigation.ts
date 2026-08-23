@@ -19,6 +19,7 @@ import {
   Trophy,
   Sparkles,
   GraduationCap,
+  Radio,
   type LucideIcon,
 } from "lucide-react";
 
@@ -35,6 +36,7 @@ export const USER_SIDEBAR_NAV: NavItem[] = [
   { label: "Portefeuille", to: "/wallet", icon: Wallet },
   { label: "Transactions", to: "/transactions", icon: Receipt },
   { label: "Équipe", to: "/team", icon: Users },
+  { label: "Canal de diffusion", to: "/channels", icon: Radio },
   { label: "Classement", to: "/leaderboard", icon: Trophy },
   { label: "Roue de la chance", to: "/spin", icon: Sparkles },
   { label: "Statistiques", to: "/analytics", icon: BarChart3 },

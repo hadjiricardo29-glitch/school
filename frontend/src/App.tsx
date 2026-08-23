@@ -30,6 +30,7 @@ const WithdrawPage = lazy(() => import("@/pages/user/WithdrawPage").then((m) => 
 const TransactionsPage = lazy(() => import("@/pages/user/TransactionsPage").then((m) => ({ default: m.TransactionsPage })));
 const ReferralsPage = lazy(() => import("@/pages/user/ReferralsPage").then((m) => ({ default: m.ReferralsPage })));
 const TeamPage = lazy(() => import("@/pages/user/TeamPage").then((m) => ({ default: m.TeamPage })));
+const ChannelsPage = lazy(() => import("@/pages/user/ChannelsPage").then((m) => ({ default: m.ChannelsPage })));
 const LeaderboardPage = lazy(() => import("@/pages/user/LeaderboardPage").then((m) => ({ default: m.LeaderboardPage })));
 const SpinPage = lazy(() => import("@/pages/user/SpinPage").then((m) => ({ default: m.SpinPage })));
 const AnalyticsPage = lazy(() => import("@/pages/user/AnalyticsPage").then((m) => ({ default: m.AnalyticsPage })));
@@ -106,6 +107,7 @@ export default function App() {
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/referrals" element={<ReferralsPage />} />
               <Route path="/team" element={<TeamPage />} />
+              <Route path="/channels" element={<ChannelsPage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/spin" element={<SpinPage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
