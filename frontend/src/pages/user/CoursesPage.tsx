@@ -9,10 +9,12 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { listPublishedCourses } from "@/services/courses";
 import type { Course } from "@/types/domain";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useT } from "@/i18n/useT";
 import { formatCurrency } from "@/utils/format";
 
 export function CoursesPage() {
   const { settings } = useSettings();
+  const t = useT().courses;
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
@@ -32,22 +34,22 @@ export function CoursesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Formations</h1>
-        <p className="mt-1 text-sm text-text-secondary">Développez vos compétences avec nos formations gratuites et payantes.</p>
+        <h1 className="text-xl font-semibold text-text-primary">{t.title}</h1>
+        <p className="mt-1 text-sm text-text-secondary">{t.subtitle}</p>
       </div>
 
       <Tabs
         value={tab}
         onChange={setTab}
         tabs={[
-          { value: "all", label: "Toutes", count: courses.length },
-          { value: "free", label: "Gratuites", count: free.length },
-          { value: "paid", label: "Payantes", count: paid.length },
+          { value: "all", label: t.all, count: courses.length },
+          { value: "free", label: t.free, count: free.length },
+          { value: "paid", label: t.paid, count: paid.length },
         ]}
       />
 
       {shown.length === 0 ? (
-        <EmptyState title="Aucune formation disponible" description="Revenez bientôt, de nouvelles formations arrivent régulièrement." />
+        <EmptyState title={t.none} description={t.noneBody} />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {shown.map((course) => (
@@ -62,13 +64,13 @@ export function CoursesPage() {
                 )}
                 <div className="flex flex-1 flex-col p-5">
                   <div className="flex items-center justify-between">
-                    <Badge tone="neutral">{course.category ?? "Formation"}</Badge>
+                    <Badge tone="neutral">{course.category ?? t.course}</Badge>
                     {course.price > 0 ? (
                       <Badge tone="warning">
-                        <Lock className="size-3" /> Payante
+                        <Lock className="size-3" /> {t.paidBadge}
                       </Badge>
                     ) : (
-                      <Badge tone="success">Gratuite</Badge>
+                      <Badge tone="success">{t.freeBadge}</Badge>
                     )}
                   </div>
                   <p className="mt-3 text-sm font-semibold text-text-primary">{course.title}</p>
@@ -79,7 +81,7 @@ export function CoursesPage() {
                       {course.duration_minutes ? `${course.duration_minutes} min` : "—"}
                     </span>
                     <span className="text-sm font-semibold text-primary">
-                      {course.price > 0 ? formatCurrency(course.price, settings.currencyLabel) : "Gratuit"}
+                      {course.price > 0 ? formatCurrency(course.price, settings.currencyLabel) : t.freeBadge}
                     </span>
                   </div>
                 </div>

@@ -8,6 +8,7 @@ import { Alert } from "@/components/ui/Alert";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useT } from "@/i18n/useT";
 import { getCourse, getMyEnrollments, purchaseCourse } from "@/services/courses";
 import { getWallet } from "@/services/wallet";
 import type { Course, CourseEnrollment, Wallet } from "@/types/domain";
@@ -19,6 +20,8 @@ export function CourseDetailPage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { settings } = useSettings();
+  const t = useT();
+  const tc = t.courseDetail;
   const [course, setCourse] = useState<Course | null>(null);
   const [enrollments, setEnrollments] = useState<CourseEnrollment[]>([]);
   const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -40,8 +43,8 @@ export function CourseDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, profile]);
 
-  if (loading) return <LoadingState label="Chargement de la formation..." />;
-  if (!course) return <Alert tone="error">Formation introuvable.</Alert>;
+  if (loading) return <LoadingState label={tc.loading} />;
+  if (!course) return <Alert tone="error">{tc.notFound}</Alert>;
 
   const isFree = course.price <= 0;
   const owned = isFree || enrollments.some((e) => e.course_id === course.id);
@@ -51,10 +54,10 @@ export function CourseDetailPage() {
     setPurchasing(true);
     try {
       await purchaseCourse(course.id);
-      notify.success("Formation débloquée !");
+      notify.success(tc.unlocked);
       await load();
     } catch (err) {
-      notify.error(err instanceof Error ? err.message : "Achat impossible");
+      notify.error(err instanceof Error ? err.message : tc.purchaseError);
     } finally {
       setPurchasing(false);
     }
@@ -63,7 +66,7 @@ export function CourseDetailPage() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary">
-        <ArrowLeft className="size-4" /> Retour
+        <ArrowLeft className="size-4" /> {tc.back}
       </button>
 
       <Card padded={false} className="overflow-hidden">
@@ -76,8 +79,8 @@ export function CourseDetailPage() {
         )}
         <div className="p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone="neutral">{course.category ?? "Formation"}</Badge>
-          {isFree ? <Badge tone="success">Gratuite</Badge> : <Badge tone="warning"><Lock className="size-3" /> Payante</Badge>}
+          <Badge tone="neutral">{course.category ?? t.courses.course}</Badge>
+          {isFree ? <Badge tone="success">{t.courses.freeBadge}</Badge> : <Badge tone="warning"><Lock className="size-3" /> {t.courses.paidBadge}</Badge>}
         </div>
         <div className="mt-3 flex items-center gap-3">
           <span className="flex size-11 items-center justify-center rounded-full bg-purple/10 text-purple">
@@ -91,12 +94,12 @@ export function CourseDetailPage() {
 
         <div className="mt-4 flex flex-wrap gap-5 text-sm text-text-secondary">
           <span className="flex items-center gap-1.5">
-            <Clock className="size-4" /> {course.duration_minutes ? `${course.duration_minutes} min` : "Non précisé"}
+            <Clock className="size-4" /> {course.duration_minutes ? `${course.duration_minutes} min` : tc.notSpecified}
           </span>
         </div>
 
         <div className="mt-6 border-t border-border pt-6">
-          <h2 className="text-sm font-semibold text-text-primary">Description</h2>
+          <h2 className="text-sm font-semibold text-text-primary">{tc.description}</h2>
           <p className="mt-1.5 whitespace-pre-line text-sm text-text-secondary">{course.description}</p>
         </div>
 
@@ -105,16 +108,16 @@ export function CourseDetailPage() {
             course.content_url ? (
               <a href={course.content_url} target="_blank" rel="noreferrer" className="block">
                 <Button size="lg" fullWidth icon={<ExternalLink className="size-4" />}>
-                  Obtenir
+                  {tc.get}
                 </Button>
               </a>
             ) : (
-              <Alert tone="info">Le contenu de cette formation sera bientôt disponible.</Alert>
+              <Alert tone="info">{tc.comingSoon}</Alert>
             )
           ) : (
             <div className="flex flex-col gap-3">
               <Alert tone="warning">
-                Cette formation est payante. Solde disponible : {formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
+                {tc.paidNotice} {formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
               </Alert>
               <Button
                 size="lg"
@@ -122,7 +125,7 @@ export function CourseDetailPage() {
                 disabled={(wallet?.available_balance ?? 0) < course.price}
                 onClick={handlePurchase}
               >
-                Débloquer pour {formatCurrency(course.price, settings.currencyLabel)}
+                {tc.unlockFor} {formatCurrency(course.price, settings.currencyLabel)}
               </Button>
             </div>
           )}
