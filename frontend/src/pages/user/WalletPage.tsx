@@ -16,7 +16,7 @@ import type { Deposit, EarningBucket, Transaction, Wallet, WalletBalance, Withdr
 import { EARNING_BUCKET_COLORS, EARNING_BUCKET_LABELS } from "@/types/domain";
 import { cn } from "@/utils/cn";
 import { formatCurrency, formatDateTime } from "@/utils/format";
-import { hasUsedDeposit } from "@/utils/activation";
+import { hasUsedDeposit, isAccountActivated } from "@/utils/activation";
 
 export function WalletPage() {
   const { profile } = useAuth();
@@ -49,6 +49,10 @@ export function WalletPage() {
   }, [profile]);
 
   const deductions = withdrawals.filter((w) => w.fee > 0 && w.status === "COMPLETED");
+  // Le staff est exempté de l'activation (isAccountActivated bypass son rôle)
+  // — inutile de lui proposer "Activer mon compte" alors qu'il n'en a pas
+  // besoin, même s'il n'a lui-même jamais fait de dépôt.
+  const needsActivation = !isAccountActivated(wallet, settings, profile?.role);
 
   if (loading) return <LoadingState />;
 
@@ -60,7 +64,7 @@ export function WalletPage() {
           <p className="mt-1 text-sm text-text-secondary">Gérez votre solde, votre activation et vos retraits.</p>
         </div>
         <div className="flex gap-2">
-          {!hasUsedDeposit(deposits) && (
+          {needsActivation && !hasUsedDeposit(deposits) && (
             <Link to="/wallet/deposit">
               <Button variant="success" icon={<ArrowDownToLine className="size-4" />}>Activer mon compte</Button>
             </Link>
@@ -133,7 +137,11 @@ export function WalletPage() {
 
           {tab === "deposits" &&
             (deposits.length === 0 ? (
-              <EmptyState title="Compte non activé" action={<Link to="/wallet/deposit"><Button size="sm">Activer mon compte</Button></Link>} />
+              needsActivation ? (
+                <EmptyState title="Compte non activé" action={<Link to="/wallet/deposit"><Button size="sm">Activer mon compte</Button></Link>} />
+              ) : (
+                <EmptyState title="Aucun dépôt" description="Vous n'avez pas de frais d'activation à payer." />
+              )
             ) : (
               <div className="flex flex-col divide-y divide-border">
                 {deposits.map((d) => (
