@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +16,11 @@ import { notify } from "@/utils/toast";
 import type { Wallet } from "@/types/domain";
 
 const SEGMENT_COLORS = ["#DC2626", "#0EA5E9", "#16A34A", "#F59E0B", "#7C3AED", "#EC4899", "#059669", "#EA580C"];
-const SEGMENT_VALUES = [25, 30, 35, 40, 50, 60, 75, 100];
+// Proportions relatives des 8 segments (mêmes qu'avant sur l'échelle [25,100]
+// par défaut) — recalées sur spinMinReward/spinMaxReward pour que la roue
+// affichée reflète vraiment ce que l'admin configure, au lieu de montrer
+// 8 valeurs figées qui ne changeaient jamais.
+const SEGMENT_FRACTIONS = [0, 0.0667, 0.1333, 0.2, 0.3333, 0.4667, 0.6667, 1];
 const BULB_COUNT = 24;
 
 function angleForSegment(i: number) {
@@ -25,9 +29,14 @@ function angleForSegment(i: number) {
   return (360 - center) % 360;
 }
 
-function nearestSegmentIndex(reward: number) {
-  return SEGMENT_VALUES.reduce(
-    (best, v, i) => (Math.abs(v - reward) < Math.abs(SEGMENT_VALUES[best] - reward) ? i : best),
+function buildSegmentValues(min: number, max: number): number[] {
+  const span = Math.max(max - min, 0);
+  return SEGMENT_FRACTIONS.map((f) => Math.round(min + f * span));
+}
+
+function nearestSegmentIndex(values: number[], reward: number) {
+  return values.reduce(
+    (best, v, i) => (Math.abs(v - reward) < Math.abs(values[best] - reward) ? i : best),
     0,
   );
 }
@@ -41,6 +50,10 @@ export function SpinPage() {
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [lastReward, setLastReward] = useState<number | null>(null);
+  const segmentValues = useMemo(
+    () => buildSegmentValues(settings.spinMinReward, settings.spinMaxReward),
+    [settings.spinMinReward, settings.spinMaxReward],
+  );
 
   async function load() {
     if (!profile) return;
@@ -64,7 +77,7 @@ export function SpinPage() {
 
     try {
       const reward = await claimDailySpin();
-      const target = angleForSegment(nearestSegmentIndex(reward));
+      const target = angleForSegment(nearestSegmentIndex(segmentValues, reward));
       const extraTurns = 4 + Math.floor(Math.random() * 3);
       setRotation((prev) => {
         const currentMod = ((prev % 360) + 360) % 360;
@@ -149,7 +162,7 @@ export function SpinPage() {
                     stroke="rgba(0,0,0,0.35)"
                     strokeWidth="0.5"
                   >
-                    {SEGMENT_VALUES[i]}
+                    {segmentValues[i]}
                   </text>
                 </g>
               );
