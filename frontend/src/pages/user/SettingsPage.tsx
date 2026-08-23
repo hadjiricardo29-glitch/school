@@ -8,10 +8,12 @@ import { Tabs } from "@/components/ui/Tabs";
 import { updatePassword } from "@/services/auth";
 import { supabase } from "@/services/supabase";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useT } from "@/i18n/useT";
 import { notify } from "@/utils/toast";
 
 export function SettingsPage() {
   const { settings } = useSettings();
+  const t = useT().settingsPage;
   const [tab, setTab] = useState("security");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -22,21 +24,21 @@ export function SettingsPage() {
     e.preventDefault();
     setError(null);
     if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas");
+      setError(t.passwordMismatch);
       return;
     }
     if (password.length < 8) {
-      setError("Le mot de passe doit contenir au moins 8 caractères");
+      setError(t.passwordTooShort);
       return;
     }
     setSaving(true);
     try {
       await updatePassword(password);
-      notify.success("Mot de passe mis à jour");
+      notify.success(t.passwordUpdated);
       setPassword("");
       setConfirmPassword("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Mise à jour impossible");
+      setError(err instanceof Error ? err.message : t.updateError);
     } finally {
       setSaving(false);
     }
@@ -44,42 +46,42 @@ export function SettingsPage() {
 
   async function onLogoutAllDevices() {
     await supabase.auth.signOut({ scope: "global" });
-    notify.success("Déconnecté de tous les appareils");
+    notify.success(t.loggedOutAllDevices);
   }
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Paramètres</h1>
+        <h1 className="text-xl font-semibold text-text-primary">{t.title}</h1>
       </div>
 
       <Tabs
         value={tab}
         onChange={setTab}
         tabs={[
-          { value: "security", label: "Sécurité" },
-          { value: "notifications", label: "Notifications" },
-          { value: "regional", label: "Langue & devise" },
+          { value: "security", label: t.tabSecurity },
+          { value: "notifications", label: t.tabNotifications },
+          { value: "regional", label: t.tabRegional },
         ]}
       />
 
       {tab === "security" && (
         <Card>
-          <CardHeader title="Changer le mot de passe" />
+          <CardHeader title={t.changePassword} />
           <form onSubmit={onChangePassword} className="flex flex-col gap-4">
             {error && <Alert tone="error">{error}</Alert>}
-            <Input label="Nouveau mot de passe" type="password" leftIcon={<Lock className="size-4" />} value={password} onChange={(e) => setPassword(e.target.value)} />
-            <Input label="Confirmer" type="password" leftIcon={<Lock className="size-4" />} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+            <Input label={t.newPassword} type="password" leftIcon={<Lock className="size-4" />} value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Input label={t.confirm} type="password" leftIcon={<Lock className="size-4" />} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
             <Button type="submit" loading={saving} className="self-start">
-              Mettre à jour
+              {t.update}
             </Button>
           </form>
 
           <div className="mt-6 border-t border-border pt-6">
-            <p className="text-sm font-medium text-text-primary">Sessions actives</p>
-            <p className="mt-1 text-sm text-text-secondary">Déconnectez-vous de tous les appareils connectés à votre compte.</p>
+            <p className="text-sm font-medium text-text-primary">{t.activeSessions}</p>
+            <p className="mt-1 text-sm text-text-secondary">{t.activeSessionsBody}</p>
             <Button variant="outline" className="mt-3" icon={<LogOut className="size-4" />} onClick={onLogoutAllDevices}>
-              Déconnecter tous les appareils
+              {t.logoutAllDevices}
             </Button>
           </div>
         </Card>
@@ -87,27 +89,25 @@ export function SettingsPage() {
 
       {tab === "notifications" && (
         <Card>
-          <CardHeader title="Préférences de notification" subtitle="Bientôt disponible" />
-          <Alert tone="info">
-            Les notifications importantes (tâches, retraits, commissions) sont toujours envoyées dans l'application.
-            La configuration fine par canal (email, SMS) arrivera dans une prochaine mise à jour.
-          </Alert>
+          <CardHeader title={t.notifPrefs} subtitle={t.notifPrefsSubtitle} />
+          <Alert tone="info">{t.notifPrefsBody}</Alert>
         </Card>
       )}
 
       {tab === "regional" && (
         <Card>
-          <CardHeader title="Langue & devise" />
+          <CardHeader title={t.langCurrency} />
           <div className="flex items-center gap-3 text-sm">
             <Globe className="size-4 text-text-secondary" />
-            <span className="text-text-secondary">Langue : </span>
-            <span className="font-medium text-text-primary">Français</span>
+            <span className="text-text-secondary">{t.language}</span>
+            <span className="font-medium text-text-primary">{settings.platformLanguage === "en" ? "English" : "Français"}</span>
           </div>
+          <p className="mt-1 text-xs text-text-secondary">{t.languageNote}</p>
           <div className="mt-3 flex items-center gap-3 text-sm">
-            <span className="text-text-secondary">Devise : </span>
+            <span className="text-text-secondary">{t.currency}</span>
             <span className="font-medium text-text-primary">{settings.currencyLabel} ({settings.currency})</span>
           </div>
-          <p className="mt-4 text-xs text-text-secondary">La devise de la plateforme est définie par l'administration.</p>
+          <p className="mt-1 text-xs text-text-secondary">{t.currencyNote}</p>
         </Card>
       )}
     </div>

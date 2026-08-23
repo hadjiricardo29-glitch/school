@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/i18n/useT";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -34,6 +35,7 @@ const ICONS: Record<NotificationType, LucideIcon> = {
 
 export function NotificationsPage() {
   const { profile } = useAuth();
+  const t = useT().notifications;
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -60,17 +62,17 @@ export function NotificationsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-text-primary">Notifications</h1>
+        <h1 className="text-xl font-semibold text-text-primary">{t.title}</h1>
         {notifications.some((n) => !n.read) && (
           <Button variant="ghost" size="sm" onClick={handleMarkAllRead}>
-            Tout marquer comme lu
+            {t.markAllRead}
           </Button>
         )}
       </div>
 
       <Card padded={false}>
         {notifications.length === 0 ? (
-          <EmptyState icon={Bell} title="Aucune notification" />
+          <EmptyState icon={Bell} title={t.none} />
         ) : (
           <div className="flex flex-col divide-y divide-border">
             {notifications.map((n) => {

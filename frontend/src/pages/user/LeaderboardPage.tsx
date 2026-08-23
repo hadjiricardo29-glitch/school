@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Trophy } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useT } from "@/i18n/useT";
 import { Card } from "@/components/ui/Card";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -14,6 +15,7 @@ const MEDAL_TONE = ["text-[#B7791F]", "text-[#6B7280]", "text-[#820000]"];
 export function LeaderboardPage() {
   const { profile } = useAuth();
   const { settings } = useSettings();
+  const t = useT().leaderboard;
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,13 +28,13 @@ export function LeaderboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Classement</h1>
-        <p className="mt-1 text-sm text-text-secondary">Le top 10 des membres ayant gagné le plus sur {settings.platformName}.</p>
+        <h1 className="text-xl font-semibold text-text-primary">{t.title}</h1>
+        <p className="mt-1 text-sm text-text-secondary">{t.subtitle.replace("{platform}", settings.platformName)}</p>
       </div>
 
       <Card padded={false}>
         {entries.length === 0 ? (
-          <EmptyState icon={Trophy} title="Personne n'a encore gagné de récompense" />
+          <EmptyState icon={Trophy} title={t.empty} />
         ) : (
           <div className="flex flex-col divide-y divide-border">
             {entries.map((entry) => {
@@ -52,7 +54,7 @@ export function LeaderboardPage() {
                   </span>
                   <span className="text-sm font-medium text-text-primary">
                     @{entry.username}
-                    {isMe && <span className="ml-1.5 text-xs font-normal text-primary">(vous)</span>}
+                    {isMe && <span className="ml-1.5 text-xs font-normal text-primary">{t.you}</span>}
                   </span>
                 </div>
               );
