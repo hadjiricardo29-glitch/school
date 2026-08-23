@@ -82,6 +82,11 @@ export async function createDepositRequest(params: {
   return (data as { depositId: string }).depositId;
 }
 
+export async function cancelDeposit(depositId: string): Promise<void> {
+  const { error } = await supabase.rpc("cancel_own_deposit", { p_deposit_id: depositId });
+  if (error) throw error;
+}
+
 export async function getDeposits(userId: string): Promise<Deposit[]> {
   const { data, error } = await supabase
     .from("deposits")

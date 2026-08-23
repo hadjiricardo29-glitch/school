@@ -9,7 +9,7 @@ import { Alert } from "@/components/ui/Alert";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
-import { createDepositRequest, getDeposits, getWallet } from "@/services/wallet";
+import { cancelDeposit, createDepositRequest, getDeposits, getWallet } from "@/services/wallet";
 import { isAccountActivated } from "@/utils/activation";
 import { notify } from "@/utils/toast";
 import { formatCurrency } from "@/utils/format";
@@ -30,15 +30,18 @@ export function DepositPage() {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [checking, setChecking] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
+
+  async function reload() {
+    if (!profile) return;
+    const [w, d] = await Promise.all([getWallet(profile.id), getDeposits(profile.id)]);
+    setWallet(w);
+    setDeposits(d);
+  }
 
   useEffect(() => {
-    if (!profile) return;
-    Promise.all([getWallet(profile.id), getDeposits(profile.id)])
-      .then(([w, d]) => {
-        setWallet(w);
-        setDeposits(d);
-      })
-      .finally(() => setChecking(false));
+    reload().finally(() => setChecking(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
 
   useEffect(() => {
@@ -48,6 +51,32 @@ export function DepositPage() {
   const needsActivation = !isAccountActivated(wallet, settings, profile?.role);
   const selectedCountry = WEST_AFRICA_COUNTRIES.find((c) => c.code === country);
   const activeDeposit = deposits.find((d) => d.status === "PENDING" || d.status === "COMPLETED");
+
+  // Une demande jamais confirmée (SIM sans solde, réseau indisponible,
+  // l'utilisateur change d'avis...) ne doit pas bloquer le compte pour
+  // toujours : annulation automatique après 5 min sans confirmation.
+  const PENDING_TIMEOUT_MS = 5 * 60 * 1000;
+  useEffect(() => {
+    if (activeDeposit?.status !== "PENDING") return;
+    const age = Date.now() - new Date(activeDeposit.created_at).getTime();
+    if (age < PENDING_TIMEOUT_MS) return;
+    cancelDeposit(activeDeposit.id).then(reload).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDeposit?.id, activeDeposit?.status]);
+
+  async function handleCancel() {
+    if (!activeDeposit) return;
+    setCancelling(true);
+    try {
+      await cancelDeposit(activeDeposit.id);
+      await reload();
+      notify.success("Paiement annulé — vous pouvez réessayer.");
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : "Annulation impossible");
+    } finally {
+      setCancelling(false);
+    }
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -106,12 +135,15 @@ export function DepositPage() {
           <h1 className="text-lg font-semibold text-text-primary">Paiement en attente de confirmation</h1>
           <p className="max-w-sm text-sm text-text-secondary">
             Votre demande de {formatCurrency(activeDeposit.amount, settings.currencyLabel)} a été envoyée — confirmez-la
-            sur votre téléphone. Le compte s'active automatiquement dès que le paiement est confirmé ; si rien ne se
-            passe après quelques minutes, contactez le support avec la référence {activeDeposit.reference}.
+            sur votre téléphone. Le compte s'active automatiquement dès que le paiement est confirmé. Sans réponse sous
+            5 minutes, la demande est annulée automatiquement et vous pourrez réessayer.
           </p>
-          <Link to="/wallet" className="mt-2">
-            <Button>Retour au portefeuille</Button>
-          </Link>
+          <div className="mt-2 flex gap-2">
+            <Button variant="secondary" loading={cancelling} onClick={handleCancel}>Annuler et réessayer</Button>
+            <Link to="/wallet">
+              <Button>Retour au portefeuille</Button>
+            </Link>
+          </div>
         </Card>
       </div>
     );
