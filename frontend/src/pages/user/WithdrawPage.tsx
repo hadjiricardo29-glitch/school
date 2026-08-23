@@ -8,12 +8,12 @@ import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useT } from "@/i18n/useT";
 import { createWithdrawalRequest, getWallet, getWalletBalances } from "@/services/wallet";
 import { countActivatedReferrals } from "@/services/referrals";
 import { formatCurrency } from "@/utils/format";
 import { notify } from "@/utils/toast";
 import type { EarningBucket, Wallet, WalletBalance } from "@/types/domain";
-import { EARNING_BUCKET_LABELS } from "@/types/domain";
 import { isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
 import { COUNTRIES } from "@/config/countries";
@@ -23,6 +23,8 @@ export function WithdrawPage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { settings } = useSettings();
+  const t = useT();
+  const tw = t.withdraw;
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [balances, setBalances] = useState<WalletBalance[]>([]);
   const [amount, setAmount] = useState("");
@@ -45,9 +47,9 @@ export function WithdrawPage() {
     setOperator(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
   }, [country]);
 
-  const bucketOptions = (Object.keys(EARNING_BUCKET_LABELS) as EarningBucket[]).map((b) => {
+  const bucketOptions = (Object.keys(t.enums.earningBucket) as EarningBucket[]).map((b) => {
     const balance = balances.find((wb) => wb.bucket === b)?.available_balance ?? 0;
-    return { value: b, label: `${EARNING_BUCKET_LABELS[b]} — ${formatCurrency(balance, settings.currencyLabel)}` };
+    return { value: b, label: `${t.enums.earningBucket[b]} — ${formatCurrency(balance, settings.currencyLabel)}` };
   });
   const bucketBalance = balances.find((wb) => wb.bucket === bucket)?.available_balance ?? 0;
 
@@ -66,15 +68,19 @@ export function WithdrawPage() {
     setError(null);
 
     if (numericAmount < settings.withdrawalMinAmount) {
-      setError(`Le montant minimum de retrait est de ${formatCurrency(settings.withdrawalMinAmount, settings.currencyLabel)}`);
+      setError(tw.minAmountError.replace("{min}", formatCurrency(settings.withdrawalMinAmount, settings.currencyLabel)));
       return;
     }
     if (numericAmount > bucketBalance) {
-      setError(`Solde insuffisant dans "${EARNING_BUCKET_LABELS[bucket]}" (${formatCurrency(bucketBalance, settings.currencyLabel)} disponible)`);
+      setError(
+        tw.insufficientBalanceError
+          .replace("{bucket}", t.enums.earningBucket[bucket])
+          .replace("{available}", formatCurrency(bucketBalance, settings.currencyLabel)),
+      );
       return;
     }
     if (!phone) {
-      setError("Le numéro de téléphone est requis");
+      setError(tw.phoneRequiredError);
       return;
     }
 
@@ -86,10 +92,10 @@ export function WithdrawPage() {
         destination: { phone, country, operator },
         bucket,
       });
-      notify.success("Demande de retrait envoyée. Elle sera traitée par notre équipe.");
+      notify.success(tw.requestSent);
       navigate("/wallet");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Retrait impossible");
+      setError(err instanceof Error ? err.message : tw.requestError);
     } finally {
       setLoading(false);
     }
@@ -98,13 +104,13 @@ export function WithdrawPage() {
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6">
       <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary">
-        <ArrowLeft className="size-4" /> Retour
+        <ArrowLeft className="size-4" /> {tw.back}
       </button>
 
       <Card>
-        <h1 className="text-lg font-semibold text-text-primary">Demander un retrait</h1>
+        <h1 className="text-lg font-semibold text-text-primary">{tw.title}</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Solde disponible : <strong className="text-text-primary">{formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}</strong>
+          {tw.availableBalance} <strong className="text-text-primary">{formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}</strong>
         </p>
 
         {!isAccountActivated(wallet, settings, profile?.role) ? (
@@ -116,15 +122,16 @@ export function WithdrawPage() {
             <div className="flex gap-3">
               <Users className="mt-0.5 size-5 shrink-0 text-warning" />
               <div>
-                <p className="text-sm font-semibold text-text-primary">Parrainage insuffisant</p>
+                <p className="text-sm font-semibold text-text-primary">{tw.insufficientReferralsTitle}</p>
                 <p className="mt-0.5 text-sm text-text-secondary">
-                  Il vous faut au moins {referralsRequired} filleuls activés pour demander un retrait. Vous en avez
-                  actuellement {activatedReferrals ?? 0}.
+                  {tw.insufficientReferralsBody
+                    .replace("{required}", String(referralsRequired))
+                    .replace("{current}", String(activatedReferrals ?? 0))}
                 </p>
               </div>
             </div>
             <Link to="/referrals" className="shrink-0">
-              <Button size="sm">Inviter des amis</Button>
+              <Button size="sm">{tw.inviteFriends}</Button>
             </Link>
           </div>
         ) : (
@@ -132,33 +139,35 @@ export function WithdrawPage() {
           {error && <Alert tone="error">{error}</Alert>}
 
           <Select
-            label="Retirer depuis"
+            label={tw.withdrawFrom}
             options={bucketOptions}
             value={bucket}
             onChange={(e) => setBucket(e.target.value as EarningBucket)}
-            hint="Chaque catégorie de gain a son propre solde retirable"
+            hint={tw.withdrawFromHint}
           />
 
           <Input
-            label={`Montant (${settings.currencyLabel})`}
+            label={tw.amount.replace("{currency}", settings.currencyLabel)}
             type="number"
             min={settings.withdrawalMinAmount}
             max={bucketBalance}
             required
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            hint={`Minimum ${formatCurrency(settings.withdrawalMinAmount, settings.currencyLabel)} · Disponible dans ce bucket : ${formatCurrency(bucketBalance, settings.currencyLabel)}`}
+            hint={tw.amountHint
+              .replace("{min}", formatCurrency(settings.withdrawalMinAmount, settings.currencyLabel))
+              .replace("{available}", formatCurrency(bucketBalance, settings.currencyLabel))}
           />
 
           <div className="grid grid-cols-2 gap-3">
             <Select
-              label="Pays"
+              label={tw.country}
               options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
               value={country}
               onChange={(e) => setCountry(e.target.value)}
             />
             <Select
-              label="Opérateur"
+              label={tw.operator}
               options={getOperatorsForCountry(country)}
               value={operator}
               onChange={(e) => setOperator(e.target.value)}
@@ -166,7 +175,7 @@ export function WithdrawPage() {
           </div>
 
           <Input
-            label="Numéro de téléphone"
+            label={tw.phone}
             required
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -176,22 +185,22 @@ export function WithdrawPage() {
           {numericAmount > 0 && (
             <div className="flex flex-col gap-1.5 rounded-md bg-surface-alt p-4 text-sm">
               <div className="flex justify-between text-text-secondary">
-                <span>Demandé</span>
+                <span>{tw.requested}</span>
                 <span>{formatCurrency(numericAmount, settings.currencyLabel)}</span>
               </div>
               <div className="flex justify-between text-text-secondary">
-                <span>Frais</span>
+                <span>{tw.fees}</span>
                 <span>-{formatCurrency(fee, settings.currencyLabel)}</span>
               </div>
               <div className="flex justify-between border-t border-border pt-1.5 font-semibold text-text-primary">
-                <span>Vous recevrez</span>
+                <span>{tw.youWillReceive}</span>
                 <span>{formatCurrency(net, settings.currencyLabel)}</span>
               </div>
             </div>
           )}
 
           <Button type="submit" fullWidth loading={loading}>
-            Demander le retrait
+            {tw.submit}
           </Button>
         </form>
         )}
