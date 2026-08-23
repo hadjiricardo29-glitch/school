@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { TelegramIcon, WhatsAppIcon, InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/shared/SocialIcons";
 
 const SOCIAL_PLACEHOLDERS = [
+  { label: "Telegram", icon: TelegramIcon },
   { label: "Instagram", icon: InstagramIcon },
   { label: "Facebook", icon: FacebookIcon },
   { label: "TikTok", icon: TikTokIcon },
@@ -45,9 +46,9 @@ export function ChannelsPage() {
 
       <Card>
         <CardHeader title="Réseaux sociaux" subtitle="Bientôt disponible" />
-        <div className="flex gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {SOCIAL_PLACEHOLDERS.map(({ label, icon: Icon }) => (
-            <div key={label} className="flex flex-1 flex-col items-center gap-2 rounded-md border border-dashed border-border py-4 text-text-secondary opacity-60">
+            <div key={label} className="flex flex-col items-center gap-2 rounded-md border border-dashed border-border py-4 text-text-secondary opacity-60">
               <Icon className="size-6" />
               <span className="text-xs">{label}</span>
             </div>
