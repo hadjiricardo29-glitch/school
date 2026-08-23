@@ -97,6 +97,21 @@ export class ManualPaymentProvider implements PaymentProvider {
 
 const SASPAY_BASE_URL = "https://api.saspay.me/api/v1";
 
+// BUG CRITIQUE trouvé en relisant docs.saspay.me/api-reference/openapi.json :
+// l'enum réel du statut SASpay est PENDING | SUCCESS | FAILED | CANCELLED —
+// il n'existe AUCUN statut "COMPLETED" côté SASpay. Le code comparait
+// jusqu'ici `status === "COMPLETED"`, une valeur que SASpay n'envoie jamais :
+// même un webhook transaction.success (data.status: "SUCCESS") aurait été
+// silencieusement traité comme PENDING, donc jamais auto-approuvé. Ce bug
+// existait indépendamment du bug de référence déjà corrigé — un dépôt avec
+// la bonne référence ET un vrai paiement confirmé serait quand même resté
+// bloqué en PENDING pour toujours.
+function mapSaspayStatus(raw: string | undefined): PaymentIntent["status"] {
+  if (raw === "SUCCESS") return "COMPLETED";
+  if (raw === "FAILED" || raw === "CANCELLED") return "FAILED";
+  return "PENDING";
+}
+
 /**
  * Fournisseur réel — encaissement (dépôt) via SASpay softpay (push Mobile
  * Money direct sur le téléphone du client). Le décaissement (retrait) n'est
@@ -171,7 +186,7 @@ export class SASpayProvider implements PaymentProvider {
 
     return {
       reference,
-      status: body.status === "COMPLETED" ? "COMPLETED" : "PENDING",
+      status: mapSaspayStatus(body.status),
       checkoutUrl: body.checkout_url,
       providerMetadata: body,
     };
@@ -187,7 +202,7 @@ export class SASpayProvider implements PaymentProvider {
     }
     return {
       reference,
-      status: body.status === "COMPLETED" ? "COMPLETED" : body.status === "FAILED" ? "FAILED" : "PENDING",
+      status: mapSaspayStatus(body.status),
       providerMetadata: body,
     };
   }
@@ -200,8 +215,7 @@ export class SASpayProvider implements PaymentProvider {
       event?: string;
       data?: { id?: string; status?: string };
     };
-    const status = envelope.data?.status === "COMPLETED" ? "COMPLETED" : envelope.data?.status === "FAILED" ? "FAILED" : "PENDING";
-    return { reference: envelope.data?.id ?? "unknown", status };
+    return { reference: envelope.data?.id ?? "unknown", status: mapSaspayStatus(envelope.data?.status) };
   }
 
   private async verifyWebhookSignature(rawBody: string, headers: WebhookHeaders): Promise<void> {

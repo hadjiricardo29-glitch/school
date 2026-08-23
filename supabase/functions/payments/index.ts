@@ -1,6 +1,6 @@
 // Edge Function "payments" — point d'entrée unique pour l'abstraction PaymentProvider.
 // POST /payments/deposit         { amount, method, provider? }  (JWT utilisateur requis)
-// POST /payments/webhook         { reference, status, ... }      (appelé par le fournisseur réel, pas de JWT utilisateur)
+// POST /payments/webhook         { event, data: { id, status, ... } } (SASpay — pas de JWT utilisateur, signature HMAC)
 // POST /payments/test-connection {}                              (staff uniquement, lecture seule, aucun mouvement d'argent)
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
@@ -133,24 +133,40 @@ Deno.serve(async (req: Request) => {
 
     if (route === "webhook") {
       const rawBody = await req.text();
-      const body = JSON.parse(rawBody);
-      const provider = getPaymentProvider(String(body.provider ?? "manual"));
+      const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+      // Le fournisseur réel (SASpay) n'envoie aucun champ "provider" dans son
+      // payload webhook — ce n'était vrai que du webhook fictif de
+      // MockPaymentProvider, inventé pour la démo. Le seul fournisseur qui
+      // reçoit un webhook réel est celui actuellement configuré en prod.
+      const { data: providerSetting } = await admin
+        .from("system_settings")
+        .select("value")
+        .eq("key", "payment_provider")
+        .maybeSingle();
+      const provider = getPaymentProvider(String(providerSetting?.value ?? "mock"));
+
       const result = await provider.handleWebhook(rawBody, {
         signature: req.headers.get("x-webhook-signature"),
         timestamp: req.headers.get("x-webhook-timestamp"),
       });
 
-      if (result.status === "COMPLETED") {
-        const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-        const { data: deposit } = await admin
-          .from("deposits")
-          .select("id, status")
-          .eq("reference", result.reference)
-          .maybeSingle();
+      const { data: deposit } = await admin
+        .from("deposits")
+        .select("id, status")
+        .eq("reference", result.reference)
+        .maybeSingle();
 
-        if (deposit && deposit.status === "PENDING") {
+      if (deposit && deposit.status === "PENDING") {
+        if (result.status === "COMPLETED") {
           const { error: approveError } = await admin.rpc("approve_deposit", { p_deposit_id: deposit.id });
           if (approveError) throw approveError;
+        } else if (result.status === "FAILED") {
+          const { error: rejectError } = await admin.rpc("reject_deposit", {
+            p_deposit_id: deposit.id,
+            p_reason: "Paiement échoué ou annulé (webhook fournisseur)",
+          });
+          if (rejectError) throw rejectError;
         }
       }
 
