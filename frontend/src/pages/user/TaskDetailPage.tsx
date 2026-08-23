@@ -179,10 +179,12 @@ export function TaskDetailPage() {
         </div>
 
         <div className="mt-6 flex flex-col gap-4 border-t border-border pt-6">
-          <div>
-            <h2 className="text-sm font-semibold text-text-primary">{t.taskDetail.description}</h2>
-            <p className="mt-1.5 whitespace-pre-line text-sm text-text-secondary">{task.description}</p>
-          </div>
+          {!isQuiz && (
+            <div>
+              <h2 className="text-sm font-semibold text-text-primary">{t.taskDetail.description}</h2>
+              <p className="mt-1.5 whitespace-pre-line text-sm text-text-secondary">{task.description}</p>
+            </div>
+          )}
           {task.instructions && (
             <div>
               <h2 className="text-sm font-semibold text-text-primary">{t.taskDetail.instructions}</h2>

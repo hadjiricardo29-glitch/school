@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Plus, Pencil, Trash2, Copy } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Table, type Column } from "@/components/ui/Table";
 import { Badge, StatusBadge } from "@/components/ui/Badge";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { createTask, deleteTask, listAllTasks, listQuizQuestions, replaceQuizQuestions, updateTask } from "@/services/admin";
+import { createTask, deleteTask, generateQuizQuestions, listAllTasks, listQuizQuestions, replaceQuizQuestions, updateTask } from "@/services/admin";
 import type { Task, TaskCategory, TaskDifficulty, TaskStatus } from "@/types/domain";
 import { TASK_CATEGORY_LABELS, TASK_DIFFICULTY_LABELS } from "@/types/domain";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -38,7 +38,7 @@ interface QuizDraftQuestion {
   correct_option: number;
 }
 
-const EMPTY_QUESTION: QuizDraftQuestion = { question: "", options: ["", ""], correct_option: 0 };
+const EMPTY_QUESTION: QuizDraftQuestion = { question: "", options: ["", "", ""], correct_option: 0 };
 
 const EMPTY_FORM = {
   title: "",
@@ -66,6 +66,9 @@ export function AdminTasksPage() {
   const [editing, setEditing] = useState<Task | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [quizQuestions, setQuizQuestions] = useState<QuizDraftQuestion[]>([]);
+  const [genTopic, setGenTopic] = useState("");
+  const [genCount, setGenCount] = useState("5");
+  const [genLoading, setGenLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toDelete, setToDelete] = useState<Task | null>(null);
 
@@ -85,6 +88,7 @@ export function AdminTasksPage() {
     setEditing(null);
     setForm({ ...EMPTY_FORM, category: socialOnly ? "TIKTOK" : "QUIZ" });
     setQuizQuestions(socialOnly ? [] : [{ ...EMPTY_QUESTION }]);
+    setGenTopic("");
     setModalOpen(true);
   }
 
@@ -106,6 +110,7 @@ export function AdminTasksPage() {
       auto_verify_seconds: String(task.auto_verify_seconds),
     });
     setQuizQuestions(task.category === "QUIZ" ? await loadQuizDraft(task.id) : []);
+    setGenTopic("");
     setModalOpen(true);
   }
 
@@ -127,6 +132,7 @@ export function AdminTasksPage() {
       auto_verify_seconds: String(task.auto_verify_seconds),
     });
     setQuizQuestions(task.category === "QUIZ" ? await loadQuizDraft(task.id) : []);
+    setGenTopic("");
     setModalOpen(true);
   }
 
@@ -157,6 +163,25 @@ export function AdminTasksPage() {
     updateQuestion(qi, { options: q.options.map((o, i) => (i === oi ? value : o)) });
   }
 
+  async function handleGenerate() {
+    if (!genTopic.trim()) {
+      notify.error("Indiquez un sujet pour générer des questions");
+      return;
+    }
+    setGenLoading(true);
+    try {
+      const generated = await generateQuizQuestions(genTopic.trim(), Number(genCount) || 5, 3);
+      // Garde les questions déjà remplies à la main, jette juste le brouillon vide de départ.
+      const kept = quizQuestions.filter((q) => q.question.trim() || q.options.some((o) => o.trim()));
+      setQuizQuestions([...kept, ...generated]);
+      notify.success(`${generated.length} questions générées — relisez-les avant d'enregistrer`);
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : "Génération impossible");
+    } finally {
+      setGenLoading(false);
+    }
+  }
+
   function validateQuiz(): string | null {
     if (quizQuestions.length === 0) return "Ajoutez au moins une question au quiz";
     for (const q of quizQuestions) {
@@ -168,7 +193,8 @@ export function AdminTasksPage() {
   }
 
   async function onSave() {
-    if (!form.title || !form.description || !form.reward) {
+    const isQuiz = form.category === "QUIZ";
+    if (!form.title || !form.reward || (!isQuiz && !form.description)) {
       notify.error("Titre, description et récompense sont requis");
       return;
     }
@@ -187,16 +213,16 @@ export function AdminTasksPage() {
     try {
       const payload = {
         title: form.title,
-        description: form.description,
+        description: isQuiz ? form.title : form.description,
         category: form.category,
         reward: Number(form.reward),
         estimated_time: null,
-        difficulty: form.difficulty,
-        instructions: form.instructions || null,
-        requirements: form.requirements || null,
-        max_completions: form.max_completions ? Number(form.max_completions) : null,
+        difficulty: isQuiz ? "EASY" as TaskDifficulty : form.difficulty,
+        instructions: isQuiz ? null : form.instructions || null,
+        requirements: isQuiz ? null : form.requirements || null,
+        max_completions: isQuiz ? null : form.max_completions ? Number(form.max_completions) : null,
         single_submission_per_user: form.single_submission_per_user,
-        deadline: form.deadline ? new Date(form.deadline).toISOString() : null,
+        deadline: isQuiz ? null : form.deadline ? new Date(form.deadline).toISOString() : null,
         status: form.status,
         video_url: SOCIAL_CATEGORIES.includes(form.category) ? form.video_url || null : null,
         auto_verify_seconds: SOCIAL_CATEGORIES.includes(form.category) ? Number(form.auto_verify_seconds) : 1,
@@ -267,31 +293,44 @@ export function AdminTasksPage() {
       }>
         <div className="flex flex-col gap-4">
           <Input label="Titre" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-text-primary">Description</label>
-            <textarea className="min-h-20 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
+          {form.category !== "QUIZ" && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-text-primary">Description</label>
+              <textarea className="min-h-20 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </div>
+          )}
+          {form.category === "QUIZ" ? (
             <Select label="Catégorie" options={ADMIN_TASK_CATEGORIES.map((c) => ({ value: c, label: TASK_CATEGORY_LABELS[c] }))} value={form.category} onChange={(e) => {
               const category = e.target.value as TaskCategory;
               setForm({ ...form, category });
-              if (category === "QUIZ" && quizQuestions.length === 0) setQuizQuestions([{ ...EMPTY_QUESTION }]);
             }} />
-            <Select label="Difficulté" options={(Object.keys(TASK_DIFFICULTY_LABELS) as TaskDifficulty[]).map((d) => ({ value: d, label: TASK_DIFFICULTY_LABELS[d] }))} value={form.difficulty} onChange={(e) => setForm({ ...form, difficulty: e.target.value as TaskDifficulty })} />
-          </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <Select label="Catégorie" options={ADMIN_TASK_CATEGORIES.map((c) => ({ value: c, label: TASK_CATEGORY_LABELS[c] }))} value={form.category} onChange={(e) => {
+                const category = e.target.value as TaskCategory;
+                setForm({ ...form, category });
+                if (category === "QUIZ" && quizQuestions.length === 0) setQuizQuestions([{ ...EMPTY_QUESTION }]);
+              }} />
+              <Select label="Difficulté" options={(Object.keys(TASK_DIFFICULTY_LABELS) as TaskDifficulty[]).map((d) => ({ value: d, label: TASK_DIFFICULTY_LABELS[d] }))} value={form.difficulty} onChange={(e) => setForm({ ...form, difficulty: e.target.value as TaskDifficulty })} />
+            </div>
+          )}
           <Input label={`Récompense (${settings.currencyLabel})`} type="number" value={form.reward} onChange={(e) => setForm({ ...form, reward: e.target.value })} />
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-text-primary">Instructions</label>
-            <textarea className="min-h-16 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.instructions} onChange={(e) => setForm({ ...form, instructions: e.target.value })} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-text-primary">Conditions</label>
-            <textarea className="min-h-16 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Input label="Places max (vide = illimité)" type="number" value={form.max_completions} onChange={(e) => setForm({ ...form, max_completions: e.target.value })} />
-            <Input label="Deadline" type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
-          </div>
+          {form.category !== "QUIZ" && (
+            <>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-text-primary">Instructions</label>
+                <textarea className="min-h-16 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.instructions} onChange={(e) => setForm({ ...form, instructions: e.target.value })} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-text-primary">Conditions</label>
+                <textarea className="min-h-16 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Input label="Places max (vide = illimité)" type="number" value={form.max_completions} onChange={(e) => setForm({ ...form, max_completions: e.target.value })} />
+                <Input label="Deadline" type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
+              </div>
+            </>
+          )}
 
           {SOCIAL_CATEGORIES.includes(form.category) && (
             <>
@@ -315,6 +354,14 @@ export function AdminTasksPage() {
 
           {form.category === "QUIZ" && (
             <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-3">
+                <p className="flex items-center gap-1.5 text-sm font-medium text-text-primary"><Sparkles className="size-4" /> Générer avec l'IA</p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input value={genTopic} onChange={(e) => setGenTopic(e.target.value)} placeholder="Sujet (ex: culture générale africaine)" className="flex-1" />
+                  <Input type="number" min={1} max={15} value={genCount} onChange={(e) => setGenCount(e.target.value)} className="sm:w-20" hint="Nb." />
+                  <Button variant="outline" loading={genLoading} onClick={handleGenerate}>Générer</Button>
+                </div>
+              </div>
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-text-primary">Questions du quiz</label>
                 <Button variant="outline" size="sm" onClick={addQuestion}>+ Ajouter une question</Button>

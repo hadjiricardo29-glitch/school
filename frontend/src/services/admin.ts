@@ -1,3 +1,4 @@
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { supabase } from "@/services/supabase";
 import type {
   AuditLogEntry,
@@ -67,6 +68,27 @@ export async function updateTask(id: string, patch: Partial<Task>) {
 export async function deleteTask(id: string) {
   const { error } = await supabase.from("tasks").delete().eq("id", id);
   if (error) throw error;
+}
+
+export interface GeneratedQuizQuestion {
+  question: string;
+  options: string[];
+  correct_option: number;
+}
+
+/** Préremplit le constructeur de quiz via Gemini (staff uniquement, voir Edge Function generate-quiz) — l'admin reste libre de tout modifier avant d'enregistrer. */
+export async function generateQuizQuestions(topic: string, count: number, optionsPerQuestion: number): Promise<GeneratedQuizQuestion[]> {
+  const { data, error } = await supabase.functions.invoke("generate-quiz", {
+    body: { topic, count, optionsPerQuestion },
+  });
+  if (error) {
+    if (error instanceof FunctionsHttpError) {
+      const body = await error.context.json().catch(() => null);
+      throw new Error(body?.error ?? error.message);
+    }
+    throw error;
+  }
+  return (data as { questions: GeneratedQuizQuestion[] }).questions;
 }
 
 export async function listQuizQuestions(taskId: string): Promise<TaskQuizQuestion[]> {
