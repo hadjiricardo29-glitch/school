@@ -1,14 +1,15 @@
-import { Send, MessageCircle, Instagram, Facebook, Music2, Radio } from "lucide-react";
+import { Radio } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { TelegramIcon, WhatsAppIcon, InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/shared/SocialIcons";
 
 const SOCIAL_PLACEHOLDERS = [
-  { label: "Instagram", icon: Instagram },
-  { label: "Facebook", icon: Facebook },
-  { label: "TikTok", icon: Music2 },
+  { label: "Instagram", icon: InstagramIcon },
+  { label: "Facebook", icon: FacebookIcon },
+  { label: "TikTok", icon: TikTokIcon },
 ];
 
 export function ChannelsPage() {
@@ -28,12 +29,12 @@ export function ChannelsPage() {
           <div className="flex flex-col gap-3">
             {settings.communityTelegramUrl && (
               <a href={settings.communityTelegramUrl} target="_blank" rel="noreferrer">
-                <Button variant="outline" fullWidth icon={<Send className="size-4" />}>Groupe Telegram</Button>
+                <Button variant="outline" fullWidth icon={<TelegramIcon className="size-4" />}>Groupe Telegram</Button>
               </a>
             )}
             {settings.communityWhatsappUrl && (
               <a href={settings.communityWhatsappUrl} target="_blank" rel="noreferrer">
-                <Button variant="outline" fullWidth icon={<MessageCircle className="size-4" />}>Groupe WhatsApp</Button>
+                <Button variant="outline" fullWidth icon={<WhatsAppIcon className="size-4" />}>Groupe WhatsApp</Button>
               </a>
             )}
           </div>

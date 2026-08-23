@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Copy, Share2, Users, Network, Coins, MessageCircle, Send, MoonStar, UploadCloud } from "lucide-react";
+import { Check, Copy, Share2, Users, Network, Coins, MoonStar, UploadCloud } from "lucide-react";
+import { TelegramIcon, WhatsAppIcon } from "@/components/shared/SocialIcons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { StatCard } from "@/components/ui/StatCard";
@@ -120,7 +121,7 @@ export function ReferralsPage() {
                   <p className="text-xs text-text-secondary">{c.phone}</p>
                 </div>
                 <a href={whatsappInviteUrl(c)} target="_blank" rel="noreferrer">
-                  <Button size="sm" variant="outline" icon={<MessageCircle className="size-3.5" />}>
+                  <Button size="sm" variant="outline" icon={<WhatsAppIcon className="size-3.5" />}>
                     Inviter
                   </Button>
                 </a>
@@ -156,12 +157,12 @@ export function ReferralsPage() {
           <div className="flex flex-col gap-2 sm:flex-row">
             {settings.communityTelegramUrl && (
               <a href={settings.communityTelegramUrl} target="_blank" rel="noreferrer" className="flex-1">
-                <Button variant="outline" fullWidth icon={<Send className="size-4" />}>Groupe Telegram</Button>
+                <Button variant="outline" fullWidth icon={<TelegramIcon className="size-4" />}>Groupe Telegram</Button>
               </a>
             )}
             {settings.communityWhatsappUrl && (
               <a href={settings.communityWhatsappUrl} target="_blank" rel="noreferrer" className="flex-1">
-                <Button variant="outline" fullWidth icon={<MessageCircle className="size-4" />}>Groupe WhatsApp</Button>
+                <Button variant="outline" fullWidth icon={<WhatsAppIcon className="size-4" />}>Groupe WhatsApp</Button>
               </a>
             )}
           </div>
