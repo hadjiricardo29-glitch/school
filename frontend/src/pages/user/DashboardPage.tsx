@@ -38,7 +38,7 @@ const WEEKLY_SCHEDULE: {
   { weekday: 1, category: "QUIZ", bucket: "WALLET", type: "answer", icon: HelpCircle, to: "/tasks/quiz" },
   { weekday: 2, category: "TIKTOK", bucket: "TIKTOK", type: "watch", icon: TikTokIcon, to: "/tasks?category=TIKTOK" },
   { weekday: 3, category: "YOUTUBE", bucket: "YOUTUBE", type: "watch", icon: PlayCircle, to: "/tasks?category=YOUTUBE" },
-  { weekday: 4, category: "ADS", bucket: "ADS", type: "click", icon: MousePointerClick, to: "/tasks?category=ADS" },
+  { weekday: 4, category: "ADS", bucket: "ADS", type: "click", icon: MousePointerClick, to: "/tasks/ads" },
   { weekday: 5, category: "TIKTOK", bucket: "TIKTOK", type: "watch", icon: TikTokIcon, to: "/tasks?category=TIKTOK" },
 ];
 

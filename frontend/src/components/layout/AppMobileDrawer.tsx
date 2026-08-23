@@ -1,15 +1,50 @@
-import { NavLink } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useLocation, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { LogOut } from "lucide-react";
+import { LogOut, ChevronDown } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
-import { USER_SIDEBAR_NAV } from "@/config/navigation";
+import { USER_SIDEBAR_NAV, type NavItem } from "@/config/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useT } from "@/i18n/useT";
 import { cn } from "@/utils/cn";
 
+interface NavGroup {
+  item: NavItem;
+  children: NavItem[];
+}
+
+// Regroupe les items `indent: true` sous l'item non-indenté juste au-dessus
+// (ex: "Réseaux sociaux"/"Quiz"/"Ads" sous "Tâches journalières") pour un
+// rendu en accordéon — sans dupliquer la config de USER_SIDEBAR_NAV.
+function groupNav(items: NavItem[]): NavGroup[] {
+  const groups: NavGroup[] = [];
+  for (const item of items) {
+    if (item.indent && groups.length > 0) {
+      groups[groups.length - 1].children.push(item);
+    } else {
+      groups.push({ item, children: [] });
+    }
+  }
+  return groups;
+}
+
 export function AppMobileDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { signOut } = useAuth();
   const t = useT();
+  const pathname = useLocation().pathname;
+  const groups = useMemo(() => groupNav(USER_SIDEBAR_NAV), []);
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () => new Set(groups.filter((g) => g.children.some((c) => c.to === pathname)).map((g) => g.item.to)),
+  );
+
+  function toggle(to: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(to)) next.delete(to);
+      else next.add(to);
+      return next;
+    });
+  }
 
   return (
     <AnimatePresence>
@@ -33,21 +68,54 @@ export function AppMobileDrawer({ open, onClose }: { open: boolean; onClose: () 
               <Logo />
             </div>
             <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-              {USER_SIDEBAR_NAV.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  onClick={onClose}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                      isActive ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-surface-alt hover:text-text-primary",
-                    )
-                  }
-                >
-                  <item.icon className="size-[18px]" />
-                  {item.labelKey ? t.nav[item.labelKey] : item.label}
-                </NavLink>
+              {groups.map(({ item, children }) => (
+                <div key={item.to}>
+                  <div className="flex items-center gap-1">
+                    <NavLink
+                      to={item.to}
+                      onClick={onClose}
+                      className={({ isActive }) =>
+                        cn(
+                          "flex flex-1 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                          isActive ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-surface-alt hover:text-text-primary",
+                        )
+                      }
+                    >
+                      <item.icon className="size-[18px]" />
+                      {item.labelKey ? t.nav[item.labelKey] : item.label}
+                    </NavLink>
+                    {children.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => toggle(item.to)}
+                        aria-label={expanded.has(item.to) ? "Réduire" : "Développer"}
+                        className="shrink-0 rounded-md p-2.5 text-text-secondary hover:bg-surface-alt hover:text-text-primary"
+                      >
+                        <ChevronDown className={cn("size-4 transition-transform", expanded.has(item.to) && "rotate-180")} />
+                      </button>
+                    )}
+                  </div>
+                  {children.length > 0 && expanded.has(item.to) && (
+                    <div className="mt-1 flex flex-col gap-1 border-l border-border pl-3">
+                      {children.map((child) => (
+                        <NavLink
+                          key={child.to}
+                          to={child.to}
+                          onClick={onClose}
+                          className={({ isActive }) =>
+                            cn(
+                              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                              isActive ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-surface-alt hover:text-text-primary",
+                            )
+                          }
+                        >
+                          <child.icon className="size-4" />
+                          {child.labelKey ? t.nav[child.labelKey] : child.label}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </nav>
             <div className="border-t border-border p-3">

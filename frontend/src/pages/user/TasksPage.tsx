@@ -21,6 +21,7 @@ export function TasksPage() {
   const pathname = useLocation().pathname;
   const socialOnly = pathname === "/tasks/social";
   const quizOnly = pathname === "/tasks/quiz";
+  const adsOnly = pathname === "/tasks/ads";
   const [searchParams] = useSearchParams();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,10 +42,11 @@ export function TasksPage() {
       .then((all) => {
         if (socialOnly) return setTasks(all.filter((task) => SOCIAL_CATEGORIES.includes(task.category)));
         if (quizOnly) return setTasks(all.filter((task) => task.category === "QUIZ"));
+        if (adsOnly) return setTasks(all.filter((task) => task.category === "ADS"));
         setTasks(all);
       })
       .finally(() => setLoading(false));
-  }, [category, search, socialOnly, quizOnly]);
+  }, [category, search, socialOnly, quizOnly, adsOnly]);
 
   const remainingSlots = useMemo(
     () => (task: Task) => (task.max_completions ? Math.max(task.max_completions - task.completions_count, 0) : null),
@@ -55,10 +57,10 @@ export function TasksPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-xl font-semibold text-text-primary">
-          {quizOnly ? t.tasks.quizTitle : socialOnly ? t.tasks.socialTitle : t.tasks.title}
+          {quizOnly ? t.tasks.quizTitle : socialOnly ? t.tasks.socialTitle : adsOnly ? t.tasks.adsTitle : t.tasks.title}
         </h1>
         <p className="mt-1 text-sm text-text-secondary">
-          {quizOnly ? t.tasks.quizSubtitle : socialOnly ? t.tasks.socialSubtitle : t.tasks.subtitle}
+          {quizOnly ? t.tasks.quizSubtitle : socialOnly ? t.tasks.socialSubtitle : adsOnly ? t.tasks.adsSubtitle : t.tasks.subtitle}
         </p>
       </div>
 
@@ -70,7 +72,7 @@ export function TasksPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-xs"
         />
-        {!socialOnly && !quizOnly && (
+        {!socialOnly && !quizOnly && !adsOnly && (
           <Select options={CATEGORY_OPTIONS} value={category} onChange={(e) => setCategory(e.target.value)} className="sm:max-w-xs" />
         )}
       </div>
