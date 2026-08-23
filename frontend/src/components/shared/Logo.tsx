@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/utils/cn";
-import logoImage from "@/assets/logo.svg";
+import logoImage from "@/assets/logo-mark.png";
 
 export function Logo({ to = "/", className }: { to?: string; className?: string }) {
   const { settings } = useSettings();
