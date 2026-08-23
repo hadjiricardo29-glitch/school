@@ -197,6 +197,8 @@ export const translations = {
       loadingSession: "Loading your session...",
       checkingAccount: "Checking your account...",
       checkingAccess: "Checking access...",
+      pageNotFound: "This page doesn't exist anymore.",
+      backHome: "Back to home",
     },
     tasks: {
       title: "Daily tasks",
@@ -524,6 +526,30 @@ export const translations = {
       task: "Task",
       startedOn: "Started on",
     },
+    terms: {
+      title: "Terms of use",
+      lastUpdated: "Last updated:",
+      sections: [
+        { title: "1. Purpose", body: "These terms govern the use of the platform, which lets its members complete paid daily tasks, build a referral network, and manage a rewards wallet." },
+        { title: "2. User account", body: "Each person may only create one account. Information provided at signup must be accurate. Any attempt to create multiple accounts, self-refer, or commit referral fraud leads to account suspension." },
+        { title: "3. Daily tasks", body: "Rewards are paid only after proof of completion is reviewed and approved by our team. A single-entry task can only be claimed once per user." },
+        { title: "4. Referrals and commissions", body: "Referral commissions are calculated automatically according to the current multi-level scale, viewable from your account. This scale may change; commissions already paid are not retroactively modified." },
+        { title: "5. Withdrawals", body: "Withdrawals are subject to a minimum amount, fees, and a processing delay shown before confirmation." },
+        { title: "6. Suspension and fraud", body: "We reserve the right to suspend any account showing fraudulent activity (multiple accounts, falsified tasks, referral system abuse) after review by our team." },
+        { title: "7. Changes to these terms", body: "These terms may be updated. Users will be informed of substantial changes through the platform." },
+      ],
+    },
+    privacy: {
+      title: "Privacy policy",
+      lastUpdated: "Last updated:",
+      sections: [
+        { title: "1. Data collected", body: "We collect the information you provide at signup (name, email, phone, country), data related to your activity (completed tasks, transactions, referrals), and limited technical information (IP address, connection log) for security purposes." },
+        { title: "2. Use of data", body: "Your data is used to operate your account, calculate your rewards and commissions, prevent fraud, and contact you about your account. We do not sell your data to third parties." },
+        { title: "3. Security", body: "Passwords are managed securely by our authentication provider and are never stored in plain text. Access to financial data is restricted by strict authorization rules based on each user's role." },
+        { title: "4. Retention", body: "Data is kept for as long as your account is active, then archived in accordance with our legal and accounting obligations." },
+        { title: "5. Your rights", body: "You can view and correct your information from your profile at any time, or contact us with any request regarding your personal data." },
+      ],
+    },
   },
   fr: {
     nav: {
@@ -718,6 +744,8 @@ export const translations = {
       loadingSession: "Chargement de votre session...",
       checkingAccount: "Vérification de votre compte...",
       checkingAccess: "Vérification des accès...",
+      pageNotFound: "Cette page n'existe pas ou plus.",
+      backHome: "Retour à l'accueil",
     },
     tasks: {
       title: "Tâches journalières",
@@ -1044,6 +1072,30 @@ export const translations = {
       browseTasks: "Parcourir les tâches",
       task: "Tâche",
       startedOn: "Démarrée le",
+    },
+    terms: {
+      title: "Conditions d'utilisation",
+      lastUpdated: "Dernière mise à jour :",
+      sections: [
+        { title: "1. Objet", body: "Ces conditions régissent l'utilisation de la plateforme, qui permet à ses membres d'accomplir des tâches journalières rémunérées, de développer un réseau de parrainage et de gérer un portefeuille de récompenses." },
+        { title: "2. Compte utilisateur", body: "Chaque personne ne peut créer qu'un seul compte. Les informations fournies à l'inscription doivent être exactes. Toute tentative de création de comptes multiples, d'auto-parrainage ou de fraude au parrainage entraîne la suspension du compte." },
+        { title: "3. Tâches journalières", body: "Les récompenses sont versées uniquement après vérification et approbation de la preuve de réalisation par notre équipe. Une tâche à participation unique ne peut être réclamée qu'une seule fois par utilisateur." },
+        { title: "4. Parrainage et commissions", body: "Les commissions de parrainage sont calculées automatiquement selon le barème multi-niveaux en vigueur, consultable depuis votre espace. Ce barème peut évoluer ; les commissions déjà versées ne sont pas rétroactivement modifiées." },
+        { title: "5. Retraits", body: "Les retraits sont soumis à un montant minimum, à des frais et à un délai de traitement affichés avant confirmation." },
+        { title: "6. Suspension et fraude", body: "Nous nous réservons le droit de suspendre tout compte présentant une activité frauduleuse (comptes multiples, tâches falsifiées, abus du système de parrainage) après examen par notre équipe." },
+        { title: "7. Modification des conditions", body: "Ces conditions peuvent être mises à jour. Les utilisateurs seront informés des changements substantiels via la plateforme." },
+      ],
+    },
+    privacy: {
+      title: "Politique de confidentialité",
+      lastUpdated: "Dernière mise à jour :",
+      sections: [
+        { title: "1. Données collectées", body: "Nous collectons les informations que vous fournissez à l'inscription (nom, email, téléphone, pays), les données liées à votre activité (tâches réalisées, transactions, parrainages) et des informations techniques limitées (adresse IP, journal de connexion) à des fins de sécurité." },
+        { title: "2. Utilisation des données", body: "Vos données servent à faire fonctionner votre compte, calculer vos récompenses et commissions, prévenir la fraude, et vous contacter au sujet de votre compte. Nous ne vendons pas vos données à des tiers." },
+        { title: "3. Sécurité", body: "Les mots de passe sont gérés de façon sécurisée par notre fournisseur d'authentification et ne sont jamais stockés en clair. L'accès aux données financières est restreint par des règles d'autorisation strictes selon le rôle de chaque utilisateur." },
+        { title: "4. Conservation", body: "Les données sont conservées tant que votre compte est actif, puis archivées conformément à nos obligations légales et comptables." },
+        { title: "5. Vos droits", body: "Vous pouvez à tout moment consulter et corriger vos informations depuis votre profil, ou nous contacter pour toute demande relative à vos données personnelles." },
+      ],
     },
   },
 } as const satisfies Record<Lang, unknown>;
