@@ -23,6 +23,7 @@ export function AdminSettingsPage() {
   const [withdrawalFeePct, setWithdrawalFeePct] = useState("");
   const [withdrawalFeeFixed, setWithdrawalFeeFixed] = useState("");
   const [withdrawalMax, setWithdrawalMax] = useState("");
+  const [withdrawalMinReferrals, setWithdrawalMinReferrals] = useState("");
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [registrationEnabled, setRegistrationEnabled] = useState(true);
   const [activationEnabled, setActivationEnabled] = useState(true);
@@ -58,6 +59,7 @@ export function AdminSettingsPage() {
     setWithdrawalFeePct(String(settings.withdrawalFeePercentage));
     setWithdrawalFeeFixed(String(settings.withdrawalFeeFixed));
     setWithdrawalMax(String(settings.withdrawalMaxAmount));
+    setWithdrawalMinReferrals(String(settings.withdrawalMinReferrals));
     setMaintenanceMode(settings.maintenanceMode);
     setRegistrationEnabled(settings.registrationEnabled);
     setActivationEnabled(settings.accountActivationEnabled);
@@ -100,6 +102,7 @@ export function AdminSettingsPage() {
         updateSetting("withdrawal_fee_percentage", Number(withdrawalFeePct)),
         updateSetting("withdrawal_fee_fixed", Number(withdrawalFeeFixed)),
         updateSetting("withdrawal_max_amount", Number(withdrawalMax)),
+        updateSetting("withdrawal_min_referrals", Number(withdrawalMinReferrals)),
       ]);
       await refresh();
       notify.success("Paramètres de retrait enregistrés");
@@ -290,12 +293,19 @@ export function AdminSettingsPage() {
       </Card>
 
       <Card>
-        <CardHeader title="Retraits" subtitle="Montant minimum, frais et plafond" />
+        <CardHeader title="Retraits" subtitle="Montant minimum, frais, plafond et condition de parrainage" />
         <div className="grid grid-cols-2 gap-4">
           <Input label="Montant minimum" type="number" value={withdrawalMin} onChange={(e) => setWithdrawalMin(e.target.value)} />
           <Input label="Montant maximum" type="number" value={withdrawalMax} onChange={(e) => setWithdrawalMax(e.target.value)} />
           <Input label="Frais (%)" type="number" value={withdrawalFeePct} onChange={(e) => setWithdrawalFeePct(e.target.value)} />
           <Input label="Frais fixes" type="number" value={withdrawalFeeFixed} onChange={(e) => setWithdrawalFeeFixed(e.target.value)} />
+          <Input
+            label="Filleuls activés requis (0 = désactivé)"
+            type="number"
+            min={0}
+            value={withdrawalMinReferrals}
+            onChange={(e) => setWithdrawalMinReferrals(e.target.value)}
+          />
         </div>
         <Button className="mt-4 self-start" loading={saving} onClick={saveWithdrawalSettings}>Enregistrer</Button>
       </Card>
