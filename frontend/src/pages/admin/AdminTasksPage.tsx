@@ -26,10 +26,15 @@ const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
 ];
 
 // Les tâches journalières se limitent désormais à ces catégories : les
-// réseaux sociaux (TikTok/YouTube, tâche vidéo) et le quiz (toutes les
-// autres tâches, pour l'instant) — voir AdminTasksPage.
-const ADMIN_TASK_CATEGORIES: TaskCategory[] = ["QUIZ", "TIKTOK", "YOUTUBE"];
+// réseaux sociaux (TikTok/YouTube, tâche vidéo), les publicités (Ads,
+// même mécanique de vérification par temps d'engagement) et le quiz —
+// voir AdminTasksPage.
+const ADMIN_TASK_CATEGORIES: TaskCategory[] = ["QUIZ", "TIKTOK", "YOUTUBE", "ADS"];
 const SOCIAL_CATEGORIES: TaskCategory[] = ["TIKTOK", "YOUTUBE"];
+// TikTok/YouTube/Ads partagent la même mécanique : l'utilisateur reste sur
+// la page (avec un lien optionnel) pendant auto_verify_seconds et est
+// crédité automatiquement — par opposition au QUIZ, seule catégorie notée.
+const ENGAGEMENT_CATEGORIES: TaskCategory[] = ["TIKTOK", "YOUTUBE", "ADS"];
 const MAX_QUIZ_OPTIONS = 6;
 
 interface QuizDraftQuestion {
@@ -198,7 +203,7 @@ export function AdminTasksPage() {
       notify.error("Titre, description et récompense sont requis");
       return;
     }
-    if (SOCIAL_CATEGORIES.includes(form.category) && (!form.auto_verify_seconds || Number(form.auto_verify_seconds) <= 0)) {
+    if (ENGAGEMENT_CATEGORIES.includes(form.category) && (!form.auto_verify_seconds || Number(form.auto_verify_seconds) <= 0)) {
       notify.error("La durée de vérification doit être supérieure à 0");
       return;
     }
@@ -224,8 +229,8 @@ export function AdminTasksPage() {
         single_submission_per_user: form.single_submission_per_user,
         deadline: isQuiz ? null : form.deadline ? new Date(form.deadline).toISOString() : null,
         status: form.status,
-        video_url: SOCIAL_CATEGORIES.includes(form.category) ? form.video_url || null : null,
-        auto_verify_seconds: SOCIAL_CATEGORIES.includes(form.category) ? Number(form.auto_verify_seconds) : 1,
+        video_url: ENGAGEMENT_CATEGORIES.includes(form.category) ? form.video_url || null : null,
+        auto_verify_seconds: ENGAGEMENT_CATEGORIES.includes(form.category) ? Number(form.auto_verify_seconds) : 1,
       };
       const savedTask = editing ? await updateTask(editing.id, payload) : await createTask(payload);
       await replaceQuizQuestions(savedTask.id, form.category === "QUIZ" ? quizQuestions : []);
@@ -332,14 +337,14 @@ export function AdminTasksPage() {
             </>
           )}
 
-          {SOCIAL_CATEGORIES.includes(form.category) && (
+          {ENGAGEMENT_CATEGORIES.includes(form.category) && (
             <>
               <Input
-                label="URL vidéo (optionnel)"
+                label={form.category === "ADS" ? "Lien à visiter (optionnel)" : "URL vidéo (optionnel)"}
                 value={form.video_url}
                 onChange={(e) => setForm({ ...form, video_url: e.target.value })}
-                placeholder="https://www.tiktok.com/@compte/video/1234567890"
-                hint="Lien TikTok — la vidéo s'affiche directement dans l'application"
+                placeholder={form.category === "ADS" ? "https://exemple.com/offre" : "https://www.tiktok.com/@compte/video/1234567890"}
+                hint={form.category === "ADS" ? "Lien de la publicité — s'ouvre dans un nouvel onglet" : "Lien TikTok — la vidéo s'affiche directement dans l'application"}
               />
               <Input
                 label="Durée de vérification (secondes)"

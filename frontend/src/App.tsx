@@ -41,7 +41,6 @@ const CourseDetailPage = lazy(() => import("@/pages/user/CourseDetailPage").then
 const AdminDashboardPage = lazy(() => import("@/pages/admin/AdminDashboardPage").then((m) => ({ default: m.AdminDashboardPage })));
 const AdminUsersPage = lazy(() => import("@/pages/admin/AdminUsersPage").then((m) => ({ default: m.AdminUsersPage })));
 const AdminTasksPage = lazy(() => import("@/pages/admin/AdminTasksPage").then((m) => ({ default: m.AdminTasksPage })));
-const AdminSubmissionsPage = lazy(() => import("@/pages/admin/AdminSubmissionsPage").then((m) => ({ default: m.AdminSubmissionsPage })));
 const AdminDepositsPage = lazy(() => import("@/pages/admin/AdminDepositsPage").then((m) => ({ default: m.AdminDepositsPage })));
 const AdminWithdrawalsPage = lazy(() => import("@/pages/admin/AdminWithdrawalsPage").then((m) => ({ default: m.AdminWithdrawalsPage })));
 const AdminReferralsPage = lazy(() => import("@/pages/admin/AdminReferralsPage").then((m) => ({ default: m.AdminReferralsPage })));
@@ -130,7 +129,6 @@ export default function App() {
               <Route path="users" element={<AdminUsersPage />} />
               <Route path="tasks" element={<AdminTasksPage />} />
               <Route path="courses" element={<AdminCoursesPage />} />
-              <Route path="submissions" element={<AdminSubmissionsPage />} />
               <Route path="deposits" element={<AdminDepositsPage />} />
               <Route path="withdrawals" element={<AdminWithdrawalsPage />} />
               <Route path="referrals" element={<AdminReferralsPage />} />

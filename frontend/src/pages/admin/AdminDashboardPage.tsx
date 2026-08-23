@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Users, ClipboardList, ListChecks, ArrowUpFromLine, ArrowDownToLine, Coins } from "lucide-react";
+import { Users, ClipboardList, ArrowUpFromLine, ArrowDownToLine, Coins } from "lucide-react";
 import { StatCard } from "@/components/ui/StatCard";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -29,7 +29,6 @@ export function AdminDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard label="Utilisateurs" value={stats.totalUsers} icon={Users} tone="primary" />
         <StatCard label="Tâches" value={stats.totalTasks} icon={ClipboardList} />
-        <StatCard label="Soumissions en attente" value={stats.pendingSubmissions} icon={ListChecks} />
         <StatCard label="Retraits en attente" value={stats.pendingWithdrawals} icon={ArrowUpFromLine} />
         <StatCard label="Total frais d'activation" value={formatCurrency(stats.totalDeposits, settings.currencyLabel)} icon={ArrowDownToLine} />
         <StatCard label="Total des retraits" value={formatCurrency(stats.totalWithdrawals, settings.currencyLabel)} icon={Coins} />
@@ -37,7 +36,6 @@ export function AdminDashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Approuver des soumissions", to: "/admin/submissions" },
           { label: "Traiter les retraits", to: "/admin/withdrawals" },
           { label: "Gérer les tâches", to: "/admin/tasks" },
           { label: "Gérer les utilisateurs", to: "/admin/users" },

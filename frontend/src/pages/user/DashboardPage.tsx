@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { Link } from "react-router-dom";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowRight, ListChecks, Share2, Wallet as WalletIcon, ArrowDownToLine, Sparkles, Trophy, HelpCircle, PlayCircle, ChevronRight } from "lucide-react";
+import { ArrowRight, ListChecks, Share2, Wallet as WalletIcon, ArrowDownToLine, Sparkles, Trophy, HelpCircle, PlayCircle, MousePointerClick, ChevronRight } from "lucide-react";
 import motosuImage from "@/assets/motosu.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -31,14 +31,14 @@ const WEEKLY_SCHEDULE: {
   weekday: number;
   category: TaskCategory;
   bucket: EarningBucket;
-  type: "watch" | "answer";
+  type: "watch" | "answer" | "click";
   icon: ComponentType<{ className?: string }>;
   to: string;
 }[] = [
   { weekday: 1, category: "QUIZ", bucket: "WALLET", type: "answer", icon: HelpCircle, to: "/tasks/quiz" },
   { weekday: 2, category: "TIKTOK", bucket: "TIKTOK", type: "watch", icon: TikTokIcon, to: "/tasks?category=TIKTOK" },
   { weekday: 3, category: "YOUTUBE", bucket: "YOUTUBE", type: "watch", icon: PlayCircle, to: "/tasks?category=YOUTUBE" },
-  { weekday: 4, category: "QUIZ", bucket: "WALLET", type: "answer", icon: HelpCircle, to: "/tasks/quiz" },
+  { weekday: 4, category: "ADS", bucket: "ADS", type: "click", icon: MousePointerClick, to: "/tasks?category=ADS" },
   { weekday: 5, category: "TIKTOK", bucket: "TIKTOK", type: "watch", icon: TikTokIcon, to: "/tasks?category=TIKTOK" },
 ];
 
@@ -188,7 +188,9 @@ export function DashboardPage() {
               </span>
               <div className="flex-1">
                 <p className="text-sm font-medium text-text-primary">{tAll.enums.taskCategory[category]}</p>
-                <p className="text-xs text-text-secondary">{type === "watch" ? t.scheduleWatch : t.scheduleAnswer}</p>
+                <p className="text-xs text-text-secondary">
+                  {type === "watch" ? t.scheduleWatch : type === "click" ? t.scheduleClick : t.scheduleAnswer}
+                </p>
               </div>
               <ChevronRight className="size-4 shrink-0 text-text-secondary" />
             </Link>

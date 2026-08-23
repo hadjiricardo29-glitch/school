@@ -10,7 +10,6 @@ import type {
   SupportTicketStatus,
   Task,
   TaskQuizQuestion,
-  TaskSubmission,
   UserRole,
   WithdrawalRequest,
 } from "@/types/domain";
@@ -146,32 +145,14 @@ export async function deleteCourse(id: string) {
 }
 
 export async function uploadCourseThumbnail(file: File): Promise<string> {
-  const path = `${crypto.randomUUID()}-${file.name}`;
+  // Supabase Storage rejette les clés avec espaces/virgules/accents — le nom
+  // de fichier original (ex: "Image 23 août 2026, ...png") n'est jamais
+  // affiché nulle part, donc on ne garde que l'extension.
+  const ext = (file.name.split(".").pop() ?? "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+  const path = `${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from("course-thumbnails").upload(path, file, { upsert: true });
   if (error) throw error;
   return supabase.storage.from("course-thumbnails").getPublicUrl(path).data.publicUrl;
-}
-
-// ---------- Submissions ----------
-export async function listSubmissions(status?: string): Promise<TaskSubmission[]> {
-  let query = supabase
-    .from("task_submissions")
-    .select("*, task:tasks(*), user:profiles!task_submissions_user_id_fkey(*)")
-    .order("created_at", { ascending: false });
-  if (status) query = query.eq("status", status);
-  const { data, error } = await query;
-  if (error) throw error;
-  return (data ?? []) as unknown as TaskSubmission[];
-}
-
-export async function approveSubmission(id: string, note?: string) {
-  const { error } = await supabase.rpc("approve_submission", { p_submission_id: id, p_review_note: note ?? null });
-  if (error) throw error;
-}
-
-export async function rejectSubmission(id: string, note?: string) {
-  const { error } = await supabase.rpc("reject_submission", { p_submission_id: id, p_review_note: note ?? null });
-  if (error) throw error;
 }
 
 // ---------- Withdrawals ----------
@@ -318,10 +299,9 @@ export async function upsertCommissionRule(rule: { level: number; percentage: nu
 
 // ---------- Dashboard stats ----------
 export async function getAdminStats() {
-  const [users, tasks, pendingSubs, pendingWithdrawals, deposits, withdrawals] = await Promise.all([
+  const [users, tasks, pendingWithdrawals, deposits, withdrawals] = await Promise.all([
     supabase.from("profiles").select("id", { count: "exact", head: true }),
     supabase.from("tasks").select("id", { count: "exact", head: true }),
-    supabase.from("task_submissions").select("id", { count: "exact", head: true }).in("status", ["SUBMITTED", "UNDER_REVIEW"]),
     supabase.from("withdrawal_requests").select("id", { count: "exact", head: true }).eq("status", "PENDING"),
     supabase.from("deposits").select("amount").eq("status", "COMPLETED"),
     supabase.from("withdrawal_requests").select("net_amount").eq("status", "COMPLETED"),
@@ -333,7 +313,6 @@ export async function getAdminStats() {
   return {
     totalUsers: users.count ?? 0,
     totalTasks: tasks.count ?? 0,
-    pendingSubmissions: pendingSubs.count ?? 0,
     pendingWithdrawals: pendingWithdrawals.count ?? 0,
     totalDeposits,
     totalWithdrawals,

@@ -73,7 +73,6 @@ export const ADMIN_SIDEBAR_NAV: NavItem[] = [
   { label: "Tâches journalières", to: "/admin/tasks", icon: ClipboardList },
   { label: "Réseaux sociaux", to: "/admin/tasks?social=1", icon: Video, indent: true },
   { label: "Formations", to: "/admin/courses", icon: GraduationCap },
-  { label: "Soumissions", to: "/admin/submissions", icon: ListChecks },
   { label: "Frais d'activation", to: "/admin/deposits", icon: ArrowDownToLine },
   { label: "Retraits", to: "/admin/withdrawals", icon: ArrowUpFromLine },
   { label: "Parrainage", to: "/admin/referrals", icon: Share2 },
