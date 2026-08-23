@@ -3,6 +3,7 @@ import { Check, Copy, Share2, Users, Network, Coins, MoonStar, UploadCloud } fro
 import { TelegramIcon, WhatsAppIcon } from "@/components/shared/SocialIcons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useT } from "@/i18n/useT";
 import { StatCard } from "@/components/ui/StatCard";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -26,6 +27,7 @@ import { parseVcf, type VcfContact } from "@/utils/vcf";
 export function ReferralsPage() {
   const { profile } = useAuth();
   const { settings } = useSettings();
+  const t = useT().referrals;
   const [stats, setStats] = useState<ReferralStats | null>(null);
   const [referrals, setReferrals] = useState<ReferralWithStatus[]>([]);
   const [rules, setRules] = useState<CommissionRule[]>([]);
@@ -55,7 +57,7 @@ export function ReferralsPage() {
   async function copyLink() {
     await navigator.clipboard.writeText(referralLink);
     setCopied(true);
-    notify.success("Lien copié !");
+    notify.success(t.copiedToast);
     setTimeout(() => setCopied(false), 2000);
   }
 
@@ -66,15 +68,18 @@ export function ReferralsPage() {
     const text = await file.text();
     const parsed = parseVcf(text);
     if (parsed.length === 0) {
-      notify.error("Aucun contact avec numéro de téléphone trouvé dans ce fichier");
+      notify.error(t.noContactsFound);
       return;
     }
     setContacts(parsed);
-    notify.success(`${parsed.length} contact(s) importé(s)`);
+    notify.success(`${parsed.length} ${t.contactsImported}`);
   }
 
   function whatsappInviteUrl(contact: VcfContact) {
-    const message = `Salut ${contact.name} ! Rejoins-moi sur ${settings.platformName} et commence à gagner des récompenses : ${referralLink}`;
+    const message = t.whatsappMessage
+      .replace("{name}", contact.name)
+      .replace("{platform}", settings.platformName)
+      .replace("{link}", referralLink);
     return `https://wa.me/${contact.phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
   }
 
@@ -83,34 +88,34 @@ export function ReferralsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Parrainage</h1>
-        <p className="mt-1 text-sm text-text-secondary">Invitez votre réseau et gagnez des commissions à chaque tâche complétée.</p>
+        <h1 className="text-xl font-semibold text-text-primary">{t.title}</h1>
+        <p className="mt-1 text-sm text-text-secondary">{t.subtitle}</p>
       </div>
 
       <Card>
-        <CardHeader title="Mon lien de parrainage" subtitle={`Code : ${profile?.referral_code}`} />
+        <CardHeader title={t.myLink} subtitle={`${t.code} ${profile?.referral_code}`} />
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="flex-1 truncate rounded-md border border-border bg-surface-alt px-3.5 py-2.5 text-sm text-text-secondary">
             {referralLink}
           </div>
           <Button onClick={copyLink} icon={copied ? <Check className="size-4" /> : <Copy className="size-4" />}>
-            {copied ? "Copié" : "Copier"}
+            {copied ? t.copied : t.copy}
           </Button>
           <Button
             variant="outline"
             icon={<Share2 className="size-4" />}
             onClick={() => navigator.share?.({ title: settings.platformName, url: referralLink }).catch(() => {})}
           >
-            Partager
+            {t.share}
           </Button>
         </div>
       </Card>
 
       <Card>
-        <CardHeader title="Importer des contacts" subtitle="Depuis un fichier .vcf exporté de votre téléphone" />
+        <CardHeader title={t.importContacts} subtitle={t.importContactsSubtitle} />
         <input ref={fileInputRef} type="file" accept=".vcf,text/vcard" className="hidden" onChange={onImportVcf} />
         <Button variant="outline" icon={<UploadCloud className="size-4" />} onClick={() => fileInputRef.current?.click()}>
-          Choisir un fichier .vcf
+          {t.chooseVcf}
         </Button>
         {contacts && (
           <div className="mt-4 flex max-h-80 flex-col divide-y divide-border overflow-y-auto">
@@ -122,7 +127,7 @@ export function ReferralsPage() {
                 </div>
                 <a href={whatsappInviteUrl(c)} target="_blank" rel="noreferrer">
                   <Button size="sm" variant="outline" icon={<WhatsAppIcon className="size-3.5" />}>
-                    Inviter
+                    {t.invite}
                   </Button>
                 </a>
               </div>
@@ -132,17 +137,17 @@ export function ReferralsPage() {
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Filleuls directs" value={stats?.directCount ?? 0} icon={Users} tone="primary" />
-        <StatCard label="Taille du réseau" value={stats?.networkSize ?? 0} icon={Network} />
-        <StatCard label="Commissions générées" value={formatCurrency(stats?.totalCommissions ?? 0, settings.currencyLabel)} icon={Coins} />
+        <StatCard label={t.directReferrals} value={stats?.directCount ?? 0} icon={Users} tone="primary" />
+        <StatCard label={t.networkSize} value={stats?.networkSize ?? 0} icon={Network} />
+        <StatCard label={t.commissionsEarned} value={formatCurrency(stats?.totalCommissions ?? 0, settings.currencyLabel)} icon={Coins} />
       </div>
 
       <Card>
-        <CardHeader title="Barème de commissions" subtitle="Configuré par l'administration" />
+        <CardHeader title={t.commissionScale} subtitle={t.commissionScaleSubtitle} />
         <div className="flex flex-col divide-y divide-border">
           {rules.map((rule) => (
             <div key={rule.id} className="flex items-center justify-between py-3 text-sm">
-              <span className="text-text-secondary">Niveau {rule.level}</span>
+              <span className="text-text-secondary">{t.level} {rule.level}</span>
               <span className="font-semibold text-primary">
                 {rule.percentage}%{rule.fixed_amount > 0 ? ` + ${formatCurrency(rule.fixed_amount, settings.currencyLabel)}` : ""}
               </span>
@@ -153,16 +158,16 @@ export function ReferralsPage() {
 
       {(settings.communityTelegramUrl || settings.communityWhatsappUrl) && (
         <Card>
-          <CardHeader title="Rejoindre la communauté" subtitle="Échangez avec les autres membres et l'équipe support" />
+          <CardHeader title={t.joinCommunity} subtitle={t.joinCommunitySubtitle} />
           <div className="flex flex-col gap-2 sm:flex-row">
             {settings.communityTelegramUrl && (
               <a href={settings.communityTelegramUrl} target="_blank" rel="noreferrer" className="flex-1">
-                <Button variant="outline" fullWidth icon={<TelegramIcon className="size-4" />}>Groupe Telegram</Button>
+                <Button variant="outline" fullWidth icon={<TelegramIcon className="size-4" />}>{t.telegramGroup}</Button>
               </a>
             )}
             {settings.communityWhatsappUrl && (
               <a href={settings.communityWhatsappUrl} target="_blank" rel="noreferrer" className="flex-1">
-                <Button variant="outline" fullWidth icon={<WhatsAppIcon className="size-4" />}>Groupe WhatsApp</Button>
+                <Button variant="outline" fullWidth icon={<WhatsAppIcon className="size-4" />}>{t.whatsappGroup}</Button>
               </a>
             )}
           </div>
@@ -171,22 +176,22 @@ export function ReferralsPage() {
 
       <Card padded={false}>
         <div className="px-5 pt-4">
-          <CardHeader title="Filleuls directs" />
+          <CardHeader title={t.directReferralsHeader} />
           <Tabs
             value={tab}
             onChange={setTab}
             tabs={[
-              { value: "active", label: "Actifs", count: activeReferrals.length },
-              { value: "dormant", label: "Dormants", count: dormantReferrals.length },
+              { value: "active", label: t.active, count: activeReferrals.length },
+              { value: "dormant", label: t.dormant, count: dormantReferrals.length },
             ]}
           />
         </div>
         <div className="p-5">
           {shownReferrals.length === 0 ? (
             tab === "active" ? (
-              <EmptyState title="Aucun filleul actif" description="Partagez votre lien pour commencer à inviter votre réseau." />
+              <EmptyState title={t.noActiveReferrals} description={t.noActiveReferralsBody} />
             ) : (
-              <EmptyState title="Aucun filleul dormant" description="Tous vos filleuls ont activé leur compte." />
+              <EmptyState title={t.noDormantReferrals} description={t.noDormantReferralsBody} />
             )
           ) : (
             <div className="flex flex-col divide-y divide-border">
@@ -196,12 +201,12 @@ export function ReferralsPage() {
                     <Avatar firstName={r.first_name} lastName={r.last_name} username={r.username} size="sm" />
                     <div>
                       <p className="text-sm font-medium text-text-primary">@{r.username}</p>
-                      <p className="text-xs text-text-secondary">Membre depuis le {formatDate(r.created_at)}</p>
+                      <p className="text-xs text-text-secondary">{t.memberSince} {formatDate(r.created_at)}</p>
                     </div>
                   </div>
                   {!r.activated && (
                     <Badge tone="warning">
-                      <MoonStar className="size-3" /> Dormant
+                      <MoonStar className="size-3" /> {t.dormantBadge}
                     </Badge>
                   )}
                 </div>

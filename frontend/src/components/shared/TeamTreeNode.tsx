@@ -3,9 +3,11 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import type { TeamNode } from "@/services/referrals";
+import { useT } from "@/i18n/useT";
 import { formatDate } from "@/utils/format";
 
 export function TeamTreeNode({ node, depth = 0, isRoot = false }: { node: TeamNode; depth?: number; isRoot?: boolean }) {
+  const t = useT().team;
   const [open, setOpen] = useState(depth < 1);
   const hasChildren = node.children.length > 0;
 
@@ -23,10 +25,10 @@ export function TeamTreeNode({ node, depth = 0, isRoot = false }: { node: TeamNo
         <div className="min-w-0">
           <p className="flex items-center gap-2 text-sm font-medium text-text-primary">
             @{node.username}
-            {isRoot && <Badge tone="primary">Vous</Badge>}
+            {isRoot && <Badge tone="primary">{t.you}</Badge>}
           </p>
           <p className="text-xs text-text-secondary">
-            {node.children.length} filleul{node.children.length !== 1 ? "s" : ""} · depuis le {formatDate(node.created_at)}
+            {node.children.length} {node.children.length !== 1 ? t.referralsPlural : t.referral} · {t.since} {formatDate(node.created_at)}
           </p>
         </div>
       </div>
