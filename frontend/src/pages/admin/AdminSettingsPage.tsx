@@ -38,6 +38,14 @@ export function AdminSettingsPage() {
   const [spinWindowDays, setSpinWindowDays] = useState("");
   const [paymentProvider, setPaymentProvider] = useState<"mock" | "saspay">("mock");
   const [rules, setRules] = useState<CommissionRule[]>([]);
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [connectionResult, setConnectionResult] = useState<{
+    configured: boolean;
+    apiKeyValid?: boolean;
+    status?: number;
+    networks?: unknown;
+    error?: string;
+  } | null>(null);
 
   useEffect(() => {
     getCommissionRules().then(setRules).finally(() => setLoading(false));
@@ -168,6 +176,20 @@ export function AdminSettingsPage() {
     }
   }
 
+  async function testConnection() {
+    setTestingConnection(true);
+    setConnectionResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("payments/test-connection");
+      if (error) throw error;
+      setConnectionResult(data);
+    } catch (err) {
+      setConnectionResult({ configured: false, error: err instanceof Error ? err.message : "Test impossible" });
+    } finally {
+      setTestingConnection(false);
+    }
+  }
+
   function updateRuleField(index: number, field: keyof CommissionRule, value: string | boolean) {
     setRules((prev) => prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)));
   }
@@ -243,7 +265,27 @@ export function AdminSettingsPage() {
               l'Edge Function "payments" — sans ça, tous les paiements d'activation échoueront.
             </Alert>
           )}
-          <Button className="self-start" loading={saving} onClick={savePaymentProvider}>Enregistrer</Button>
+          <div className="flex gap-2">
+            <Button className="self-start" loading={saving} onClick={savePaymentProvider}>Enregistrer</Button>
+            <Button variant="secondary" className="self-start" loading={testingConnection} onClick={testConnection}>
+              Tester la connexion SASpay
+            </Button>
+          </div>
+          {connectionResult && (
+            <Alert tone={connectionResult.configured && connectionResult.apiKeyValid ? "success" : "error"}>
+              {!connectionResult.configured && "Clé API non configurée."}
+              {connectionResult.configured && !connectionResult.apiKeyValid && `Clé API invalide ou rejetée (HTTP ${connectionResult.status}) — ${connectionResult.error}`}
+              {connectionResult.configured && connectionResult.apiKeyValid && (
+                <>
+                  Connexion OK. Réseaux renvoyés par SASpay (vérifie lesquels sont réellement actifs/tarifés pour ton
+                  compte) :
+                  <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded bg-black/5 p-2 text-xs">
+                    {JSON.stringify(connectionResult.networks, null, 2)}
+                  </pre>
+                </>
+              )}
+            </Alert>
+          )}
         </div>
       </Card>
 
