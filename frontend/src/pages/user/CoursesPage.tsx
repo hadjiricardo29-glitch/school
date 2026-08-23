@@ -54,7 +54,7 @@ export function CoursesPage() {
             <Link key={course.id} to={`/courses/${course.id}`}>
               <Card padded={false} className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
                 {course.thumbnail_url ? (
-                  <img src={course.thumbnail_url} alt={course.title} className="aspect-[9/16] w-full object-cover" />
+                  <img src={course.thumbnail_url} alt={course.title} className="aspect-[9/16] w-full bg-purple/5 object-contain" />
                 ) : (
                   <div className="flex aspect-[9/16] w-full items-center justify-center bg-purple/10">
                     <GraduationCap className="size-10 text-purple" />

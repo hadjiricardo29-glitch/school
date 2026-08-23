@@ -192,7 +192,7 @@ export function AdminCoursesPage() {
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onThumbnailChange} />
             {form.thumbnail_url ? (
               <div className="relative w-fit">
-                <img src={form.thumbnail_url} alt="" className="aspect-[9/16] w-24 rounded-md object-cover" />
+                <img src={form.thumbnail_url} alt="" className="aspect-[9/16] w-24 rounded-md bg-purple/5 object-contain" />
                 <button
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, thumbnail_url: "" }))}
