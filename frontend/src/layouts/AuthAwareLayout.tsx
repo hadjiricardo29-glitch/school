@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/i18n/useT";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { AppLayout } from "@/layouts/AppLayout";
 import { PublicLayout } from "@/layouts/PublicLayout";
@@ -12,6 +13,7 @@ import { PublicLayout } from "@/layouts/PublicLayout";
  */
 export function AuthAwareLayout() {
   const { session, loading } = useAuth();
-  if (loading) return <LoadingState className="min-h-dvh" label="Chargement..." />;
+  const t = useT().common;
+  if (loading) return <LoadingState className="min-h-dvh" label={t.loading} />;
   return session ? <AppLayout /> : <PublicLayout />;
 }

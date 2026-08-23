@@ -2,25 +2,26 @@ import { Link } from "react-router-dom";
 import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useT } from "@/i18n/useT";
 import { formatCurrency } from "@/utils/format";
 
 export function ActivationBanner() {
   const { settings } = useSettings();
+  const t = useT().common;
 
   return (
     <div className="flex flex-col items-start gap-3 rounded-md border border-warning/30 bg-warning-bg p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex gap-3">
         <ShieldAlert className="mt-0.5 size-5 shrink-0 text-warning" />
         <div>
-          <p className="text-sm font-semibold text-text-primary">Compte non activé</p>
+          <p className="text-sm font-semibold text-text-primary">{t.accountNotActivated}</p>
           <p className="mt-0.5 text-sm text-text-secondary">
-            Des frais d'activation de {formatCurrency(settings.accountActivationMinDeposit, settings.currencyLabel)} débloquent
-            vos tâches et retraits.
+            {t.activationBannerBody.replace("{amount}", formatCurrency(settings.accountActivationMinDeposit, settings.currencyLabel))}
           </p>
         </div>
       </div>
       <Link to="/wallet/deposit" className="shrink-0">
-        <Button size="sm">Activer mon compte</Button>
+        <Button size="sm">{t.activateMyAccount}</Button>
       </Link>
     </div>
   );
