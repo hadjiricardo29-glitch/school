@@ -20,12 +20,13 @@ export function AppSidebar() {
             to={item.to}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-md py-2.5 text-sm font-medium transition-colors",
+                item.indent ? "ml-3 pl-4 pr-3 border-l border-border" : "px-3",
                 isActive ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-surface-alt hover:text-text-primary",
               )
             }
           >
-            <item.icon className="size-[18px]" />
+            <item.icon className={item.indent ? "size-4" : "size-[18px]"} />
             {item.label}
           </NavLink>
         ))}

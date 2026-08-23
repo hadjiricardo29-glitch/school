@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Search, Clock } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -22,6 +22,7 @@ const SOCIAL_CATEGORIES: TaskCategory[] = ["TIKTOK", "YOUTUBE"];
 
 export function TasksPage() {
   const { settings } = useSettings();
+  const socialOnly = useLocation().pathname === "/tasks/social";
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -30,9 +31,9 @@ export function TasksPage() {
   useEffect(() => {
     setLoading(true);
     listPublishedTasks({ category: (category || undefined) as TaskCategory | undefined, search: search || undefined })
-      .then(setTasks)
+      .then((all) => setTasks(socialOnly ? all.filter((t) => SOCIAL_CATEGORIES.includes(t.category)) : all))
       .finally(() => setLoading(false));
-  }, [category, search]);
+  }, [category, search, socialOnly]);
 
   const remainingSlots = useMemo(
     () => (task: Task) => (task.max_completions ? Math.max(task.max_completions - task.completions_count, 0) : null),
@@ -42,8 +43,10 @@ export function TasksPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Tâches journalières</h1>
-        <p className="mt-1 text-sm text-text-secondary">Choisissez, réalisez, gagnez.</p>
+        <h1 className="text-xl font-semibold text-text-primary">{socialOnly ? "Tâches réseaux sociaux" : "Tâches journalières"}</h1>
+        <p className="mt-1 text-sm text-text-secondary">
+          {socialOnly ? "Regardez la vidéo jusqu'au bout pour être crédité automatiquement." : "Choisissez, réalisez, gagnez."}
+        </p>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -54,7 +57,9 @@ export function TasksPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-xs"
         />
-        <Select options={CATEGORY_OPTIONS} value={category} onChange={(e) => setCategory(e.target.value)} className="sm:max-w-xs" />
+        {!socialOnly && (
+          <Select options={CATEGORY_OPTIONS} value={category} onChange={(e) => setCategory(e.target.value)} className="sm:max-w-xs" />
+        )}
       </div>
 
       {loading ? (

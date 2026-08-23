@@ -21,6 +21,7 @@ import {
   GraduationCap,
   Radio,
   LifeBuoy,
+  Video,
   type LucideIcon,
 } from "lucide-react";
 
@@ -28,11 +29,14 @@ export interface NavItem {
   label: string;
   to: string;
   icon: LucideIcon;
+  /** Affiché en retrait, comme sous-item du lien juste au-dessus. */
+  indent?: boolean;
 }
 
 export const USER_SIDEBAR_NAV: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Tâches journalières", to: "/tasks", icon: ListChecks },
+  { label: "Réseaux sociaux", to: "/tasks/social", icon: Video, indent: true },
   { label: "Formations", to: "/courses", icon: GraduationCap },
   { label: "Portefeuille", to: "/wallet", icon: Wallet },
   { label: "Transactions", to: "/transactions", icon: Receipt },
