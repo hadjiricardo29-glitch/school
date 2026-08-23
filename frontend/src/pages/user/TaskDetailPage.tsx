@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Clock, Users, Calendar, ArrowLeft, ExternalLink, Timer } from "lucide-react";
+import { Users, Calendar, ArrowLeft, ExternalLink, Timer } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -128,7 +128,6 @@ export function TaskDetailPage() {
         <p className="mt-3 text-2xl font-semibold text-primary">{formatCurrency(task.reward, settings.currencyLabel)}</p>
 
         <div className="mt-4 flex flex-wrap gap-5 text-sm text-text-secondary">
-          <span className="flex items-center gap-1.5"><Clock className="size-4" /> {task.estimated_time ?? t.taskDetail.notSpecified}</span>
           <span className="flex items-center gap-1.5"><Timer className="size-4" /> {task.auto_verify_seconds}s {t.taskDetail.toBeCredited}</span>
           {slotsLeft !== null && <span className="flex items-center gap-1.5"><Users className="size-4" /> {slotsLeft} {t.taskDetail.spotsLeft}</span>}
           {task.deadline && <span className="flex items-center gap-1.5"><Calendar className="size-4" /> {t.taskDetail.before} {formatDate(task.deadline)}</span>}

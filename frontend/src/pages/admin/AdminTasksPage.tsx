@@ -29,7 +29,6 @@ const EMPTY_FORM = {
   description: "",
   category: "OTHER" as TaskCategory,
   reward: "",
-  estimated_time: "",
   difficulty: "EASY" as TaskDifficulty,
   instructions: "",
   requirements: "",
@@ -74,7 +73,6 @@ export function AdminTasksPage() {
       description: task.description,
       category: task.category,
       reward: String(task.reward),
-      estimated_time: task.estimated_time ?? "",
       difficulty: task.difficulty,
       instructions: task.instructions ?? "",
       requirements: task.requirements ?? "",
@@ -95,7 +93,6 @@ export function AdminTasksPage() {
       description: task.description,
       category: task.category,
       reward: String(task.reward),
-      estimated_time: task.estimated_time ?? "",
       difficulty: task.difficulty,
       instructions: task.instructions ?? "",
       requirements: task.requirements ?? "",
@@ -125,7 +122,7 @@ export function AdminTasksPage() {
         description: form.description,
         category: form.category,
         reward: Number(form.reward),
-        estimated_time: form.estimated_time || null,
+        estimated_time: null,
         difficulty: form.difficulty,
         instructions: form.instructions || null,
         requirements: form.requirements || null,
@@ -214,10 +211,7 @@ export function AdminTasksPage() {
             <Select label="Catégorie" options={(Object.keys(TASK_CATEGORY_LABELS) as TaskCategory[]).map((c) => ({ value: c, label: TASK_CATEGORY_LABELS[c] }))} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as TaskCategory })} />
             <Select label="Difficulté" options={(Object.keys(TASK_DIFFICULTY_LABELS) as TaskDifficulty[]).map((d) => ({ value: d, label: TASK_DIFFICULTY_LABELS[d] }))} value={form.difficulty} onChange={(e) => setForm({ ...form, difficulty: e.target.value as TaskDifficulty })} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Input label={`Récompense (${settings.currencyLabel})`} type="number" value={form.reward} onChange={(e) => setForm({ ...form, reward: e.target.value })} />
-            <Input label="Temps estimé" value={form.estimated_time} onChange={(e) => setForm({ ...form, estimated_time: e.target.value })} placeholder="15 min" />
-          </div>
+          <Input label={`Récompense (${settings.currencyLabel})`} type="number" value={form.reward} onChange={(e) => setForm({ ...form, reward: e.target.value })} />
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-text-primary">Instructions</label>
             <textarea className="min-h-16 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.instructions} onChange={(e) => setForm({ ...form, instructions: e.target.value })} />

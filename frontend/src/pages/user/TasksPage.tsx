@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Clock } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Card } from "@/components/ui/Card";
@@ -83,11 +83,7 @@ export function TasksPage() {
                   </div>
                   <p className="mt-3 text-sm font-semibold text-text-primary">{task.title}</p>
                   <p className="mt-1.5 line-clamp-2 flex-1 text-sm text-text-secondary">{task.description}</p>
-                  <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-                    <span className="flex items-center gap-1 text-xs text-text-secondary">
-                      <Clock className="size-3.5" />
-                      {task.estimated_time ?? "—"}
-                    </span>
+                  <div className="mt-4 flex items-center justify-end border-t border-border pt-3">
                     <span className="text-sm font-semibold text-primary">{formatCurrency(task.reward, settings.currencyLabel)}</span>
                   </div>
                   {slots !== null && (
