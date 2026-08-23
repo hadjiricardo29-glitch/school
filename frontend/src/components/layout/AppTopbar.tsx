@@ -5,6 +5,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "@/components/shared/Logo";
+import avatarMascot from "@/assets/avatar-mascot.png";
 
 const STAFF_ROLES = ["ADMIN", "MODERATOR", "FINANCE_ADMIN", "TASK_MANAGER"];
 
@@ -33,7 +34,7 @@ export function AppTopbar({ title, onMenuClick }: { title?: string; onMenuClick?
         <Dropdown
           trigger={
             <button className="flex items-center gap-2 rounded-full p-1 hover:bg-surface-alt">
-              <Avatar firstName={profile?.first_name} lastName={profile?.last_name} username={profile?.username} src={profile?.avatar_url} size="sm" />
+              <Avatar username={profile?.username} src={avatarMascot} size="sm" className="object-top" />
             </button>
           }
           items={[
