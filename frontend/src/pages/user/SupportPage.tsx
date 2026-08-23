@@ -1,5 +1,5 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { LifeBuoy, MessageSquareReply } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { LifeBuoy, MessageSquareReply, Headset } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -31,6 +31,12 @@ export function SupportPage() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const subjectRef = useRef<HTMLInputElement>(null);
+
+  function goToForm() {
+    subjectRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    subjectRef.current?.focus();
+  }
 
   async function load() {
     if (!profile) return;
@@ -67,10 +73,30 @@ export function SupportPage() {
         <p className="mt-1 text-sm text-text-secondary">Une question, un problème ? Écrivez-nous ici.</p>
       </div>
 
+      <Card className="flex flex-col items-center gap-3 bg-primary/5 py-8 text-center">
+        <span className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Headset className="size-7" />
+        </span>
+        <div>
+          <p className="text-base font-semibold text-text-primary">Nous sommes là pour toutes vos préoccupations</p>
+          <p className="mt-1 max-w-sm text-sm text-text-secondary">
+            Dépôt, retrait, tâche, compte bloqué... notre équipe vous répond directement ici, dans l'application.
+          </p>
+        </div>
+        <Button onClick={goToForm}>Envoyer un message</Button>
+      </Card>
+
       <Card>
         <CardHeader title="Nouveau message" />
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <Input label="Sujet" required value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Ex : Dépôt bloqué" />
+          <Input
+            ref={subjectRef}
+            label="Sujet"
+            required
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="Ex : Dépôt bloqué"
+          />
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-text-primary">Message</label>
             <textarea
