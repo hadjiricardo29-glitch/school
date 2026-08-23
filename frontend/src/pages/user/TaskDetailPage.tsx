@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Users, Calendar, ArrowLeft, ExternalLink, Timer } from "lucide-react";
+import { Users, Calendar, ArrowLeft, ExternalLink, Timer, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -9,9 +9,9 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useT } from "@/i18n/useT";
-import { getTask, startTask, recordWatchHeartbeat, getMySubmissions } from "@/services/tasks";
+import { getTask, startTask, recordWatchHeartbeat, getMySubmissions, getQuizQuestions, submitQuizAnswers } from "@/services/tasks";
 import { getWallet } from "@/services/wallet";
-import type { Task, TaskSubmission, Wallet } from "@/types/domain";
+import type { QuizQuestionPublic, QuizResult, Task, TaskSubmission, Wallet } from "@/types/domain";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { notify } from "@/utils/toast";
 import { isAccountActivated } from "@/utils/activation";
@@ -33,7 +33,14 @@ export function TaskDetailPage() {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [watched, setWatched] = useState(0);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestionPublic[]>([]);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
+  const [quizSubmitting, setQuizSubmitting] = useState(false);
+  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   const reloadingRef = useRef(false);
+
+  const isQuiz = task?.category === "QUIZ";
 
   async function load() {
     if (!id) return;
@@ -65,6 +72,8 @@ export function TaskDetailPage() {
       const s = await startTask(id, profile.id);
       setSubmission(s);
       setWatched(0);
+      setQuizAnswers({});
+      setQuizResult(null);
       notify.success(t.taskDetail.startedSuccess);
     } catch (err) {
       notify.error(err instanceof Error ? err.message : t.taskDetail.startError);
@@ -73,13 +82,26 @@ export function TaskDetailPage() {
     }
   }
 
-  // Vérification automatique : tant que la tâche est STARTED, envoie un
+  // Quiz : les questions (sans la bonne réponse) ne sont chargées qu'une
+  // fois la tâche démarrée, via une RPC dédiée qui ne renvoie jamais
+  // correct_option au client.
+  useEffect(() => {
+    if (!isQuiz || !submission || submission.status !== "STARTED") return;
+    setQuizLoading(true);
+    getQuizQuestions(submission.task_id)
+      .then(setQuizQuestions)
+      .finally(() => setQuizLoading(false));
+  }, [isQuiz, submission?.id, submission?.status, submission?.task_id]);
+
+  // Vérification automatique par temps d'engagement (tâches vidéo/réseaux
+  // sociaux uniquement) : tant que la tâche est STARTED, envoie un
   // heartbeat authentifié toutes les 4s (en pause si l'onglet n'est pas
   // visible) — le serveur borne l'incrément au temps réellement écoulé,
   // donc spammer ou rejouer l'appel ne fait pas avancer le compteur plus
-  // vite que le temps réel (voir record_watch_heartbeat côté DB).
+  // vite que le temps réel (voir record_watch_heartbeat côté DB). Les
+  // tâches QUIZ sont créditées via submit_quiz_answers, pas ce mécanisme.
   useEffect(() => {
-    if (!submission || submission.status !== "STARTED") return;
+    if (isQuiz || !submission || submission.status !== "STARTED") return;
     reloadingRef.current = false;
     let cancelled = false;
 
@@ -106,7 +128,28 @@ export function TaskDetailPage() {
       window.clearInterval(intervalId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submission?.id, submission?.status]);
+  }, [isQuiz, submission?.id, submission?.status]);
+
+  async function handleSubmitQuiz() {
+    if (!submission) return;
+    if (Object.keys(quizAnswers).length < quizQuestions.length) {
+      notify.error(t.taskDetail.quiz.answerAll);
+      return;
+    }
+    setQuizSubmitting(true);
+    try {
+      const result = await submitQuizAnswers(submission.id, quizAnswers);
+      setQuizResult(result);
+      if (result.passed) {
+        notify.success(`+${formatCurrency(task?.reward ?? 0, settings.currencyLabel)}`);
+      }
+      await load();
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : t.taskDetail.startError);
+    } finally {
+      setQuizSubmitting(false);
+    }
+  }
 
   if (loading) return <LoadingState label={t.taskDetail.loading} />;
   if (!task) return <Alert tone="error">{t.taskDetail.notFound}</Alert>;
@@ -128,7 +171,9 @@ export function TaskDetailPage() {
         <p className="mt-3 text-2xl font-semibold text-primary">{formatCurrency(task.reward, settings.currencyLabel)}</p>
 
         <div className="mt-4 flex flex-wrap gap-5 text-sm text-text-secondary">
-          <span className="flex items-center gap-1.5"><Timer className="size-4" /> {task.auto_verify_seconds}s {t.taskDetail.toBeCredited}</span>
+          {!isQuiz && (
+            <span className="flex items-center gap-1.5"><Timer className="size-4" /> {task.auto_verify_seconds}s {t.taskDetail.toBeCredited}</span>
+          )}
           {slotsLeft !== null && <span className="flex items-center gap-1.5"><Users className="size-4" /> {slotsLeft} {t.taskDetail.spotsLeft}</span>}
           {task.deadline && <span className="flex items-center gap-1.5"><Calendar className="size-4" /> {t.taskDetail.before} {formatDate(task.deadline)}</span>}
         </div>
@@ -202,7 +247,50 @@ export function TaskDetailPage() {
             </Button>
           )}
 
-          {submission?.status === "STARTED" && (
+          {submission?.status === "STARTED" && isQuiz && (
+            <div className="flex flex-col gap-5">
+              {quizLoading ? (
+                <LoadingState label={t.taskDetail.quiz.loading} />
+              ) : quizQuestions.length === 0 ? (
+                <Alert tone="info">{t.taskDetail.quiz.noQuestions}</Alert>
+              ) : (
+                <>
+                  {quizQuestions.map((q, qi) => (
+                    <div key={q.id} className="flex flex-col gap-2">
+                      <p className="text-sm font-medium text-text-primary">
+                        {t.taskDetail.quiz.questionOf.replace("{current}", String(qi + 1)).replace("{total}", String(quizQuestions.length))}
+                      </p>
+                      <p className="text-sm text-text-secondary">{q.question}</p>
+                      <div className="flex flex-col gap-2">
+                        {q.options.map((opt, oi) => (
+                          <label
+                            key={oi}
+                            className={`flex cursor-pointer items-center gap-2 rounded-md border p-3 text-sm transition-colors ${
+                              quizAnswers[q.id] === oi ? "border-primary bg-primary/5" : "border-border hover:bg-surface-alt"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name={`quiz-${q.id}`}
+                              className="accent-primary"
+                              checked={quizAnswers[q.id] === oi}
+                              onChange={() => setQuizAnswers({ ...quizAnswers, [q.id]: oi })}
+                            />
+                            {opt}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <Button fullWidth size="lg" loading={quizSubmitting} onClick={handleSubmitQuiz}>
+                    {t.taskDetail.quiz.submit}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+
+          {submission?.status === "STARTED" && !isQuiz && (
             <div className="flex flex-col gap-3">
               <Alert tone="info">
                 {t.taskDetail.startedInfo.replace("{video}", task.video_url ? t.taskDetail.startedInfoVideo : "")}
@@ -220,10 +308,28 @@ export function TaskDetailPage() {
           )}
 
           {submission && submission.status !== "STARTED" && (
-            <Alert tone={submission.status === "APPROVED" ? "success" : submission.status === "REJECTED" ? "error" : "info"}>
-              {t.taskDetail.submissionStatus} <strong>{submission.status.replace(/_/g, " ")}</strong>
-              {submission.review_note && <p className="mt-1">{t.taskDetail.note} {submission.review_note}</p>}
-            </Alert>
+            <div className="flex flex-col gap-3">
+              <Alert tone={submission.status === "APPROVED" ? "success" : submission.status === "REJECTED" ? "error" : "info"}>
+                {isQuiz && quizResult ? (
+                  <span className="flex items-center gap-1.5">
+                    {quizResult.passed && <CheckCircle2 className="size-4 shrink-0" />}
+                    {quizResult.passed
+                      ? t.taskDetail.quiz.passed.replace("{correct}", String(quizResult.correct_count)).replace("{total}", String(quizResult.total_count))
+                      : t.taskDetail.quiz.failed.replace("{correct}", String(quizResult.correct_count)).replace("{total}", String(quizResult.total_count))}
+                  </span>
+                ) : (
+                  <>
+                    {t.taskDetail.submissionStatus} <strong>{submission.status.replace(/_/g, " ")}</strong>
+                    {submission.review_note && <p className="mt-1">{t.taskDetail.note} {submission.review_note}</p>}
+                  </>
+                )}
+              </Alert>
+              {isQuiz && submission.status === "REJECTED" && (
+                <Button fullWidth loading={starting} onClick={handleStart} disabled={slotsLeft === 0}>
+                  {t.taskDetail.quiz.retry}
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </Card>

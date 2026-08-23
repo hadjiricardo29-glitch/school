@@ -8,6 +8,7 @@ import type {
   SupportTicket,
   SupportTicketStatus,
   Task,
+  TaskQuizQuestion,
   TaskSubmission,
   UserRole,
   WithdrawalRequest,
@@ -66,6 +67,36 @@ export async function updateTask(id: string, patch: Partial<Task>) {
 export async function deleteTask(id: string) {
   const { error } = await supabase.from("tasks").delete().eq("id", id);
   if (error) throw error;
+}
+
+export async function listQuizQuestions(taskId: string): Promise<TaskQuizQuestion[]> {
+  const { data, error } = await supabase
+    .from("task_quiz_questions")
+    .select("*")
+    .eq("task_id", taskId)
+    .order("sort_order", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as TaskQuizQuestion[];
+}
+
+/** Remplace intégralement les questions d'un quiz (supprime puis réinsère) — plus simple qu'un diff pour un petit jeu de questions géré depuis un seul formulaire admin. */
+export async function replaceQuizQuestions(
+  taskId: string,
+  questions: { question: string; options: string[]; correct_option: number }[],
+) {
+  const { error: delError } = await supabase.from("task_quiz_questions").delete().eq("task_id", taskId);
+  if (delError) throw delError;
+  if (questions.length === 0) return;
+  const { error: insError } = await supabase.from("task_quiz_questions").insert(
+    questions.map((q, i) => ({
+      task_id: taskId,
+      question: q.question,
+      options: q.options,
+      correct_option: q.correct_option,
+      sort_order: i,
+    })),
+  );
+  if (insError) throw insError;
 }
 
 // ---------- Courses ----------

@@ -69,6 +69,7 @@ export const ADMIN_SIDEBAR_NAV: NavItem[] = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
   { label: "Utilisateurs", to: "/admin/users", icon: Users },
   { label: "Tâches journalières", to: "/admin/tasks", icon: ClipboardList },
+  { label: "Réseaux sociaux", to: "/admin/tasks?social=1", icon: Video, indent: true },
   { label: "Formations", to: "/admin/courses", icon: GraduationCap },
   { label: "Soumissions", to: "/admin/submissions", icon: ListChecks },
   { label: "Frais d'activation", to: "/admin/deposits", icon: ArrowDownToLine },

@@ -167,6 +167,31 @@ export interface TaskSubmission {
   user?: Profile;
 }
 
+/** Question d'un quiz telle que gérée côté admin (inclut la bonne réponse). */
+export interface TaskQuizQuestion {
+  id: string;
+  task_id: string;
+  question: string;
+  options: string[];
+  correct_option: number;
+  sort_order: number;
+}
+
+/** Question telle que renvoyée à l'utilisateur pour répondre — jamais la bonne réponse. */
+export interface QuizQuestionPublic {
+  id: string;
+  question: string;
+  options: string[];
+  sort_order: number;
+}
+
+export interface QuizResult {
+  score_pct: number;
+  correct_count: number;
+  total_count: number;
+  passed: boolean;
+}
+
 export interface CommissionRule {
   id: string;
   level: number;

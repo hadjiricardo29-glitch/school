@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Plus, Pencil, Trash2, Copy } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Table, type Column } from "@/components/ui/Table";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { createTask, deleteTask, listAllTasks, updateTask } from "@/services/admin";
+import { createTask, deleteTask, listAllTasks, listQuizQuestions, replaceQuizQuestions, updateTask } from "@/services/admin";
 import type { Task, TaskCategory, TaskDifficulty, TaskStatus } from "@/types/domain";
 import { TASK_CATEGORY_LABELS, TASK_DIFFICULTY_LABELS } from "@/types/domain";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -24,10 +25,25 @@ const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: "EXPIRED", label: "Expirée" },
 ];
 
+// Les tâches journalières se limitent désormais à ces catégories : les
+// réseaux sociaux (TikTok/YouTube, tâche vidéo) et le quiz (toutes les
+// autres tâches, pour l'instant) — voir AdminTasksPage.
+const ADMIN_TASK_CATEGORIES: TaskCategory[] = ["QUIZ", "TIKTOK", "YOUTUBE"];
+const SOCIAL_CATEGORIES: TaskCategory[] = ["TIKTOK", "YOUTUBE"];
+const MAX_QUIZ_OPTIONS = 6;
+
+interface QuizDraftQuestion {
+  question: string;
+  options: string[];
+  correct_option: number;
+}
+
+const EMPTY_QUESTION: QuizDraftQuestion = { question: "", options: ["", ""], correct_option: 0 };
+
 const EMPTY_FORM = {
   title: "",
   description: "",
-  category: "OTHER" as TaskCategory,
+  category: "QUIZ" as TaskCategory,
   reward: "",
   difficulty: "EASY" as TaskDifficulty,
   instructions: "",
@@ -42,11 +58,14 @@ const EMPTY_FORM = {
 
 export function AdminTasksPage() {
   const { settings } = useSettings();
+  const [searchParams] = useSearchParams();
+  const socialOnly = searchParams.get("social") === "1";
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [quizQuestions, setQuizQuestions] = useState<QuizDraftQuestion[]>([]);
   const [saving, setSaving] = useState(false);
   const [toDelete, setToDelete] = useState<Task | null>(null);
 
@@ -60,13 +79,16 @@ export function AdminTasksPage() {
     load();
   }, []);
 
+  const visibleTasks = socialOnly ? tasks.filter((t) => SOCIAL_CATEGORIES.includes(t.category)) : tasks;
+
   function openCreate() {
     setEditing(null);
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, category: socialOnly ? "TIKTOK" : "QUIZ" });
+    setQuizQuestions(socialOnly ? [] : [{ ...EMPTY_QUESTION }]);
     setModalOpen(true);
   }
 
-  function openEdit(task: Task) {
+  async function openEdit(task: Task) {
     setEditing(task);
     setForm({
       title: task.title,
@@ -83,10 +105,11 @@ export function AdminTasksPage() {
       video_url: task.video_url ?? "",
       auto_verify_seconds: String(task.auto_verify_seconds),
     });
+    setQuizQuestions(task.category === "QUIZ" ? await loadQuizDraft(task.id) : []);
     setModalOpen(true);
   }
 
-  function duplicate(task: Task) {
+  async function duplicate(task: Task) {
     setEditing(null);
     setForm({
       title: `${task.title} (copie)`,
@@ -103,7 +126,45 @@ export function AdminTasksPage() {
       video_url: task.video_url ?? "",
       auto_verify_seconds: String(task.auto_verify_seconds),
     });
+    setQuizQuestions(task.category === "QUIZ" ? await loadQuizDraft(task.id) : []);
     setModalOpen(true);
+  }
+
+  async function loadQuizDraft(taskId: string): Promise<QuizDraftQuestion[]> {
+    const questions = await listQuizQuestions(taskId);
+    return questions.map((q) => ({ question: q.question, options: q.options, correct_option: q.correct_option }));
+  }
+
+  function addQuestion() {
+    setQuizQuestions([...quizQuestions, { ...EMPTY_QUESTION }]);
+  }
+  function removeQuestion(qi: number) {
+    setQuizQuestions(quizQuestions.filter((_, i) => i !== qi));
+  }
+  function updateQuestion(qi: number, patch: Partial<QuizDraftQuestion>) {
+    setQuizQuestions(quizQuestions.map((q, i) => (i === qi ? { ...q, ...patch } : q)));
+  }
+  function addOption(qi: number) {
+    updateQuestion(qi, { options: [...quizQuestions[qi].options, ""] });
+  }
+  function removeOption(qi: number, oi: number) {
+    const q = quizQuestions[qi];
+    const options = q.options.filter((_, i) => i !== oi);
+    updateQuestion(qi, { options, correct_option: q.correct_option >= options.length ? 0 : q.correct_option });
+  }
+  function updateOption(qi: number, oi: number, value: string) {
+    const q = quizQuestions[qi];
+    updateQuestion(qi, { options: q.options.map((o, i) => (i === oi ? value : o)) });
+  }
+
+  function validateQuiz(): string | null {
+    if (quizQuestions.length === 0) return "Ajoutez au moins une question au quiz";
+    for (const q of quizQuestions) {
+      if (!q.question.trim()) return "Chaque question doit avoir un texte";
+      if (q.options.length < 2) return "Chaque question doit avoir au moins 2 options";
+      if (q.options.some((o) => !o.trim())) return "Aucune option ne peut être vide";
+    }
+    return null;
   }
 
   async function onSave() {
@@ -111,9 +172,16 @@ export function AdminTasksPage() {
       notify.error("Titre, description et récompense sont requis");
       return;
     }
-    if (!form.auto_verify_seconds || Number(form.auto_verify_seconds) <= 0) {
+    if (SOCIAL_CATEGORIES.includes(form.category) && (!form.auto_verify_seconds || Number(form.auto_verify_seconds) <= 0)) {
       notify.error("La durée de vérification doit être supérieure à 0");
       return;
+    }
+    if (form.category === "QUIZ") {
+      const quizError = validateQuiz();
+      if (quizError) {
+        notify.error(quizError);
+        return;
+      }
     }
     setSaving(true);
     try {
@@ -130,16 +198,12 @@ export function AdminTasksPage() {
         single_submission_per_user: form.single_submission_per_user,
         deadline: form.deadline ? new Date(form.deadline).toISOString() : null,
         status: form.status,
-        video_url: form.video_url || null,
-        auto_verify_seconds: Number(form.auto_verify_seconds),
+        video_url: SOCIAL_CATEGORIES.includes(form.category) ? form.video_url || null : null,
+        auto_verify_seconds: SOCIAL_CATEGORIES.includes(form.category) ? Number(form.auto_verify_seconds) : 1,
       };
-      if (editing) {
-        await updateTask(editing.id, payload);
-        notify.success("Tâche mise à jour");
-      } else {
-        await createTask(payload);
-        notify.success("Tâche créée");
-      }
+      const savedTask = editing ? await updateTask(editing.id, payload) : await createTask(payload);
+      await replaceQuizQuestions(savedTask.id, form.category === "QUIZ" ? quizQuestions : []);
+      notify.success(editing ? "Tâche mise à jour" : "Tâche créée");
       setModalOpen(false);
       await load();
     } catch (err) {
@@ -187,13 +251,13 @@ export function AdminTasksPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-text-primary">Tâches journalières</h1>
-          <p className="mt-1 text-sm text-text-secondary">{tasks.length} tâches au total</p>
+          <h1 className="text-xl font-semibold text-text-primary">{socialOnly ? "Réseaux sociaux" : "Tâches journalières"}</h1>
+          <p className="mt-1 text-sm text-text-secondary">{visibleTasks.length} tâches au total</p>
         </div>
         <Button icon={<Plus className="size-4" />} onClick={openCreate}>Nouvelle tâche</Button>
       </div>
 
-      <Card>{loading ? <LoadingState /> : <Table columns={columns} data={tasks} rowKey={(t) => t.id} onRowClick={openEdit} emptyMessage="Aucune tâche" />}</Card>
+      <Card>{loading ? <LoadingState /> : <Table columns={columns} data={visibleTasks} rowKey={(t) => t.id} onRowClick={openEdit} emptyMessage="Aucune tâche" />}</Card>
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? "Modifier la tâche" : "Nouvelle tâche"} size="lg" footer={
         <>
@@ -208,7 +272,11 @@ export function AdminTasksPage() {
             <textarea className="min-h-20 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Select label="Catégorie" options={(Object.keys(TASK_CATEGORY_LABELS) as TaskCategory[]).map((c) => ({ value: c, label: TASK_CATEGORY_LABELS[c] }))} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as TaskCategory })} />
+            <Select label="Catégorie" options={ADMIN_TASK_CATEGORIES.map((c) => ({ value: c, label: TASK_CATEGORY_LABELS[c] }))} value={form.category} onChange={(e) => {
+              const category = e.target.value as TaskCategory;
+              setForm({ ...form, category });
+              if (category === "QUIZ" && quizQuestions.length === 0) setQuizQuestions([{ ...EMPTY_QUESTION }]);
+            }} />
             <Select label="Difficulté" options={(Object.keys(TASK_DIFFICULTY_LABELS) as TaskDifficulty[]).map((d) => ({ value: d, label: TASK_DIFFICULTY_LABELS[d] }))} value={form.difficulty} onChange={(e) => setForm({ ...form, difficulty: e.target.value as TaskDifficulty })} />
           </div>
           <Input label={`Récompense (${settings.currencyLabel})`} type="number" value={form.reward} onChange={(e) => setForm({ ...form, reward: e.target.value })} />
@@ -224,21 +292,66 @@ export function AdminTasksPage() {
             <Input label="Places max (vide = illimité)" type="number" value={form.max_completions} onChange={(e) => setForm({ ...form, max_completions: e.target.value })} />
             <Input label="Deadline" type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
           </div>
-          <Input
-            label="URL vidéo (optionnel)"
-            value={form.video_url}
-            onChange={(e) => setForm({ ...form, video_url: e.target.value })}
-            placeholder="https://www.tiktok.com/@compte/video/1234567890"
-            hint="Lien TikTok — la vidéo s'affiche directement dans l'application"
-          />
-          <Input
-            label="Durée de vérification (secondes)"
-            type="number"
-            min={1}
-            value={form.auto_verify_seconds}
-            onChange={(e) => setForm({ ...form, auto_verify_seconds: e.target.value })}
-            hint="Temps que l'utilisateur doit rester sur la page pour être crédité automatiquement — aucune preuve à envoyer"
-          />
+
+          {SOCIAL_CATEGORIES.includes(form.category) && (
+            <>
+              <Input
+                label="URL vidéo (optionnel)"
+                value={form.video_url}
+                onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+                placeholder="https://www.tiktok.com/@compte/video/1234567890"
+                hint="Lien TikTok — la vidéo s'affiche directement dans l'application"
+              />
+              <Input
+                label="Durée de vérification (secondes)"
+                type="number"
+                min={1}
+                value={form.auto_verify_seconds}
+                onChange={(e) => setForm({ ...form, auto_verify_seconds: e.target.value })}
+                hint="Temps que l'utilisateur doit rester sur la page pour être crédité automatiquement — aucune preuve à envoyer"
+              />
+            </>
+          )}
+
+          {form.category === "QUIZ" && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-text-primary">Questions du quiz</label>
+                <Button variant="outline" size="sm" onClick={addQuestion}>+ Ajouter une question</Button>
+              </div>
+              {quizQuestions.length === 0 && <p className="text-sm text-text-secondary">Aucune question — ajoutez-en au moins une.</p>}
+              {quizQuestions.map((q, qi) => (
+                <div key={qi} className="flex flex-col gap-2 rounded-md border border-border p-3">
+                  <div className="flex items-center gap-2">
+                    <Input value={q.question} onChange={(e) => updateQuestion(qi, { question: e.target.value })} placeholder={`Question ${qi + 1}`} className="flex-1" />
+                    <button onClick={() => removeQuestion(qi)} className="rounded-full p-1.5 text-error hover:bg-error-bg" aria-label="Supprimer la question"><Trash2 className="size-4" /></button>
+                  </div>
+                  <p className="text-xs text-text-secondary">Cochez la bonne réponse</p>
+                  <div className="flex flex-col gap-1.5">
+                    {q.options.map((opt, oi) => (
+                      <div key={oi} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name={`correct-${qi}`}
+                          checked={q.correct_option === oi}
+                          onChange={() => updateQuestion(qi, { correct_option: oi })}
+                          className="size-4 accent-primary"
+                        />
+                        <Input value={opt} onChange={(e) => updateOption(qi, oi, e.target.value)} placeholder={`Option ${oi + 1}`} className="flex-1" />
+                        {q.options.length > 2 && (
+                          <button onClick={() => removeOption(qi, oi)} className="rounded-full p-1 text-text-secondary hover:bg-error-bg hover:text-error" aria-label="Retirer l'option"><Trash2 className="size-3.5" /></button>
+                        )}
+                      </div>
+                    ))}
+                    {q.options.length < MAX_QUIZ_OPTIONS && (
+                      <button onClick={() => addOption(qi)} className="self-start text-xs font-medium text-primary hover:underline">+ Ajouter une option</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <Select label="Statut" options={STATUS_OPTIONS} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as TaskStatus })} />
           <label className="flex items-center gap-2 text-sm text-text-primary">
             <input type="checkbox" className="size-4 accent-primary" checked={form.single_submission_per_user} onChange={(e) => setForm({ ...form, single_submission_per_user: e.target.checked })} />

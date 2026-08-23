@@ -1,5 +1,5 @@
 import { supabase } from "@/services/supabase";
-import type { Task, TaskCategory, TaskSubmission } from "@/types/domain";
+import type { QuizQuestionPublic, QuizResult, Task, TaskCategory, TaskSubmission } from "@/types/domain";
 
 export async function listPublishedTasks(params?: { category?: TaskCategory; search?: string }): Promise<Task[]> {
   let query = supabase.from("tasks").select("*").eq("status", "PUBLISHED").order("created_at", { ascending: false });
@@ -36,6 +36,18 @@ export async function recordWatchHeartbeat(submissionId: string): Promise<WatchH
   const { data, error } = await supabase.rpc("record_watch_heartbeat", { p_submission_id: submissionId });
   if (error) throw error;
   return (data as WatchHeartbeatResult[])[0];
+}
+
+export async function getQuizQuestions(taskId: string): Promise<QuizQuestionPublic[]> {
+  const { data, error } = await supabase.rpc("get_task_quiz_questions", { p_task_id: taskId });
+  if (error) throw error;
+  return (data ?? []) as QuizQuestionPublic[];
+}
+
+export async function submitQuizAnswers(submissionId: string, answers: Record<string, number>): Promise<QuizResult> {
+  const { data, error } = await supabase.rpc("submit_quiz_answers", { p_submission_id: submissionId, p_answers: answers });
+  if (error) throw error;
+  return (data as QuizResult[])[0];
 }
 
 export async function getMySubmissions(userId: string): Promise<TaskSubmission[]> {
