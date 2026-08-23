@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, ShieldAlert } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
@@ -23,6 +24,7 @@ export function DepositPage() {
   const amount = settings.accountActivationMinDeposit;
   const [country, setCountry] = useState(WEST_AFRICA_COUNTRIES.find((c) => c.name === profile?.country)?.code ?? "CI");
   const [operator, setOperator] = useState(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
+  const [phone, setPhone] = useState(profile?.phone ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -44,13 +46,18 @@ export function DepositPage() {
   }, [country]);
 
   const needsActivation = !isAccountActivated(wallet, settings, profile?.role);
+  const selectedCountry = WEST_AFRICA_COUNTRIES.find((c) => c.code === country);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!phone.trim()) {
+      setError("Numéro de téléphone requis — c'est ce numéro qui recevra la demande de paiement.");
+      return;
+    }
     setLoading(true);
     try {
-      await createDepositRequest({ amount, method: operator, provider: settings.paymentProvider, country });
+      await createDepositRequest({ amount, method: operator, provider: settings.paymentProvider, country, phone: phone.trim() });
       if (settings.paymentProvider === "mock") {
         notify.success(`Frais d'activation (démo) de ${formatCurrency(amount, settings.currencyLabel)} payés — compte activé.`);
       } else {
@@ -141,6 +148,14 @@ export function DepositPage() {
               onChange={(e) => setOperator(e.target.value)}
             />
           </div>
+          <Input
+            label="Numéro de téléphone"
+            required
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder={`${selectedCountry?.phoneCode ?? ""} 00 00 00 00`}
+          />
+          <p className="-mt-2 text-xs text-text-secondary">C'est ce numéro qui recevra la demande de paiement Mobile Money.</p>
           <Button type="submit" fullWidth loading={loading}>
             {settings.paymentProvider === "mock" ? "Activer mon compte (démo)" : "Activer mon compte"}
           </Button>

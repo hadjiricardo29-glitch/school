@@ -39,6 +39,7 @@ Deno.serve(async (req: Request) => {
       const method = String(body.method ?? "mobile_money");
       const providerName = String(body.provider ?? "mock");
       const country = body.country ? String(body.country) : undefined;
+      const phone = body.phone ? String(body.phone) : undefined;
 
       if (!amount || amount <= 0) {
         return json({ error: "Invalid amount" }, 400);
@@ -59,7 +60,10 @@ Deno.serve(async (req: Request) => {
         email: userData.user.email,
         firstName: profile?.first_name ?? undefined,
         lastName: profile?.last_name ?? undefined,
-        phone: profile?.phone ?? undefined,
+        // Le numéro saisi sur la page de dépôt prime sur celui du profil —
+        // c'est lui qui recevra le push Mobile Money, pas forcément le même
+        // que celui donné à l'inscription.
+        phone: phone ?? profile?.phone ?? undefined,
       });
       if (!intent.reference) {
         // Ne jamais créer un dépôt que le webhook ne pourra plus jamais
