@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useT } from "@/i18n/useT";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
@@ -11,7 +12,7 @@ import { getWallet } from "@/services/wallet";
 import { claimDailySpin, getNextSpinAt } from "@/services/spin";
 import { isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
-import { formatCurrency } from "@/utils/format";
+import { formatCurrency, getLocale } from "@/utils/format";
 import { notify } from "@/utils/toast";
 import type { Wallet } from "@/types/domain";
 
@@ -44,6 +45,7 @@ function nearestSegmentIndex(values: number[], reward: number) {
 export function SpinPage() {
   const { profile } = useAuth();
   const { settings } = useSettings();
+  const t = useT().spin;
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [nextSpinAt, setNextSpinAt] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
@@ -86,13 +88,13 @@ export function SpinPage() {
       });
       setTimeout(async () => {
         setLastReward(reward);
-        notify.success(`Vous avez gagné ${formatCurrency(reward, settings.currencyLabel)} !`);
+        notify.success(t.won.replace("{amount}", formatCurrency(reward, settings.currencyLabel)));
         await load();
         setSpinning(false);
       }, 2200);
     } catch (err) {
       setSpinning(false);
-      notify.error(err instanceof Error ? err.message : "Impossible de tourner la roue pour le moment");
+      notify.error(err instanceof Error ? err.message : t.spinError);
     }
   }
 
@@ -101,16 +103,18 @@ export function SpinPage() {
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Roue de la chance</h1>
+        <h1 className="text-xl font-semibold text-text-primary">{t.title}</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          {settings.spinMaxPerWindow} tirages gratuits tous les {settings.spinWindowDays} jours, montant entre{" "}
-          {formatCurrency(settings.spinMinReward, settings.currencyLabel)} et{" "}
-          {formatCurrency(settings.spinMaxReward, settings.currencyLabel)}.
+          {t.subtitle
+            .replace("{count}", String(settings.spinMaxPerWindow))
+            .replace("{days}", String(settings.spinWindowDays))
+            .replace("{min}", formatCurrency(settings.spinMinReward, settings.currencyLabel))
+            .replace("{max}", formatCurrency(settings.spinMaxReward, settings.currencyLabel))}
         </p>
       </div>
 
       {!settings.spinEnabled ? (
-        <Alert tone="info">La roue de la chance n'est pas disponible pour le moment.</Alert>
+        <Alert tone="info">{t.disabled}</Alert>
       ) : !isAccountActivated(wallet, settings, profile?.role) ? (
         <ActivationBanner />
       ) : (
@@ -177,16 +181,16 @@ export function SpinPage() {
         </div>
 
           {lastReward !== null && !spinning && (
-            <Alert tone="success">Bravo ! +{formatCurrency(lastReward, settings.currencyLabel)} ajoutés à votre solde.</Alert>
+            <Alert tone="success">+{formatCurrency(lastReward, settings.currencyLabel)} {t.addedToBalance}</Alert>
           )}
 
           {canSpin ? (
             <Button size="lg" loading={spinning} onClick={handleSpin}>
-              {spinning ? "Ça tourne..." : "Tourner la roue"}
+              {spinning ? t.spinning : t.spinButton}
             </Button>
           ) : (
             <p className="text-sm text-text-secondary">
-              Prochain tir disponible le {nextSpinAt?.toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" })}
+              {t.nextSpinAt} {nextSpinAt?.toLocaleString(getLocale(), { dateStyle: "medium", timeStyle: "short" })}
             </p>
           )}
         </Card>
@@ -194,4 +198,3 @@ export function SpinPage() {
     </div>
   );
 }
-

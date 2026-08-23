@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/services/supabase";
 import { BRANDING } from "@/config/branding";
+import { setLocale } from "@/utils/format";
 
 interface Settings {
   platformName: string;
@@ -102,6 +103,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       paymentProvider: (map.get("payment_provider") as "mock" | "saspay") ?? DEFAULT_SETTINGS.paymentProvider,
       platformLanguage: (map.get("platform_language") as "en" | "fr") ?? DEFAULT_SETTINGS.platformLanguage,
     });
+    setLocale((map.get("platform_language") as "en" | "fr") ?? DEFAULT_SETTINGS.platformLanguage);
     setLoading(false);
   }
 

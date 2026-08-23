@@ -1,24 +1,16 @@
 import { StatusBadge } from "@/components/ui/Badge";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useT } from "@/i18n/useT";
 import type { Transaction } from "@/types/domain";
 import { formatCurrency, formatDateTime } from "@/utils/format";
 
-const TYPE_LABELS: Record<string, string> = {
-  TASK_REWARD: "Récompense tâche",
-  REFERRAL_COMMISSION: "Commission de parrainage",
-  DEPOSIT: "Frais d'activation",
-  WITHDRAWAL: "Retrait",
-  BONUS: "Bonus",
-  REFUND: "Remboursement",
-  ADJUSTMENT: "Ajustement",
-};
-
 export function TransactionRow({ transaction }: { transaction: Transaction }) {
   const { settings } = useSettings();
+  const t = useT().transactions;
   return (
     <div className="flex items-center justify-between gap-3 py-3 text-sm">
       <div className="min-w-0">
-        <p className="truncate font-medium text-text-primary">{transaction.description || TYPE_LABELS[transaction.type]}</p>
+        <p className="truncate font-medium text-text-primary">{transaction.description || t.types[transaction.type]}</p>
         <p className="mt-0.5 text-xs text-text-secondary">
           {formatDateTime(transaction.created_at)} · {transaction.reference}
         </p>

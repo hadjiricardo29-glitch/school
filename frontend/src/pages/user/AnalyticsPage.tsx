@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useT } from "@/i18n/useT";
 import { StatCard } from "@/components/ui/StatCard";
 import { ChartCard } from "@/components/ui/ChartCard";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -9,7 +10,7 @@ import { getTransactions } from "@/services/wallet";
 import { getMySubmissions } from "@/services/tasks";
 import { getReferralStats, type ReferralStats } from "@/services/referrals";
 import type { Transaction, TaskSubmission } from "@/types/domain";
-import { formatCurrency } from "@/utils/format";
+import { formatCurrency, getLocale } from "@/utils/format";
 
 function sumSince(transactions: Transaction[], since: Date) {
   return transactions.filter((t) => t.amount > 0 && new Date(t.created_at) >= since).reduce((s, t) => s + t.amount, 0);
@@ -18,6 +19,7 @@ function sumSince(transactions: Transaction[], since: Date) {
 export function AnalyticsPage() {
   const { profile } = useAuth();
   const { settings } = useSettings();
+  const t = useT().analytics;
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [submissions, setSubmissions] = useState<TaskSubmission[]>([]);
   const [referralStats, setReferralStats] = useState<ReferralStats | null>(null);
@@ -61,7 +63,7 @@ export function AnalyticsPage() {
       if (key in days) days[key] += t.amount;
     });
     return Object.entries(days).map(([date, total]) => ({
-      date: new Intl.DateTimeFormat("fr-FR", { weekday: "short" }).format(new Date(date)),
+      date: new Intl.DateTimeFormat(getLocale(), { weekday: "short" }).format(new Date(date)),
       total,
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -80,7 +82,7 @@ export function AnalyticsPage() {
     });
     return Object.entries(months).map(([key, total]) => {
       const [y, m] = key.split("-").map(Number);
-      return { month: new Intl.DateTimeFormat("fr-FR", { month: "short" }).format(new Date(y, m, 1)), total };
+      return { month: new Intl.DateTimeFormat(getLocale(), { month: "short" }).format(new Date(y, m, 1)), total };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions]);
@@ -90,26 +92,26 @@ export function AnalyticsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Statistiques</h1>
-        <p className="mt-1 text-sm text-text-secondary">Vue détaillée de votre performance sur la plateforme.</p>
+        <h1 className="text-xl font-semibold text-text-primary">{t.title}</h1>
+        <p className="mt-1 text-sm text-text-secondary">{t.subtitle}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Gains aujourd'hui" value={formatCurrency(earningsToday, settings.currencyLabel)} />
-        <StatCard label="Gains cette semaine" value={formatCurrency(earningsWeek, settings.currencyLabel)} />
-        <StatCard label="Gains ce mois" value={formatCurrency(earningsMonth, settings.currencyLabel)} tone="primary" />
-        <StatCard label="Gains totaux" value={formatCurrency(earningsTotal, settings.currencyLabel)} />
+        <StatCard label={t.todayEarnings} value={formatCurrency(earningsToday, settings.currencyLabel)} />
+        <StatCard label={t.weekEarnings} value={formatCurrency(earningsWeek, settings.currencyLabel)} />
+        <StatCard label={t.monthEarnings} value={formatCurrency(earningsMonth, settings.currencyLabel)} tone="primary" />
+        <StatCard label={t.totalEarnings} value={formatCurrency(earningsTotal, settings.currencyLabel)} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Tâches complétées" value={tasksCompleted} />
-        <StatCard label="Taux de réussite" value={`${successRate}%`} />
-        <StatCard label="Gains de parrainage" value={formatCurrency(referralStats?.totalCommissions ?? 0, settings.currencyLabel)} />
-        <StatCard label="Taille de l'équipe" value={referralStats?.networkSize ?? 0} />
+        <StatCard label={t.tasksCompleted} value={tasksCompleted} />
+        <StatCard label={t.successRate} value={`${successRate}%`} />
+        <StatCard label={t.referralEarnings} value={formatCurrency(referralStats?.totalCommissions ?? 0, settings.currencyLabel)} />
+        <StatCard label={t.teamSize} value={referralStats?.networkSize ?? 0} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <ChartCard title="Gains quotidiens" subtitle="7 derniers jours">
+        <ChartCard title={t.dailyEarnings} subtitle={t.last7days}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={dailyData}>
               <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} />
@@ -120,7 +122,7 @@ export function AnalyticsPage() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Gains mensuels" subtitle="6 derniers mois">
+        <ChartCard title={t.monthlyEarnings} subtitle={t.last6months}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={monthlyData}>
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} />

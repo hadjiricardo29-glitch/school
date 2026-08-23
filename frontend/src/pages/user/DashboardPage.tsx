@@ -17,7 +17,7 @@ import { listPublishedTasks } from "@/services/tasks";
 import { getDirectReferrals, getMyRank, type ReferralWithStatus } from "@/services/referrals";
 import type { Deposit, EarningBucket, MyRank, Task, Transaction, Wallet, WalletBalance } from "@/types/domain";
 import { EARNING_BUCKET_COLORS, EARNING_BUCKET_LABELS } from "@/types/domain";
-import { formatCurrency, formatDate } from "@/utils/format";
+import { formatCurrency, formatDate, getLocale } from "@/utils/format";
 import { hasUsedDeposit, isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
 import { useT } from "@/i18n/useT";
@@ -86,7 +86,7 @@ export function DashboardPage() {
         if (key in days) days[key] += t.amount;
       });
     return Object.entries(days).map(([date, total]) => ({
-      date: new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" }).format(new Date(date)),
+      date: new Intl.DateTimeFormat(getLocale(), { day: "2-digit", month: "2-digit" }).format(new Date(date)),
       total,
     }));
   }, [transactions]);
