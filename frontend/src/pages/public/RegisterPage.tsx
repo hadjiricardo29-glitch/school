@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { COUNTRIES } from "@/config/countries";
 import { registerUser } from "@/services/auth";
+import { useT } from "@/i18n/useT";
 
 export function RegisterPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const t = useT().register;
 
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -44,23 +46,23 @@ export function RegisterPage() {
     setError(null);
 
     if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas");
+      setError(t.errorPasswordMismatch);
       return;
     }
     if (password.length < 8) {
-      setError("Le mot de passe doit contenir au moins 8 caractères");
+      setError(t.errorPasswordLength);
       return;
     }
     if (!acceptTerms || !acceptPrivacy) {
-      setError("Vous devez accepter les conditions d'utilisation et la politique de confidentialité");
+      setError(t.errorAcceptTerms);
       return;
     }
     if (!referralCode.trim()) {
-      setError("Le code de parrainage est requis pour créer un compte");
+      setError(t.errorReferralRequired);
       return;
     }
     if (referralCode.trim().toUpperCase() === username.trim().toUpperCase()) {
-      setError("Vous ne pouvez pas être votre propre parrain");
+      setError(t.errorSelfReferral);
       return;
     }
 
@@ -92,13 +94,12 @@ export function RegisterPage() {
 
   if (confirmationSent) {
     return (
-      <AuthCard title="Vérifiez votre email">
+      <AuthCard title={t.checkEmailTitle}>
         <Alert tone="success">
-          Un email de confirmation a été envoyé à <strong>{email}</strong>. Cliquez sur le lien reçu pour activer votre
-          compte, puis connectez-vous.
+          {t.checkEmailBody} (<strong>{email}</strong>)
         </Alert>
         <Link to="/login" className="mt-6 block">
-          <Button fullWidth>Aller à la connexion</Button>
+          <Button fullWidth>{t.goToLogin}</Button>
         </Link>
       </AuthCard>
     );
@@ -106,13 +107,13 @@ export function RegisterPage() {
 
   return (
     <AuthCard
-      title="Créer un compte"
-      subtitle="Rejoignez Motosu et commencez à gagner"
+      title={t.title}
+      subtitle={t.subtitle}
       footer={
         <>
-          Déjà un compte ?{" "}
+          {t.alreadyAccount}{" "}
           <Link to="/login" className="font-medium text-primary hover:underline">
-            Se connecter
+            {t.login}
           </Link>
         </>
       }
@@ -121,22 +122,22 @@ export function RegisterPage() {
         {error && <Alert tone="error">{error}</Alert>}
 
         <div className="grid grid-cols-2 gap-3">
-          <Input label="Prénom" required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-          <Input label="Nom" required value={lastName} onChange={(e) => setLastName(e.target.value)} />
+          <Input label={t.firstName} required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+          <Input label={t.lastName} required value={lastName} onChange={(e) => setLastName(e.target.value)} />
         </div>
 
         <Input
-          label="Nom d'utilisateur"
+          label={t.username}
           required
           leftIcon={<User className="size-4" />}
           value={username}
           onChange={(e) => setUsername(e.target.value.replace(/\s/g, "").toLowerCase())}
           placeholder="prince123"
-          hint="Utilisé pour votre lien de parrainage"
+          hint={t.usernameHint}
         />
 
         <Input
-          label="Email"
+          label={t.email}
           type="email"
           required
           leftIcon={<Mail className="size-4" />}
@@ -147,13 +148,13 @@ export function RegisterPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <Select
-            label="Pays"
+            label={t.country}
             options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
             value={country}
             onChange={(e) => setCountry(e.target.value)}
           />
           <Input
-            label="Téléphone"
+            label={t.phone}
             required
             leftIcon={<Phone className="size-4" />}
             value={phone}
@@ -164,7 +165,7 @@ export function RegisterPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="Mot de passe"
+            label={t.password}
             type="password"
             required
             leftIcon={<Lock className="size-4" />}
@@ -173,7 +174,7 @@ export function RegisterPage() {
             placeholder="••••••••"
           />
           <Input
-            label="Confirmer"
+            label={t.confirm}
             type="password"
             required
             leftIcon={<Lock className="size-4" />}
@@ -184,13 +185,13 @@ export function RegisterPage() {
         </div>
 
         <Input
-          label="Code de parrainage"
+          label={t.referralCode}
           required
           value={referralCode}
           onChange={(e) => setReferralCode(e.target.value)}
           disabled={referralLocked}
           placeholder="PRINCE123"
-          hint={referralLocked ? "Rempli automatiquement depuis votre lien d'invitation" : "Demandez le code à la personne qui vous a invité"}
+          hint={referralLocked ? t.referralHintLocked : t.referralHint}
         />
 
         <div className="flex flex-col gap-2">
@@ -201,9 +202,9 @@ export function RegisterPage() {
               checked={acceptTerms}
               onChange={(e) => setAcceptTerms(e.target.checked)}
             />
-            J'accepte les{" "}
+            {t.acceptTermsPrefix}{" "}
             <Link to="/terms" className="text-primary hover:underline" target="_blank">
-              Conditions d'utilisation
+              {t.terms}
             </Link>
           </label>
           <label className="flex items-start gap-2 text-sm text-text-secondary">
@@ -213,15 +214,15 @@ export function RegisterPage() {
               checked={acceptPrivacy}
               onChange={(e) => setAcceptPrivacy(e.target.checked)}
             />
-            J'accepte la{" "}
+            {t.acceptPrivacyPrefix}{" "}
             <Link to="/privacy" className="text-primary hover:underline" target="_blank">
-              Politique de confidentialité
+              {t.privacy}
             </Link>
           </label>
         </div>
 
         <Button type="submit" fullWidth loading={loading}>
-          Créer mon compte
+          {t.submit}
         </Button>
       </form>
     </AuthCard>

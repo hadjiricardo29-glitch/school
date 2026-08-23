@@ -2,8 +2,10 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/shared/Logo";
 import { GradientBackdrop } from "@/components/shared/GradientBackdrop";
+import { useT } from "@/i18n/useT";
 
 export function AuthCard({ title, subtitle, children, footer }: { title: string; subtitle?: string; children: ReactNode; footer?: ReactNode }) {
+  const t = useT().login;
   return (
     <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-surface-alt px-4 py-10">
       <GradientBackdrop />
@@ -19,7 +21,7 @@ export function AuthCard({ title, subtitle, children, footer }: { title: string;
         {footer && <div className="mt-6 text-center text-sm text-text-secondary">{footer}</div>}
         <p className="mt-8 text-center text-xs text-text-secondary">
           <Link to="/accueil" className="hover:text-text-primary">
-            ← Retour à l'accueil
+            ← {t.backHome}
           </Link>
         </p>
       </div>

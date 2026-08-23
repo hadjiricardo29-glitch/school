@@ -20,11 +20,13 @@ import { EARNING_BUCKET_COLORS, EARNING_BUCKET_LABELS } from "@/types/domain";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { hasUsedDeposit, isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
+import { useT } from "@/i18n/useT";
 import { cn } from "@/utils/cn";
 
 export function DashboardPage() {
   const { profile } = useAuth();
   const { settings } = useSettings();
+  const t = useT().dashboard;
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [balances, setBalances] = useState<WalletBalance[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -89,13 +91,15 @@ export function DashboardPage() {
     }));
   }, [transactions]);
 
-  if (loading) return <LoadingState label="Chargement de votre dashboard..." />;
+  if (loading) return <LoadingState label={t.loading} />;
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Bonjour, {profile?.first_name ?? profile?.username} 👋</h1>
-        <p className="mt-1 text-sm text-text-secondary">Votre activité en un coup d'œil.</p>
+        <h1 className="text-xl font-semibold text-text-primary">
+          {t.greeting.replace("{name}", profile?.first_name ?? profile?.username ?? "")} 👋
+        </h1>
+        <p className="mt-1 text-sm text-text-secondary">{t.subtitle}</p>
       </div>
 
       {!isAccountActivated(wallet, settings, profile?.role) && <ActivationBanner />}
@@ -108,7 +112,7 @@ export function DashboardPage() {
         />
         <StatCard
           className="aspect-square"
-          label="Solde disponible"
+          label={t.availableBalance}
           value={formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
           icon={WalletIcon}
           tone="primary"
@@ -116,7 +120,7 @@ export function DashboardPage() {
         />
         <StatCard
           className="aspect-square"
-          label="Total retiré"
+          label={t.totalWithdrawn}
           value={formatCurrency(wallet?.total_withdrawn ?? 0, settings.currencyLabel)}
           icon={ArrowDownToLine}
           tone="success"
@@ -124,23 +128,23 @@ export function DashboardPage() {
         />
         <StatCard
           className="aspect-square"
-          label="Mon rang"
+          label={t.myRank}
           value={myRank ? `#${myRank.rank}` : "—"}
           icon={Trophy}
           tone="purple"
           variant="filled"
-          hint={myRank ? "Top gains cumulés" : "Pas encore classé"}
+          hint={myRank ? t.topEarnings : t.notRankedYet}
         />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Gains du jour" value={formatCurrency(todayEarnings, settings.currencyLabel)} />
-        <StatCard label="Total des gains" value={formatCurrency(wallet?.total_earned ?? 0, settings.currencyLabel)} icon={WalletIcon} />
-        <StatCard label="Gains de parrainage" value={formatCurrency(referralEarnings, settings.currencyLabel)} icon={Share2} />
+        <StatCard label={t.todayEarnings} value={formatCurrency(todayEarnings, settings.currencyLabel)} />
+        <StatCard label={t.totalEarnings} value={formatCurrency(wallet?.total_earned ?? 0, settings.currencyLabel)} icon={WalletIcon} />
+        <StatCard label={t.referralEarnings} value={formatCurrency(referralEarnings, settings.currencyLabel)} icon={Share2} />
       </div>
 
       <Card>
-        <CardHeader title="Solde par catégorie" subtitle="Ce que vous pouvez retirer, ventilé par source de gain" />
+        <CardHeader title={t.byCategory} subtitle={t.byCategorySubtitle} />
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {(Object.keys(EARNING_BUCKET_LABELS) as EarningBucket[]).map((b) => (
             <div key={b} className={cn("rounded-md p-3", EARNING_BUCKET_COLORS[b])}>
@@ -153,7 +157,7 @@ export function DashboardPage() {
         </div>
       </Card>
 
-      <ChartCard title="Évolution des gains" subtitle="14 derniers jours">
+      <ChartCard title={t.earningsChart} subtitle={t.last14days}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
             <defs>
@@ -175,20 +179,20 @@ export function DashboardPage() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader title="Transactions récentes" action={<Link to="/transactions" className="text-xs font-medium text-primary hover:underline">Voir tout</Link>} />
+          <CardHeader title={t.recentTransactions} action={<Link to="/transactions" className="text-xs font-medium text-primary hover:underline">{t.seeAll}</Link>} />
           {transactions.length === 0 ? (
-            <EmptyState title="Aucune transaction pour le moment" />
+            <EmptyState title={t.noTransactions} />
           ) : (
             <div className="flex flex-col divide-y divide-border">
-              {transactions.slice(0, 6).map((t) => (
-                <div key={t.id} className="flex items-center justify-between py-3 text-sm">
+              {transactions.slice(0, 6).map((tx) => (
+                <div key={tx.id} className="flex items-center justify-between py-3 text-sm">
                   <div>
-                    <p className="font-medium text-text-primary">{t.description ?? t.type}</p>
-                    <p className="text-xs text-text-secondary">{formatDate(t.created_at)}</p>
+                    <p className="font-medium text-text-primary">{tx.description ?? tx.type}</p>
+                    <p className="text-xs text-text-secondary">{formatDate(tx.created_at)}</p>
                   </div>
-                  <span className={t.amount >= 0 ? "font-semibold text-success" : "font-semibold text-error"}>
-                    {t.amount >= 0 ? "+" : ""}
-                    {formatCurrency(t.amount, settings.currencyLabel)}
+                  <span className={tx.amount >= 0 ? "font-semibold text-success" : "font-semibold text-error"}>
+                    {tx.amount >= 0 ? "+" : ""}
+                    {formatCurrency(tx.amount, settings.currencyLabel)}
                   </span>
                 </div>
               ))}
@@ -197,29 +201,29 @@ export function DashboardPage() {
         </Card>
 
         <Card>
-          <CardHeader title="Actions rapides" />
+          <CardHeader title={t.quickActions} />
           <div className="flex flex-col gap-2">
             <Link to="/tasks">
               <Button variant="outline" fullWidth icon={<ListChecks className="size-4" />}>
-                Parcourir les tâches
+                {t.browseTasks}
               </Button>
             </Link>
             {!hasUsedDeposit(deposits) && (
               <Link to="/wallet/deposit">
                 <Button variant="success" fullWidth icon={<WalletIcon className="size-4" />}>
-                  Déposer
+                  {t.deposit}
                 </Button>
               </Link>
             )}
             <Link to="/referrals">
               <Button variant="outline" fullWidth icon={<Share2 className="size-4" />}>
-                Inviter des amis
+                {t.inviteFriends}
               </Button>
             </Link>
             {settings.spinEnabled && (
               <Link to="/spin">
                 <Button variant="outline" fullWidth icon={<Sparkles className="size-4" />}>
-                  Roue de la chance
+                  {t.luckyWheel}
                 </Button>
               </Link>
             )}
@@ -229,9 +233,9 @@ export function DashboardPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Tâches journalières" action={<Link to="/tasks" className="text-xs font-medium text-primary hover:underline">Voir tout</Link>} />
+          <CardHeader title={t.dailyTasks} action={<Link to="/tasks" className="text-xs font-medium text-primary hover:underline">{t.seeAll}</Link>} />
           {tasks.length === 0 ? (
-            <EmptyState title="Aucune tâche publiée pour le moment" />
+            <EmptyState title={t.noTasksPublished} />
           ) : (
             <div className="flex flex-col gap-3">
               {tasks.map((task) => (
@@ -248,14 +252,14 @@ export function DashboardPage() {
         </Card>
 
         <Card>
-          <CardHeader title="Mon équipe" action={<Link to="/team" className="text-xs font-medium text-primary hover:underline">Voir l'arbre</Link>} />
+          <CardHeader title={t.myTeam} action={<Link to="/team" className="text-xs font-medium text-primary hover:underline">{t.seeTree}</Link>} />
           {team.length === 0 ? (
             <EmptyState
-              title="Aucun filleul pour l'instant"
-              description="Partagez votre lien de parrainage pour commencer à développer votre équipe."
+              title={t.noReferralsYet}
+              description={t.noReferralsBody}
               action={
                 <Link to="/referrals">
-                  <Button size="sm" icon={<ArrowRight className="size-4" />}>Mon lien de parrainage</Button>
+                  <Button size="sm" icon={<ArrowRight className="size-4" />}>{t.myReferralLink}</Button>
                 </Link>
               }
             />

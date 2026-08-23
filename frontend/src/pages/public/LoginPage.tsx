@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { isStaffUser, loginUser } from "@/services/auth";
+import { useT } from "@/i18n/useT";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const t = useT().login;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,7 +31,7 @@ export function LoginPage() {
         navigate(staff ? "/admin" : "/dashboard", { replace: true });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Connexion impossible");
+      setError(err instanceof Error ? err.message : t.error);
     } finally {
       setLoading(false);
     }
@@ -37,13 +39,13 @@ export function LoginPage() {
 
   return (
     <AuthCard
-      title="Connexion"
-      subtitle="Accédez à votre espace Motosu"
+      title={t.title}
+      subtitle={t.subtitle}
       footer={
         <>
-          Pas encore de compte ?{" "}
+          {t.noAccount}{" "}
           <Link to="/register" className="font-medium text-primary hover:underline">
-            Créer un compte
+            {t.createAccount}
           </Link>
         </>
       }
@@ -51,7 +53,7 @@ export function LoginPage() {
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         {error && <Alert tone="error">{error}</Alert>}
         <Input
-          label="Email"
+          label={t.email}
           type="email"
           required
           leftIcon={<Mail className="size-4" />}
@@ -60,7 +62,7 @@ export function LoginPage() {
           placeholder="vous@exemple.com"
         />
         <Input
-          label="Mot de passe"
+          label={t.password}
           type="password"
           required
           leftIcon={<Lock className="size-4" />}
@@ -69,7 +71,7 @@ export function LoginPage() {
           placeholder="••••••••"
         />
         <Button type="submit" fullWidth loading={loading}>
-          Se connecter
+          {t.submit}
         </Button>
       </form>
     </AuthCard>

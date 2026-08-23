@@ -1,8 +1,10 @@
 import { NavLink } from "react-router-dom";
 import { USER_BOTTOM_NAV } from "@/config/navigation";
+import { useT } from "@/i18n/useT";
 import { cn } from "@/utils/cn";
 
 export function AppBottomNav() {
+  const t = useT();
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-surface/95 backdrop-blur lg:hidden">
       {USER_BOTTOM_NAV.map((item) => (
@@ -19,7 +21,7 @@ export function AppBottomNav() {
           {({ isActive }) => (
             <>
               <item.icon className={cn("size-5", isActive && "stroke-[2.5]")} />
-              {item.label}
+              {item.labelKey ? t.nav[item.labelKey] : item.label}
             </>
           )}
         </NavLink>

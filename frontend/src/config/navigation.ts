@@ -24,6 +24,9 @@ import {
   Video,
   type LucideIcon,
 } from "lucide-react";
+import type { translations } from "@/i18n/translations";
+
+type NavLabelKey = keyof typeof translations.en.nav;
 
 export interface NavItem {
   label: string;
@@ -31,33 +34,35 @@ export interface NavItem {
   icon: LucideIcon;
   /** Affiché en retrait, comme sous-item du lien juste au-dessus. */
   indent?: boolean;
+  /** Clé dans translations.<lang>.nav — si absente, `label` (FR) est utilisé tel quel. */
+  labelKey?: NavLabelKey;
 }
 
 export const USER_SIDEBAR_NAV: NavItem[] = [
-  { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-  { label: "Tâches journalières", to: "/tasks", icon: ListChecks },
-  { label: "Réseaux sociaux", to: "/tasks/social", icon: Video, indent: true },
-  { label: "Formations", to: "/courses", icon: GraduationCap },
-  { label: "Portefeuille", to: "/wallet", icon: Wallet },
-  { label: "Retrait", to: "/wallet?tab=withdrawals", icon: ArrowUpFromLine, indent: true },
-  { label: "Transactions", to: "/transactions", icon: Receipt },
-  { label: "Équipe", to: "/team", icon: Users },
-  { label: "Canal de diffusion", to: "/channels", icon: Radio },
-  { label: "Classement", to: "/leaderboard", icon: Trophy },
-  { label: "Roue de la chance", to: "/spin", icon: Sparkles },
-  { label: "Statistiques", to: "/analytics", icon: BarChart3 },
-  { label: "Notifications", to: "/notifications", icon: Bell },
-  { label: "Support", to: "/support", icon: LifeBuoy },
-  { label: "Paramètres", to: "/settings", icon: Settings },
+  { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, labelKey: "dashboard" },
+  { label: "Tâches journalières", to: "/tasks", icon: ListChecks, labelKey: "tasks" },
+  { label: "Réseaux sociaux", to: "/tasks/social", icon: Video, indent: true, labelKey: "socialTasks" },
+  { label: "Formations", to: "/courses", icon: GraduationCap, labelKey: "courses" },
+  { label: "Portefeuille", to: "/wallet", icon: Wallet, labelKey: "wallet" },
+  { label: "Retrait", to: "/wallet?tab=withdrawals", icon: ArrowUpFromLine, indent: true, labelKey: "withdraw" },
+  { label: "Transactions", to: "/transactions", icon: Receipt, labelKey: "transactions" },
+  { label: "Équipe", to: "/team", icon: Users, labelKey: "team" },
+  { label: "Canal de diffusion", to: "/channels", icon: Radio, labelKey: "channels" },
+  { label: "Classement", to: "/leaderboard", icon: Trophy, labelKey: "leaderboard" },
+  { label: "Roue de la chance", to: "/spin", icon: Sparkles, labelKey: "spin" },
+  { label: "Statistiques", to: "/analytics", icon: BarChart3, labelKey: "analytics" },
+  { label: "Notifications", to: "/notifications", icon: Bell, labelKey: "notifications" },
+  { label: "Support", to: "/support", icon: LifeBuoy, labelKey: "support" },
+  { label: "Paramètres", to: "/settings", icon: Settings, labelKey: "settings" },
 ];
 
 export const USER_BOTTOM_NAV: NavItem[] = [
-  { label: "Accueil", to: "/dashboard", icon: Home },
-  { label: "Tâches", to: "/tasks", icon: ListChecks },
-  { label: "Formations", to: "/courses", icon: GraduationCap },
-  { label: "Wallet", to: "/wallet", icon: Wallet },
-  { label: "Équipe", to: "/team", icon: Users },
-  { label: "Profil", to: "/profile", icon: UserCircle },
+  { label: "Accueil", to: "/dashboard", icon: Home, labelKey: "bottomHome" },
+  { label: "Tâches", to: "/tasks", icon: ListChecks, labelKey: "bottomTasks" },
+  { label: "Formations", to: "/courses", icon: GraduationCap, labelKey: "bottomCourses" },
+  { label: "Wallet", to: "/wallet", icon: Wallet, labelKey: "bottomWallet" },
+  { label: "Équipe", to: "/team", icon: Users, labelKey: "bottomTeam" },
+  { label: "Profil", to: "/profile", icon: UserCircle, labelKey: "bottomProfile" },
 ];
 
 export const ADMIN_SIDEBAR_NAV: NavItem[] = [

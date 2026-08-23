@@ -3,10 +3,12 @@ import { LogOut } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { USER_SIDEBAR_NAV } from "@/config/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/i18n/useT";
 import { cn } from "@/utils/cn";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
+  const t = useT();
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex">
@@ -27,7 +29,7 @@ export function AppSidebar() {
             }
           >
             <item.icon className={item.indent ? "size-4" : "size-[18px]"} />
-            {item.label}
+            {item.labelKey ? t.nav[item.labelKey] : item.label}
           </NavLink>
         ))}
       </nav>
@@ -37,7 +39,7 @@ export function AppSidebar() {
           className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-secondary hover:bg-surface-alt hover:text-text-primary"
         >
           <LogOut className="size-[18px]" />
-          Déconnexion
+          {t.nav.logout}
         </button>
       </div>
     </aside>

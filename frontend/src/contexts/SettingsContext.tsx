@@ -27,6 +27,7 @@ interface Settings {
   spinMaxPerWindow: number;
   spinWindowDays: number;
   paymentProvider: "mock" | "saspay";
+  platformLanguage: "en" | "fr";
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -54,6 +55,7 @@ const DEFAULT_SETTINGS: Settings = {
   spinMaxPerWindow: 2,
   spinWindowDays: 7,
   paymentProvider: "mock",
+  platformLanguage: "en",
 };
 
 const SettingsContext = createContext<{ settings: Settings; loading: boolean; refresh: () => Promise<void> }>({
@@ -98,6 +100,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       spinMaxPerWindow: Number(map.get("spin_max_per_window") ?? DEFAULT_SETTINGS.spinMaxPerWindow),
       spinWindowDays: Number(map.get("spin_window_days") ?? DEFAULT_SETTINGS.spinWindowDays),
       paymentProvider: (map.get("payment_provider") as "mock" | "saspay") ?? DEFAULT_SETTINGS.paymentProvider,
+      platformLanguage: (map.get("platform_language") as "en" | "fr") ?? DEFAULT_SETTINGS.platformLanguage,
     });
     setLoading(false);
   }

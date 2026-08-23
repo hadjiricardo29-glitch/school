@@ -4,10 +4,12 @@ import { LogOut } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { USER_SIDEBAR_NAV } from "@/config/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/i18n/useT";
 import { cn } from "@/utils/cn";
 
 export function AppMobileDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { signOut } = useAuth();
+  const t = useT();
 
   return (
     <AnimatePresence>
@@ -44,7 +46,7 @@ export function AppMobileDrawer({ open, onClose }: { open: boolean; onClose: () 
                   }
                 >
                   <item.icon className="size-[18px]" />
-                  {item.label}
+                  {item.labelKey ? t.nav[item.labelKey] : item.label}
                 </NavLink>
               ))}
             </nav>
@@ -54,7 +56,7 @@ export function AppMobileDrawer({ open, onClose }: { open: boolean; onClose: () 
                 className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-secondary hover:bg-surface-alt hover:text-text-primary"
               >
                 <LogOut className="size-[18px]" />
-                Déconnexion
+                {t.nav.logout}
               </button>
             </div>
           </motion.aside>

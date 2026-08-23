@@ -5,6 +5,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "@/components/shared/Logo";
+import { useT } from "@/i18n/useT";
 import avatarMascot from "@/assets/avatar-mascot.png";
 
 const STAFF_ROLES = ["ADMIN", "MODERATOR", "FINANCE_ADMIN", "TASK_MANAGER"];
@@ -12,6 +13,7 @@ const STAFF_ROLES = ["ADMIN", "MODERATOR", "FINANCE_ADMIN", "TASK_MANAGER"];
 export function AppTopbar({ title, onMenuClick }: { title?: string; onMenuClick?: () => void }) {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const t = useT();
   const isStaff = !!profile && STAFF_ROLES.includes(profile.role);
 
   return (
@@ -39,11 +41,11 @@ export function AppTopbar({ title, onMenuClick }: { title?: string; onMenuClick?
           }
           items={[
             ...(isStaff
-              ? [{ label: "Administration", icon: <LayoutDashboard className="size-4" />, onClick: () => navigate("/admin") }]
+              ? [{ label: t.topbar.administration, icon: <LayoutDashboard className="size-4" />, onClick: () => navigate("/admin") }]
               : []),
-            { label: "Mon profil", icon: <UserCircle className="size-4" />, onClick: () => navigate("/profile") },
-            { label: "Paramètres", icon: <Settings className="size-4" />, onClick: () => navigate("/settings") },
-            { label: "Déconnexion", icon: <LogOut className="size-4" />, onClick: signOut, danger: true },
+            { label: t.topbar.myProfile, icon: <UserCircle className="size-4" />, onClick: () => navigate("/profile") },
+            { label: t.topbar.settings, icon: <Settings className="size-4" />, onClick: () => navigate("/settings") },
+            { label: t.topbar.logout, icon: <LogOut className="size-4" />, onClick: signOut, danger: true },
           ]}
         />
       </div>

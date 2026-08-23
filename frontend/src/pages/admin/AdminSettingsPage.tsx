@@ -24,6 +24,7 @@ export function AdminSettingsPage() {
   const [withdrawalFeeFixed, setWithdrawalFeeFixed] = useState("");
   const [withdrawalMax, setWithdrawalMax] = useState("");
   const [withdrawalMinReferrals, setWithdrawalMinReferrals] = useState("");
+  const [platformLanguage, setPlatformLanguage] = useState<"en" | "fr">("en");
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [registrationEnabled, setRegistrationEnabled] = useState(true);
   const [activationEnabled, setActivationEnabled] = useState(true);
@@ -74,6 +75,7 @@ export function AdminSettingsPage() {
     setSpinMaxPerWindow(String(settings.spinMaxPerWindow));
     setSpinWindowDays(String(settings.spinWindowDays));
     setPaymentProvider(settings.paymentProvider);
+    setPlatformLanguage(settings.platformLanguage);
   }, [settings]);
 
   async function saveGeneral() {
@@ -84,6 +86,7 @@ export function AdminSettingsPage() {
         updateSetting("currency_label", currencyLabel),
         updateSetting("maintenance_mode", maintenanceMode),
         updateSetting("registration_enabled", registrationEnabled),
+        updateSetting("platform_language", platformLanguage),
       ]);
       await refresh();
       notify.success("Paramètres généraux enregistrés");
@@ -237,6 +240,16 @@ export function AdminSettingsPage() {
         <div className="flex flex-col gap-4">
           <Input label="Nom de la plateforme" value={platformName} onChange={(e) => setPlatformName(e.target.value)} />
           <Input label="Libellé de devise" value={currencyLabel} onChange={(e) => setCurrencyLabel(e.target.value)} hint="Ex: FCFA" />
+          <Select
+            label="Langue de la plateforme"
+            options={[
+              { value: "en", label: "English" },
+              { value: "fr", label: "Français" },
+            ]}
+            value={platformLanguage}
+            onChange={(e) => setPlatformLanguage(e.target.value as "en" | "fr")}
+            hint="Change la langue pour tous les utilisateurs — pas un réglage par personne."
+          />
           <label className="flex items-center gap-2 text-sm text-text-primary">
             <input type="checkbox" className="size-4 accent-primary" checked={registrationEnabled} onChange={(e) => setRegistrationEnabled(e.target.checked)} />
             Inscriptions ouvertes

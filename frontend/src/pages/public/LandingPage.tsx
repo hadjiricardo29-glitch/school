@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useT } from "@/i18n/useT";
 import { GradientBackdrop } from "@/components/shared/GradientBackdrop";
 import { formatCurrency } from "@/utils/format";
 
@@ -23,20 +24,28 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
-const WHY_MOTOSU = [
-  { icon: Sparkles, title: "Tâches variées", body: "TikTok, YouTube, sondages, tests d'appli... de nouvelles tâches chaque semaine." },
-  { icon: TrendingUp, title: "Parrainage multi-niveaux", body: "Invitez vos amis, touchez une commission sur leurs gains." },
-  { icon: Clock, title: "Suivi en temps réel", body: "Vos gains, votre équipe, tout en un coup d'œil." },
-];
-
-const HOW_IT_WORKS = [
-  { icon: UserPlus, step: "1", title: "Créez votre compte", body: "Gratuit, en 2 minutes." },
-  { icon: ListChecks, step: "2", title: "Faites une tâche", body: "Envoyez votre preuve, c'est payé direct." },
-  { icon: Share2, step: "3", title: "Invitez vos amis", body: "Touchez une commission sur leurs gains." },
-];
-
 export function LandingPage() {
   const { settings } = useSettings();
+  const t = useT().landing;
+
+  const WHY_MOTOSU = [
+    { icon: Sparkles, title: t.why1Title, body: t.why1Body },
+    { icon: TrendingUp, title: t.why2Title, body: t.why2Body },
+    { icon: Clock, title: t.why3Title, body: t.why3Body },
+  ];
+
+  const HOW_IT_WORKS = [
+    { icon: UserPlus, step: "1", title: t.step1Title, body: t.step1Body },
+    { icon: ListChecks, step: "2", title: t.step2Title, body: t.step2Body },
+    { icon: Share2, step: "3", title: t.step3Title, body: t.step3Body },
+  ];
+
+  const FAQ: [string, string][] = [
+    [t.faq1Q, t.faq1A],
+    [t.faq2Q, t.faq2A],
+    [t.faq3Q, t.faq3A],
+    [t.faq4Q, t.faq4A],
+  ];
 
   return (
     <div>
@@ -45,22 +54,20 @@ export function LandingPage() {
         <GradientBackdrop />
         <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-28">
           <motion.div initial="hidden" animate="show" variants={fadeUp}>
-            <Badge tone="primary">Tâches • Récompenses • Parrainage</Badge>
+            <Badge tone="primary">{t.badge}</Badge>
             <h1 className="mt-4 text-4xl font-semibold tracking-tight text-text-primary sm:text-5xl">
-              Gagnez de l'argent, simplement.
+              {t.heroTitle}
             </h1>
-            <p className="mt-4 max-w-lg text-base text-text-secondary sm:text-lg">
-              Des tâches faciles, payées vite. Invitez vos amis pour gagner encore plus.
-            </p>
+            <p className="mt-4 max-w-lg text-base text-text-secondary sm:text-lg">{t.heroSubtitle}</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link to="/register">
                 <Button size="lg" fullWidth icon={<ArrowRight className="size-4" />}>
-                  Commencer maintenant
+                  {t.ctaStart}
                 </Button>
               </Link>
               <Link to="/tasks">
                 <Button size="lg" variant="outline" fullWidth>
-                  Découvrir les tâches
+                  {t.ctaDiscover}
                 </Button>
               </Link>
             </div>
@@ -73,16 +80,16 @@ export function LandingPage() {
             className="relative"
           >
             <Card className="mx-auto max-w-sm shadow-md ring-1 ring-accent/20">
-              <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">Solde disponible</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">{t.availableBalance}</p>
               <p className="mt-1 text-3xl font-semibold text-text-primary">{formatCurrency(125500, settings.currencyLabel)}</p>
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <div className="rounded-md bg-surface-alt p-3">
-                  <p className="text-xs text-text-secondary">Gains du jour</p>
+                  <p className="text-xs text-text-secondary">{t.todayEarnings}</p>
                   <p className="mt-1 text-sm font-semibold text-success">+{formatCurrency(5000, settings.currencyLabel)}</p>
                 </div>
                 <div className="rounded-md bg-surface-alt p-3">
-                  <p className="text-xs text-text-secondary">Équipe</p>
-                  <p className="mt-1 text-sm font-semibold text-text-primary">24 membres</p>
+                  <p className="text-xs text-text-secondary">{t.team}</p>
+                  <p className="mt-1 text-sm font-semibold text-text-primary">{t.teamMembers}</p>
                 </div>
               </div>
             </Card>
@@ -93,7 +100,7 @@ export function LandingPage() {
       {/* HOW IT WORKS */}
       <section id="how-it-works" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="text-center">
-          <h2 className="text-2xl font-semibold text-text-primary sm:text-3xl">Comment ça marche</h2>
+          <h2 className="text-2xl font-semibold text-text-primary sm:text-3xl">{t.howItWorksTitle}</h2>
         </motion.div>
         <div className="mt-12 grid gap-6 sm:grid-cols-3">
           {HOW_IT_WORKS.map((item) => (
@@ -111,7 +118,7 @@ export function LandingPage() {
       {/* WHY MOTOSU */}
       <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="text-center">
-          <h2 className="text-2xl font-semibold text-text-primary sm:text-3xl">Pourquoi {settings.platformName}</h2>
+          <h2 className="text-2xl font-semibold text-text-primary sm:text-3xl">{t.whyTitle.replace("{platform}", settings.platformName)}</h2>
         </motion.div>
         <div className="mt-12 grid gap-6 sm:grid-cols-3">
           {WHY_MOTOSU.map((item) => (
@@ -133,10 +140,8 @@ export function LandingPage() {
             <ShieldCheck className="size-8" />
           </span>
           <div>
-            <h2 className="text-2xl font-semibold text-text-primary">Sécurisé et transparent</h2>
-            <p className="mt-2 max-w-2xl text-text-secondary">
-              Chaque transaction est enregistrée et vérifiable. Zéro triche, la même chance pour tous.
-            </p>
+            <h2 className="text-2xl font-semibold text-text-primary">{t.securityTitle}</h2>
+            <p className="mt-2 max-w-2xl text-text-secondary">{t.securityBody}</p>
           </div>
         </div>
       </section>
@@ -148,21 +153,19 @@ export function LandingPage() {
             <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Users className="size-6" />
             </span>
-            <h2 className="mt-4 text-2xl font-semibold text-text-primary sm:text-3xl">Programme de parrainage</h2>
-            <p className="mt-3 text-text-secondary">
-              Partagez votre lien. Chaque tâche faite par vos filleuls vous rapporte une commission.
-            </p>
+            <h2 className="mt-4 text-2xl font-semibold text-text-primary sm:text-3xl">{t.referralTitle}</h2>
+            <p className="mt-3 text-text-secondary">{t.referralBody}</p>
             <Link to="/register" className="mt-6 inline-block">
-              <Button icon={<ArrowRight className="size-4" />}>Créer mon lien de parrainage</Button>
+              <Button icon={<ArrowRight className="size-4" />}>{t.referralCta}</Button>
             </Link>
           </div>
           <Card>
-            <p className="text-sm font-semibold text-text-primary">Exemple de commission</p>
+            <p className="text-sm font-semibold text-text-primary">{t.referralExampleTitle}</p>
             <div className="mt-4 flex flex-col divide-y divide-border">
               {[
-                ["Niveau 1 (filleul direct)", "10%"],
-                ["Niveau 2", "5%"],
-                ["Niveau 3", "2%"],
+                [t.level1, "10%"],
+                [t.level2, "5%"],
+                [t.level3, "2%"],
               ].map(([label, pct]) => (
                 <div key={label} className="flex items-center justify-between py-3 text-sm">
                   <span className="text-text-secondary">{label}</span>
@@ -170,7 +173,7 @@ export function LandingPage() {
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-xs text-text-secondary">Barème configurable, consultable en temps réel depuis votre espace.</p>
+            <p className="mt-3 text-xs text-text-secondary">{t.referralNote}</p>
           </Card>
         </div>
       </section>
@@ -178,14 +181,9 @@ export function LandingPage() {
       {/* FAQ */}
       <section id="faq" className="border-t border-border bg-surface py-20">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          <h2 className="text-center text-2xl font-semibold text-text-primary sm:text-3xl">Questions fréquentes</h2>
+          <h2 className="text-center text-2xl font-semibold text-text-primary sm:text-3xl">{t.faqTitle}</h2>
           <div className="mt-10 flex flex-col divide-y divide-border">
-            {[
-              ["L'inscription est-elle gratuite ?", "Oui, la création de compte est entièrement gratuite, avec ou sans lien de parrainage."],
-              ["Quand suis-je payé pour une tâche ?", "Dès que votre soumission est validée par notre équipe, la récompense est créditée immédiatement sur votre portefeuille."],
-              ["Puis-je me parrainer moi-même ?", "Non, le système empêche techniquement l'auto-parrainage et toute tentative de contournement du réseau."],
-              ["Comment fonctionnent les retraits ?", "Vous demandez un retrait depuis votre portefeuille ; le montant, les frais et le délai sont affichés avant confirmation."],
-            ].map(([q, a]) => (
+            {FAQ.map(([q, a]) => (
               <details key={q} className="group py-4">
                 <summary className="cursor-pointer list-none text-sm font-medium text-text-primary marker:content-none">
                   {q}
