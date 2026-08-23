@@ -259,6 +259,21 @@ export interface FraudFlag {
   user?: Profile;
 }
 
+export type SupportTicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
+
+export interface SupportTicket {
+  id: string;
+  user_id: string;
+  subject: string;
+  message: string;
+  status: SupportTicketStatus;
+  admin_reply: string | null;
+  replied_by: string | null;
+  replied_at: string | null;
+  created_at: string;
+  user?: Profile;
+}
+
 export type CourseStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
 export interface Course {

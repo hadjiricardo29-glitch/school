@@ -20,6 +20,7 @@ import {
   Sparkles,
   GraduationCap,
   Radio,
+  LifeBuoy,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,6 +42,7 @@ export const USER_SIDEBAR_NAV: NavItem[] = [
   { label: "Roue de la chance", to: "/spin", icon: Sparkles },
   { label: "Statistiques", to: "/analytics", icon: BarChart3 },
   { label: "Notifications", to: "/notifications", icon: Bell },
+  { label: "Support", to: "/support", icon: LifeBuoy },
   { label: "Paramètres", to: "/settings", icon: Settings },
 ];
 
@@ -63,6 +65,7 @@ export const ADMIN_SIDEBAR_NAV: NavItem[] = [
   { label: "Retraits", to: "/admin/withdrawals", icon: ArrowUpFromLine },
   { label: "Parrainage", to: "/admin/referrals", icon: Share2 },
   { label: "Anti-fraude", to: "/admin/fraud", icon: ShieldAlert },
+  { label: "Support", to: "/admin/support", icon: LifeBuoy },
   { label: "Paramètres", to: "/admin/settings", icon: Landmark },
   { label: "Journal d'audit", to: "/admin/audit-logs", icon: FileClock },
 ];

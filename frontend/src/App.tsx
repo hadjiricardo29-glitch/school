@@ -46,6 +46,8 @@ const AdminDepositsPage = lazy(() => import("@/pages/admin/AdminDepositsPage").t
 const AdminWithdrawalsPage = lazy(() => import("@/pages/admin/AdminWithdrawalsPage").then((m) => ({ default: m.AdminWithdrawalsPage })));
 const AdminReferralsPage = lazy(() => import("@/pages/admin/AdminReferralsPage").then((m) => ({ default: m.AdminReferralsPage })));
 const AdminFraudPage = lazy(() => import("@/pages/admin/AdminFraudPage").then((m) => ({ default: m.AdminFraudPage })));
+const AdminSupportPage = lazy(() => import("@/pages/admin/AdminSupportPage").then((m) => ({ default: m.AdminSupportPage })));
+const SupportPage = lazy(() => import("@/pages/user/SupportPage").then((m) => ({ default: m.SupportPage })));
 const AdminSettingsPage = lazy(() => import("@/pages/admin/AdminSettingsPage").then((m) => ({ default: m.AdminSettingsPage })));
 const AdminAuditLogsPage = lazy(() => import("@/pages/admin/AdminAuditLogsPage").then((m) => ({ default: m.AdminAuditLogsPage })));
 const AdminCoursesPage = lazy(() => import("@/pages/admin/AdminCoursesPage").then((m) => ({ default: m.AdminCoursesPage })));
@@ -104,6 +106,7 @@ export default function App() {
               <Route path="/referrals" element={<ReferralsPage />} />
               <Route path="/team" element={<TeamPage />} />
               <Route path="/channels" element={<ChannelsPage />} />
+              <Route path="/support" element={<SupportPage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/spin" element={<SpinPage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
@@ -130,6 +133,7 @@ export default function App() {
               <Route path="withdrawals" element={<AdminWithdrawalsPage />} />
               <Route path="referrals" element={<AdminReferralsPage />} />
               <Route path="fraud" element={<AdminFraudPage />} />
+              <Route path="support" element={<AdminSupportPage />} />
               <Route
                 path="settings"
                 element={

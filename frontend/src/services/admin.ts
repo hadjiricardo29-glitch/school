@@ -5,6 +5,8 @@ import type {
   Deposit,
   FraudFlag,
   Profile,
+  SupportTicket,
+  SupportTicketStatus,
   Task,
   TaskSubmission,
   UserRole,
@@ -190,6 +192,23 @@ export async function resolveFraudFlag(id: string, status: "RESOLVED" | "DISMISS
     .from("fraud_flags")
     .update({ status, resolved_by: (await supabase.auth.getUser()).data.user?.id, resolved_at: new Date().toISOString() })
     .eq("id", id);
+  if (error) throw error;
+}
+
+// ---------- Support ----------
+export async function listSupportTickets(status?: string): Promise<SupportTicket[]> {
+  let query = supabase
+    .from("support_tickets")
+    .select("*, user:profiles!support_tickets_user_id_fkey(*)")
+    .order("created_at", { ascending: false });
+  if (status) query = query.eq("status", status);
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as unknown as SupportTicket[];
+}
+
+export async function replySupportTicket(ticketId: string, reply: string, status: SupportTicketStatus = "RESOLVED") {
+  const { error } = await supabase.rpc("reply_support_ticket", { p_ticket_id: ticketId, p_reply: reply, p_status: status });
   if (error) throw error;
 }
 
