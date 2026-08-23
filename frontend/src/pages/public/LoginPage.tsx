@@ -68,11 +68,6 @@ export function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
         />
-        <div className="flex justify-end">
-          <Link to="/forgot-password" className="text-xs font-medium text-primary hover:underline">
-            Mot de passe oublié ?
-          </Link>
-        </div>
         <Button type="submit" fullWidth loading={loading}>
           Se connecter
         </Button>

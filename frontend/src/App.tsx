@@ -14,8 +14,6 @@ import { AuthAwareLayout } from "@/layouts/AuthAwareLayout";
 const LandingPage = lazy(() => import("@/pages/public/LandingPage").then((m) => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import("@/pages/public/LoginPage").then((m) => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import("@/pages/public/RegisterPage").then((m) => ({ default: m.RegisterPage })));
-const ForgotPasswordPage = lazy(() => import("@/pages/public/ForgotPasswordPage").then((m) => ({ default: m.ForgotPasswordPage })));
-const ResetPasswordPage = lazy(() => import("@/pages/public/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })));
 const TermsPage = lazy(() => import("@/pages/public/TermsPage").then((m) => ({ default: m.TermsPage })));
 const PrivacyPage = lazy(() => import("@/pages/public/PrivacyPage").then((m) => ({ default: m.PrivacyPage })));
 const NotFoundPage = lazy(() => import("@/pages/public/NotFoundPage").then((m) => ({ default: m.NotFoundPage })));
@@ -84,8 +82,6 @@ export default function App() {
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
             {/* User app */}
             <Route
