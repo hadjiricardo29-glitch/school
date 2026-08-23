@@ -76,6 +76,7 @@ export default function App() {
             <Route element={<AuthAwareLayout />}>
               <Route path="/tasks" element={<TasksPage />} />
               <Route path="/tasks/social" element={<TasksPage />} />
+              <Route path="/tasks/quiz" element={<TasksPage />} />
               <Route path="/tasks/:id" element={<TaskDetailPage />} />
             </Route>
 

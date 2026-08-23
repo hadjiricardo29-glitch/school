@@ -22,6 +22,7 @@ import {
   Radio,
   LifeBuoy,
   Video,
+  HelpCircle,
   type LucideIcon,
 } from "lucide-react";
 import type { translations } from "@/i18n/translations";
@@ -42,6 +43,7 @@ export const USER_SIDEBAR_NAV: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, labelKey: "dashboard" },
   { label: "Tâches journalières", to: "/tasks", icon: ListChecks, labelKey: "tasks" },
   { label: "Réseaux sociaux", to: "/tasks/social", icon: Video, indent: true, labelKey: "socialTasks" },
+  { label: "Quiz", to: "/tasks/quiz", icon: HelpCircle, indent: true, labelKey: "quizTasks" },
   { label: "Formations", to: "/courses", icon: GraduationCap, labelKey: "courses" },
   { label: "Portefeuille", to: "/wallet", icon: Wallet, labelKey: "wallet" },
   { label: "Retrait", to: "/wallet?tab=withdrawals", icon: ArrowUpFromLine, indent: true, labelKey: "withdraw" },

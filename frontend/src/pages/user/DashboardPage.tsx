@@ -71,6 +71,19 @@ export function DashboardPage() {
     [transactions],
   );
 
+  const categoryBreakdown = useMemo(() => {
+    const rows = (Object.keys(EARNING_BUCKET_LABELS) as EarningBucket[]).map((bucket) => ({
+      bucket,
+      amount: balances.find((wb) => wb.bucket === bucket)?.available_balance ?? 0,
+    }));
+    const total = rows.reduce((s, r) => s + r.amount, 0);
+    return {
+      rows: [...rows].sort((a, b) => b.amount - a.amount),
+      total,
+      top: total > 0 ? rows.reduce((best, r) => (r.amount > best.amount ? r : best)) : null,
+    };
+  }, [balances]);
+
   const chartData = useMemo(() => {
     const days: Record<string, number> = {};
     const now = new Date();
@@ -95,31 +108,33 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold text-text-primary">
-          {t.greeting.replace("{name}", profile?.first_name ?? profile?.username ?? "")} 👋
-        </h1>
-        <p className="mt-1 text-sm text-text-secondary">{t.subtitle}</p>
-      </div>
-
       {!isAccountActivated(wallet, settings, profile?.role) && <ActivationBanner />}
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <img
-          src={motosuImage}
-          alt={settings.platformName}
-          className="aspect-square w-full object-cover"
-        />
+      <div className="relative overflow-hidden rounded-md border border-border bg-gradient-to-br from-primary via-primary to-purple p-5 text-white shadow-sm">
+        <div className="pointer-events-none absolute -right-6 -top-10 size-40 rounded-full bg-white/10 blur-2xl" />
+        <div className="relative flex items-center gap-3">
+          <img src={motosuImage} alt="" className="size-12 shrink-0 rounded-md object-cover ring-2 ring-white/30" />
+          <div>
+            <h1 className="text-lg font-semibold">
+              {t.greeting.replace("{name}", profile?.first_name ?? profile?.username ?? "")} 👋
+            </h1>
+            <p className="text-sm text-white/80">{t.subtitle}</p>
+          </div>
+        </div>
+        <div className="relative mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-md border border-white/10 bg-white/10 p-3 backdrop-blur-sm">
+            <p className="text-xs font-medium uppercase tracking-wide text-white/70">{t.todayEarnings}</p>
+            <p className="mt-1 text-lg font-semibold">{formatCurrency(todayEarnings, settings.currencyLabel)}</p>
+          </div>
+          <div className="rounded-md border border-white/10 bg-white/10 p-3 backdrop-blur-sm">
+            <p className="text-xs font-medium uppercase tracking-wide text-white/70">{t.availableBalance}</p>
+            <p className="mt-1 text-lg font-semibold">{formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         <StatCard
-          className="aspect-square"
-          label={t.availableBalance}
-          value={formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}
-          icon={WalletIcon}
-          tone="primary"
-          variant="filled"
-        />
-        <StatCard
-          className="aspect-square"
           label={t.totalWithdrawn}
           value={formatCurrency(wallet?.total_withdrawn ?? 0, settings.currencyLabel)}
           icon={ArrowDownToLine}
@@ -127,7 +142,6 @@ export function DashboardPage() {
           variant="filled"
         />
         <StatCard
-          className="aspect-square"
           label={t.myRank}
           value={myRank ? `#${myRank.rank}` : "—"}
           icon={Trophy}
@@ -135,23 +149,38 @@ export function DashboardPage() {
           variant="filled"
           hint={myRank ? t.topEarnings : t.notRankedYet}
         />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label={t.todayEarnings} value={formatCurrency(todayEarnings, settings.currencyLabel)} />
         <StatCard label={t.totalEarnings} value={formatCurrency(wallet?.total_earned ?? 0, settings.currencyLabel)} icon={WalletIcon} />
         <StatCard label={t.referralEarnings} value={formatCurrency(referralEarnings, settings.currencyLabel)} icon={Share2} />
       </div>
 
       <Card>
         <CardHeader title={t.byCategory} subtitle={t.byCategorySubtitle} />
+        {categoryBreakdown.top && (
+          <p className="mt-1 text-xs font-medium text-text-secondary">
+            {t.topEarner
+              .replace("{category}", EARNING_BUCKET_LABELS[categoryBreakdown.top.bucket])
+              .replace("{pct}", String(Math.round((categoryBreakdown.top.amount / categoryBreakdown.total) * 100)))}
+          </p>
+        )}
+        {categoryBreakdown.total > 0 && (
+          <div className="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-surface-alt">
+            {categoryBreakdown.rows.filter((r) => r.amount > 0).map((r) => (
+              <div
+                key={r.bucket}
+                className={cn(EARNING_BUCKET_COLORS[r.bucket].split(" ")[0].replace("/10", ""))}
+                style={{ width: `${(r.amount / categoryBreakdown.total) * 100}%` }}
+              />
+            ))}
+          </div>
+        )}
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {(Object.keys(EARNING_BUCKET_LABELS) as EarningBucket[]).map((b) => (
-            <div key={b} className={cn("rounded-md p-3", EARNING_BUCKET_COLORS[b])}>
-              <p className="text-xs opacity-80">{EARNING_BUCKET_LABELS[b]}</p>
-              <p className="mt-1 text-sm font-semibold">
-                {formatCurrency(balances.find((wb) => wb.bucket === b)?.available_balance ?? 0, settings.currencyLabel)}
-              </p>
+          {categoryBreakdown.rows.map(({ bucket, amount }) => (
+            <div key={bucket} className={cn("rounded-md p-3", EARNING_BUCKET_COLORS[bucket])}>
+              <p className="text-xs opacity-80">{EARNING_BUCKET_LABELS[bucket]}</p>
+              <p className="mt-1 text-sm font-semibold">{formatCurrency(amount, settings.currencyLabel)}</p>
+              {categoryBreakdown.total > 0 && (
+                <p className="mt-0.5 text-[11px] opacity-70">{Math.round((amount / categoryBreakdown.total) * 100)}%</p>
+              )}
             </div>
           ))}
         </div>

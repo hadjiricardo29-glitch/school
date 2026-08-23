@@ -18,7 +18,9 @@ const SOCIAL_CATEGORIES: TaskCategory[] = ["TIKTOK", "YOUTUBE"];
 export function TasksPage() {
   const { settings } = useSettings();
   const t = useT();
-  const socialOnly = useLocation().pathname === "/tasks/social";
+  const pathname = useLocation().pathname;
+  const socialOnly = pathname === "/tasks/social";
+  const quizOnly = pathname === "/tasks/quiz";
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -35,9 +37,13 @@ export function TasksPage() {
   useEffect(() => {
     setLoading(true);
     listPublishedTasks({ category: (category || undefined) as TaskCategory | undefined, search: search || undefined })
-      .then((all) => setTasks(socialOnly ? all.filter((task) => SOCIAL_CATEGORIES.includes(task.category)) : all))
+      .then((all) => {
+        if (socialOnly) return setTasks(all.filter((task) => SOCIAL_CATEGORIES.includes(task.category)));
+        if (quizOnly) return setTasks(all.filter((task) => task.category === "QUIZ"));
+        setTasks(all);
+      })
       .finally(() => setLoading(false));
-  }, [category, search, socialOnly]);
+  }, [category, search, socialOnly, quizOnly]);
 
   const remainingSlots = useMemo(
     () => (task: Task) => (task.max_completions ? Math.max(task.max_completions - task.completions_count, 0) : null),
@@ -47,8 +53,12 @@ export function TasksPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">{socialOnly ? t.tasks.socialTitle : t.tasks.title}</h1>
-        <p className="mt-1 text-sm text-text-secondary">{socialOnly ? t.tasks.socialSubtitle : t.tasks.subtitle}</p>
+        <h1 className="text-xl font-semibold text-text-primary">
+          {quizOnly ? t.tasks.quizTitle : socialOnly ? t.tasks.socialTitle : t.tasks.title}
+        </h1>
+        <p className="mt-1 text-sm text-text-secondary">
+          {quizOnly ? t.tasks.quizSubtitle : socialOnly ? t.tasks.socialSubtitle : t.tasks.subtitle}
+        </p>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -59,7 +69,7 @@ export function TasksPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-xs"
         />
-        {!socialOnly && (
+        {!socialOnly && !quizOnly && (
           <Select options={CATEGORY_OPTIONS} value={category} onChange={(e) => setCategory(e.target.value)} className="sm:max-w-xs" />
         )}
       </div>
@@ -82,7 +92,9 @@ export function TasksPage() {
                     <Badge tone="primary">{t.enums.taskDifficulty[task.difficulty]}</Badge>
                   </div>
                   <p className="mt-3 text-sm font-semibold text-text-primary">{task.title}</p>
-                  <p className="mt-1.5 line-clamp-2 flex-1 text-sm text-text-secondary">{task.description}</p>
+                  {task.category !== "QUIZ" && (
+                    <p className="mt-1.5 line-clamp-2 flex-1 text-sm text-text-secondary">{task.description}</p>
+                  )}
                   <div className="mt-4 flex items-center justify-end border-t border-border pt-3">
                     <span className="text-sm font-semibold text-primary">{formatCurrency(task.reward, settings.currencyLabel)}</span>
                   </div>
