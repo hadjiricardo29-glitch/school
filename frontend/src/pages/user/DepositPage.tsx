@@ -52,15 +52,39 @@ export function DepositPage() {
   const selectedCountry = WEST_AFRICA_COUNTRIES.find((c) => c.code === country);
   const activeDeposit = deposits.find((d) => d.status === "PENDING" || d.status === "COMPLETED");
 
-  // Une demande jamais confirmée (SIM sans solde, réseau indisponible,
-  // l'utilisateur change d'avis...) ne doit pas bloquer le compte pour
-  // toujours : annulation automatique après 5 min sans confirmation.
+  // Pendant l'attente, on ne veut pas laisser l'utilisateur planté sur un
+  // écran figé : on sonde le statut toutes les 4s pour rediriger dès que
+  // le paiement est confirmé (webhook) ou échoue/expire (cron ou timeout
+  // local de secours à 5 min sans confirmation).
   const PENDING_TIMEOUT_MS = 5 * 60 * 1000;
   useEffect(() => {
-    if (activeDeposit?.status !== "PENDING") return;
-    const age = Date.now() - new Date(activeDeposit.created_at).getTime();
-    if (age < PENDING_TIMEOUT_MS) return;
-    cancelDeposit(activeDeposit.id).then(reload).catch(() => {});
+    if (activeDeposit?.status !== "PENDING" || !profile) return;
+    const depositId = activeDeposit.id;
+    const startedAt = new Date(activeDeposit.created_at).getTime();
+    let stopped = false;
+
+    async function tick() {
+      if (stopped) return;
+      if (Date.now() - startedAt >= PENDING_TIMEOUT_MS) {
+        await cancelDeposit(depositId).catch(() => {});
+      }
+      const d = await getDeposits(profile!.id);
+      if (stopped) return;
+      setDeposits(d);
+      const updated = d.find((x) => x.id === depositId);
+      if (updated?.status === "COMPLETED") {
+        notify.success("Paiement confirmé — compte activé !");
+        navigate("/wallet");
+      } else if (updated?.status === "FAILED") {
+        notify.error("Le paiement a échoué ou a expiré — vous pouvez réessayer.");
+      }
+    }
+
+    const intervalId = window.setInterval(tick, 4000);
+    return () => {
+      stopped = true;
+      window.clearInterval(intervalId);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeDeposit?.id, activeDeposit?.status]);
 
@@ -90,10 +114,11 @@ export function DepositPage() {
       await createDepositRequest({ amount, method: operator, provider: settings.paymentProvider, country, phone: phone.trim() });
       if (settings.paymentProvider === "mock") {
         notify.success(`Frais d'activation (démo) de ${formatCurrency(amount, settings.currencyLabel)} payés — compte activé.`);
-      } else {
-        notify.success("Confirmez le paiement reçu sur votre téléphone pour activer votre compte.");
       }
-      navigate("/wallet");
+      // Reste sur place plutôt que de rediriger à l'aveugle vers /wallet :
+      // reload() fait apparaître l'écran "en attente" (saspay) ou "activé"
+      // (mock, instantané) selon le vrai statut, avec le suivi en direct.
+      await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Paiement impossible");
     } finally {
