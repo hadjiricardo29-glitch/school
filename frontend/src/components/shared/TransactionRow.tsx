@@ -6,7 +6,7 @@ import { formatCurrency, formatDateTime } from "@/utils/format";
 const TYPE_LABELS: Record<string, string> = {
   TASK_REWARD: "Récompense tâche",
   REFERRAL_COMMISSION: "Commission de parrainage",
-  DEPOSIT: "Dépôt",
+  DEPOSIT: "Frais d'activation",
   WITHDRAWAL: "Retrait",
   BONUS: "Bonus",
   REFUND: "Remboursement",

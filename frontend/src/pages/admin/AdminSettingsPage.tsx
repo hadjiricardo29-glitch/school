@@ -226,7 +226,7 @@ export function AdminSettingsPage() {
       </Card>
 
       <Card>
-        <CardHeader title="Paiement" subtitle="Fournisseur utilisé pour les dépôts" />
+        <CardHeader title="Paiement" subtitle="Fournisseur utilisé pour les frais d'activation" />
         <div className="flex flex-col gap-4">
           <Select
             label="Fournisseur"
@@ -240,7 +240,7 @@ export function AdminSettingsPage() {
           {paymentProvider === "saspay" && (
             <Alert tone="warning">
               Vérifie d'abord que SASPAY_API_KEY et SASPAY_WEBHOOK_SECRET sont bien configurés dans les secrets de
-              l'Edge Function "payments" — sans ça, tous les dépôts échoueront dès l'activation.
+              l'Edge Function "payments" — sans ça, tous les paiements d'activation échoueront.
             </Alert>
           )}
           <Button className="self-start" loading={saving} onClick={savePaymentProvider}>Enregistrer</Button>
@@ -259,7 +259,7 @@ export function AdminSettingsPage() {
       </Card>
 
       <Card>
-        <CardHeader title="Activation de compte" subtitle="Exige un dépôt minimum avant de pouvoir réclamer une tâche ou retirer" />
+        <CardHeader title="Activation de compte" subtitle="Exige le paiement des frais d'activation avant de pouvoir réclamer une tâche ou retirer" />
         <div className="flex flex-col gap-4">
           <label className="flex items-center gap-2 text-sm text-text-primary">
             <input type="checkbox" className="size-4 accent-primary" checked={activationEnabled} onChange={(e) => setActivationEnabled(e.target.checked)} />
@@ -267,7 +267,7 @@ export function AdminSettingsPage() {
           </label>
           {activationEnabled && (
             <Input
-              label={`Dépôt minimum d'activation (${settings.currencyLabel})`}
+              label={`Frais d'activation (${settings.currencyLabel})`}
               type="number"
               value={activationMinDeposit}
               onChange={(e) => setActivationMinDeposit(e.target.value)}

@@ -157,9 +157,20 @@ export class SASpayProvider implements PaymentProvider {
     if (!res.ok) {
       throw new Error(body?.message ?? body?.code ?? `SASpay softpay failed with status ${res.status}`);
     }
+    // Journalisé pour diagnostiquer tout écart entre le schéma documenté et
+    // la réponse réelle — c'est ce qui a permis de repérer le bug ci-dessous.
+    console.log("SASpay softpay response:", JSON.stringify(body));
+
+    // reference?/transaction_id?/data.id? en secours : la doc documente `id`,
+    // mais un dépôt réel a déjà reçu une réponse où `id` était absent, ce qui
+    // générait silencieusement une référence bidon côté Postgres (fallback
+    // 'DEP-xxxx') — un tel dépôt ne peut alors jamais être rapproché par le
+    // webhook. On préfère échouer bruyamment (voir index.ts) plutôt que de
+    // laisser recréer ce bug.
+    const reference = body.id ?? body.reference ?? body.transaction_id ?? body.data?.id;
 
     return {
-      reference: body.id,
+      reference,
       status: body.status === "COMPLETED" ? "COMPLETED" : "PENDING",
       checkoutUrl: body.checkout_url,
       providerMetadata: body,

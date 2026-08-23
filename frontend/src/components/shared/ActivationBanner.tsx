@@ -14,8 +14,8 @@ export function ActivationBanner() {
         <div>
           <p className="text-sm font-semibold text-text-primary">Compte non activé</p>
           <p className="mt-0.5 text-sm text-text-secondary">
-            Déposez au moins {formatCurrency(settings.accountActivationMinDeposit, settings.currencyLabel)} pour
-            débloquer vos tâches et retraits.
+            Des frais d'activation de {formatCurrency(settings.accountActivationMinDeposit, settings.currencyLabel)} débloquent
+            vos tâches et retraits.
           </p>
         </div>
       </div>

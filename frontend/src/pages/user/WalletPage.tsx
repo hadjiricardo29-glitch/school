@@ -57,12 +57,12 @@ export function WalletPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-text-primary">Portefeuille</h1>
-          <p className="mt-1 text-sm text-text-secondary">Gérez votre solde, vos dépôts et vos retraits.</p>
+          <p className="mt-1 text-sm text-text-secondary">Gérez votre solde, votre activation et vos retraits.</p>
         </div>
         <div className="flex gap-2">
           {!hasUsedDeposit(deposits) && (
             <Link to="/wallet/deposit">
-              <Button variant="success" icon={<ArrowDownToLine className="size-4" />}>Déposer</Button>
+              <Button variant="success" icon={<ArrowDownToLine className="size-4" />}>Activer mon compte</Button>
             </Link>
           )}
           <Link to="/wallet/withdraw">
@@ -115,7 +115,7 @@ export function WalletPage() {
             onChange={setTab}
             tabs={[
               { value: "overview", label: "Transactions", count: transactions.length },
-              { value: "deposits", label: "Dépôts", count: deposits.length },
+              { value: "deposits", label: "Activation", count: deposits.length },
               { value: "withdrawals", label: "Retraits", count: withdrawals.length },
               { value: "deductions", label: "Déductions", count: deductions.length },
             ]}
@@ -133,7 +133,7 @@ export function WalletPage() {
 
           {tab === "deposits" &&
             (deposits.length === 0 ? (
-              <EmptyState title="Aucun dépôt" action={<Link to="/wallet/deposit"><Button size="sm">Faire un dépôt</Button></Link>} />
+              <EmptyState title="Compte non activé" action={<Link to="/wallet/deposit"><Button size="sm">Activer mon compte</Button></Link>} />
             ) : (
               <div className="flex flex-col divide-y divide-border">
                 {deposits.map((d) => (

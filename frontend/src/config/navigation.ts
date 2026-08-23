@@ -57,7 +57,7 @@ export const ADMIN_SIDEBAR_NAV: NavItem[] = [
   { label: "Tâches journalières", to: "/admin/tasks", icon: ClipboardList },
   { label: "Formations", to: "/admin/courses", icon: GraduationCap },
   { label: "Soumissions", to: "/admin/submissions", icon: ListChecks },
-  { label: "Dépôts", to: "/admin/deposits", icon: ArrowDownToLine },
+  { label: "Frais d'activation", to: "/admin/deposits", icon: ArrowDownToLine },
   { label: "Retraits", to: "/admin/withdrawals", icon: ArrowUpFromLine },
   { label: "Parrainage", to: "/admin/referrals", icon: Share2 },
   { label: "Anti-fraude", to: "/admin/fraud", icon: ShieldAlert },

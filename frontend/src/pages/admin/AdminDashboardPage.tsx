@@ -31,7 +31,7 @@ export function AdminDashboardPage() {
         <StatCard label="Tâches" value={stats.totalTasks} icon={ClipboardList} />
         <StatCard label="Soumissions en attente" value={stats.pendingSubmissions} icon={ListChecks} />
         <StatCard label="Retraits en attente" value={stats.pendingWithdrawals} icon={ArrowUpFromLine} />
-        <StatCard label="Total des dépôts" value={formatCurrency(stats.totalDeposits, settings.currencyLabel)} icon={ArrowDownToLine} />
+        <StatCard label="Total frais d'activation" value={formatCurrency(stats.totalDeposits, settings.currencyLabel)} icon={ArrowDownToLine} />
         <StatCard label="Total des retraits" value={formatCurrency(stats.totalWithdrawals, settings.currencyLabel)} icon={Coins} />
       </div>
 

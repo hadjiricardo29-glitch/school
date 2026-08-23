@@ -61,6 +61,11 @@ Deno.serve(async (req: Request) => {
         lastName: profile?.last_name ?? undefined,
         phone: profile?.phone ?? undefined,
       });
+      if (!intent.reference) {
+        // Ne jamais créer un dépôt que le webhook ne pourra plus jamais
+        // rapprocher — mieux vaut un échec explicite qu'un PENDING fantôme.
+        throw new Error(`${provider.name} did not return a payment reference`);
+      }
 
       // La mutation atomique du wallet reste dans Postgres (create_deposit_request),
       // qui auto-crédite immédiatement pour le provider "mock" et laisse PENDING sinon.

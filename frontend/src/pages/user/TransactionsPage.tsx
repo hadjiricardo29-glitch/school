@@ -12,7 +12,7 @@ const TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "", label: "Tous les types" },
   { value: "TASK_REWARD", label: "Récompenses" },
   { value: "REFERRAL_COMMISSION", label: "Commissions" },
-  { value: "DEPOSIT", label: "Dépôts" },
+  { value: "DEPOSIT", label: "Activation" },
   { value: "WITHDRAWAL", label: "Retraits" },
   { value: "BONUS", label: "Bonus" },
   { value: "REFUND", label: "Remboursements" },

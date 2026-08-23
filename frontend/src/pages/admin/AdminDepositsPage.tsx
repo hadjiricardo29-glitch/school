@@ -39,7 +39,7 @@ export function AdminDepositsPage() {
     setSavingId(id);
     try {
       await approveDeposit(id);
-      notify.success("Dépôt approuvé et crédité");
+      notify.success("Frais d'activation approuvés — compte activé");
       await load();
     } catch (err) {
       notify.error(err instanceof Error ? err.message : "Action impossible");
@@ -52,7 +52,7 @@ export function AdminDepositsPage() {
     setSavingId(id);
     try {
       await rejectDeposit(id);
-      notify.success("Dépôt rejeté");
+      notify.success("Frais d'activation rejetés");
       await load();
     } catch (err) {
       notify.error(err instanceof Error ? err.message : "Action impossible");
@@ -84,17 +84,17 @@ export function AdminDepositsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Dépôts</h1>
+        <h1 className="text-xl font-semibold text-text-primary">Frais d'activation</h1>
         <p className="mt-1 text-sm text-text-secondary">
           {settings.paymentProvider === "mock"
-            ? "Les dépôts en mode démo (Mock) sont crédités instantanément."
-            : "Dépôts traités via SASpay — confirmés automatiquement par webhook."}
+            ? "Les frais en mode démo (Mock) sont crédités instantanément."
+            : "Frais traités via SASpay — confirmés automatiquement par webhook."}
         </p>
       </div>
 
       <Tabs tabs={TABS} value={tab} onChange={setTab} />
 
-      <Card>{loading ? <LoadingState /> : <Table columns={columns} data={rows} rowKey={(d) => d.id} emptyMessage="Aucun dépôt" />}</Card>
+      <Card>{loading ? <LoadingState /> : <Table columns={columns} data={rows} rowKey={(d) => d.id} emptyMessage="Aucun frais d'activation" />}</Card>
     </div>
   );
 }
