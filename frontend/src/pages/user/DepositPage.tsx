@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, ShieldAlert } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -10,7 +10,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { createDepositRequest, getDeposits, getWallet } from "@/services/wallet";
-import { hasUsedDeposit, isAccountActivated } from "@/utils/activation";
+import { isAccountActivated } from "@/utils/activation";
 import { notify } from "@/utils/toast";
 import { formatCurrency } from "@/utils/format";
 import { WEST_AFRICA_COUNTRIES } from "@/config/countries";
@@ -47,6 +47,7 @@ export function DepositPage() {
 
   const needsActivation = !isAccountActivated(wallet, settings, profile?.role);
   const selectedCountry = WEST_AFRICA_COUNTRIES.find((c) => c.code === country);
+  const activeDeposit = deposits.find((d) => d.status === "PENDING" || d.status === "COMPLETED");
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -73,7 +74,7 @@ export function DepositPage() {
 
   if (checking) return <LoadingState label="Vérification de l'activation..." />;
 
-  if (hasUsedDeposit(deposits)) {
+  if (activeDeposit?.status === "COMPLETED") {
     return (
       <div className="mx-auto flex max-w-lg flex-col gap-6">
         <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary">
@@ -85,6 +86,28 @@ export function DepositPage() {
           <p className="max-w-sm text-sm text-text-secondary">
             Les frais d'activation sont déjà payés. La suite se passe du côté des retraits, une fois les conditions
             atteintes.
+          </p>
+          <Link to="/wallet" className="mt-2">
+            <Button>Retour au portefeuille</Button>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+
+  if (activeDeposit?.status === "PENDING") {
+    return (
+      <div className="mx-auto flex max-w-lg flex-col gap-6">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary">
+          <ArrowLeft className="size-4" /> Retour
+        </button>
+        <Card className="flex flex-col items-center gap-3 py-10 text-center">
+          <Clock className="size-10 text-warning" />
+          <h1 className="text-lg font-semibold text-text-primary">Paiement en attente de confirmation</h1>
+          <p className="max-w-sm text-sm text-text-secondary">
+            Votre demande de {formatCurrency(activeDeposit.amount, settings.currencyLabel)} a été envoyée — confirmez-la
+            sur votre téléphone. Le compte s'active automatiquement dès que le paiement est confirmé ; si rien ne se
+            passe après quelques minutes, contactez le support avec la référence {activeDeposit.reference}.
           </p>
           <Link to="/wallet" className="mt-2">
             <Button>Retour au portefeuille</Button>
