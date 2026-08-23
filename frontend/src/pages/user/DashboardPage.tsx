@@ -204,11 +204,6 @@ export function DashboardPage() {
                 Parcourir les tâches
               </Button>
             </Link>
-            <Link to="/wallet/withdraw">
-              <Button variant="info" fullWidth icon={<ArrowDownToLine className="size-4" />}>
-                Retirer
-              </Button>
-            </Link>
             {!hasUsedDeposit(deposits) && (
               <Link to="/wallet/deposit">
                 <Button variant="success" fullWidth icon={<WalletIcon className="size-4" />}>

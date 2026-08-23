@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ArrowDownToLine, ArrowUpFromLine, TrendingUp, Wallet as WalletIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -26,7 +26,9 @@ export function WalletPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
-  const [tab, setTab] = useState("overview");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab");
+  const [tab, setTab] = useState(initialTab && ["overview", "deposits", "withdrawals", "deductions"].includes(initialTab) ? initialTab : "overview");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -39,6 +39,7 @@ export const USER_SIDEBAR_NAV: NavItem[] = [
   { label: "Réseaux sociaux", to: "/tasks/social", icon: Video, indent: true },
   { label: "Formations", to: "/courses", icon: GraduationCap },
   { label: "Portefeuille", to: "/wallet", icon: Wallet },
+  { label: "Retrait", to: "/wallet?tab=withdrawals", icon: ArrowUpFromLine, indent: true },
   { label: "Transactions", to: "/transactions", icon: Receipt },
   { label: "Équipe", to: "/team", icon: Users },
   { label: "Canal de diffusion", to: "/channels", icon: Radio },
