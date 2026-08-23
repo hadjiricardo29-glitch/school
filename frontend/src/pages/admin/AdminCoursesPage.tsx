@@ -192,7 +192,7 @@ export function AdminCoursesPage() {
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onThumbnailChange} />
             {form.thumbnail_url ? (
               <div className="relative w-fit">
-                <img src={form.thumbnail_url} alt="" className="h-28 w-28 rounded-md object-cover" />
+                <img src={form.thumbnail_url} alt="" className="aspect-[9/16] w-24 rounded-md object-cover" />
                 <button
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, thumbnail_url: "" }))}
@@ -213,7 +213,7 @@ export function AdminCoursesPage() {
                 Choisir une image
               </Button>
             )}
-            <p className="text-xs text-text-secondary">Envoyée depuis votre ordinateur, affichée sur la carte et la page de la formation</p>
+            <p className="text-xs text-text-secondary">Format vertical recommandé (9:16, type TikTok) — affichée sur la carte et la page de la formation</p>
           </div>
           <Input
             label="Lien du produit"

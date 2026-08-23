@@ -68,9 +68,9 @@ export function CourseDetailPage() {
 
       <Card padded={false} className="overflow-hidden">
         {course.thumbnail_url ? (
-          <img src={course.thumbnail_url} alt={course.title} className="h-48 w-full object-cover sm:h-64" />
+          <img src={course.thumbnail_url} alt={course.title} className="aspect-[9/16] w-full max-w-xs mx-auto object-cover" />
         ) : (
-          <div className="flex h-48 w-full items-center justify-center bg-purple/10 sm:h-64">
+          <div className="flex aspect-[9/16] w-full max-w-xs mx-auto items-center justify-center bg-purple/10">
             <GraduationCap className="size-16 text-purple" />
           </div>
         )}
