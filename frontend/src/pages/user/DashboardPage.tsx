@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { Link } from "react-router-dom";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowRight, ListChecks, Share2, Wallet as WalletIcon, ArrowDownToLine, Sparkles, Trophy } from "lucide-react";
+import { ArrowRight, ListChecks, Share2, Wallet as WalletIcon, ArrowDownToLine, Sparkles, Trophy, HelpCircle, PlayCircle, ChevronRight } from "lucide-react";
 import motosuImage from "@/assets/motosu.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -12,10 +12,11 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { TikTokIcon } from "@/components/shared/SocialIcons";
 import { getDeposits, getTransactions, getWallet, getWalletBalances } from "@/services/wallet";
 import { listPublishedTasks } from "@/services/tasks";
 import { getDirectReferrals, getMyRank, type ReferralWithStatus } from "@/services/referrals";
-import type { Deposit, EarningBucket, MyRank, Task, Transaction, Wallet, WalletBalance } from "@/types/domain";
+import type { Deposit, EarningBucket, MyRank, Task, TaskCategory, Transaction, Wallet, WalletBalance } from "@/types/domain";
 import { EARNING_BUCKET_COLORS, EARNING_BUCKET_LABELS } from "@/types/domain";
 import { formatCurrency, formatDate, getLocale } from "@/utils/format";
 import { hasUsedDeposit, isAccountActivated } from "@/utils/activation";
@@ -23,10 +24,29 @@ import { ActivationBanner } from "@/components/shared/ActivationBanner";
 import { useT } from "@/i18n/useT";
 import { cn } from "@/utils/cn";
 
+// Planning hebdomadaire — une catégorie de tâche mise en avant par jour,
+// du lundi au vendredi uniquement (rien le week-end). weekday suit
+// Date#getDay() (0=dimanche...6=samedi). Ajustable librement plus tard.
+const WEEKLY_SCHEDULE: {
+  weekday: number;
+  category: TaskCategory;
+  bucket: EarningBucket;
+  type: "watch" | "answer";
+  icon: ComponentType<{ className?: string }>;
+  to: string;
+}[] = [
+  { weekday: 1, category: "QUIZ", bucket: "WALLET", type: "answer", icon: HelpCircle, to: "/tasks/quiz" },
+  { weekday: 2, category: "TIKTOK", bucket: "TIKTOK", type: "watch", icon: TikTokIcon, to: "/tasks?category=TIKTOK" },
+  { weekday: 3, category: "YOUTUBE", bucket: "YOUTUBE", type: "watch", icon: PlayCircle, to: "/tasks?category=YOUTUBE" },
+  { weekday: 4, category: "QUIZ", bucket: "WALLET", type: "answer", icon: HelpCircle, to: "/tasks/quiz" },
+  { weekday: 5, category: "TIKTOK", bucket: "TIKTOK", type: "watch", icon: TikTokIcon, to: "/tasks?category=TIKTOK" },
+];
+
 export function DashboardPage() {
   const { profile } = useAuth();
   const { settings } = useSettings();
-  const t = useT().dashboard;
+  const tAll = useT();
+  const t = tAll.dashboard;
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [balances, setBalances] = useState<WalletBalance[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -152,6 +172,29 @@ export function DashboardPage() {
         <StatCard label={t.totalEarnings} value={formatCurrency(wallet?.total_earned ?? 0, settings.currencyLabel)} icon={WalletIcon} />
         <StatCard label={t.referralEarnings} value={formatCurrency(referralEarnings, settings.currencyLabel)} icon={Share2} />
       </div>
+
+      <Card padded={false}>
+        <div className="p-5 pb-0">
+          <CardHeader title={t.weeklySchedule} subtitle={t.weeklyScheduleSubtitle} />
+        </div>
+        <div className="flex flex-col divide-y divide-border">
+          {WEEKLY_SCHEDULE.map(({ weekday, category, bucket, type, icon: Icon, to }) => (
+            <Link key={weekday} to={to} className="flex items-center gap-3 p-4 hover:bg-surface-alt">
+              <span className="w-10 shrink-0 text-center text-xs font-semibold uppercase text-text-secondary">
+                {new Intl.DateTimeFormat(getLocale(), { weekday: "short" }).format(new Date(2024, 0, weekday))}
+              </span>
+              <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-md", EARNING_BUCKET_COLORS[bucket])}>
+                <Icon className="size-4" />
+              </span>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-text-primary">{tAll.enums.taskCategory[category]}</p>
+                <p className="text-xs text-text-secondary">{type === "watch" ? t.scheduleWatch : t.scheduleAnswer}</p>
+              </div>
+              <ChevronRight className="size-4 shrink-0 text-text-secondary" />
+            </Link>
+          ))}
+        </div>
+      </Card>
 
       <Card>
         <CardHeader title={t.byCategory} subtitle={t.byCategorySubtitle} />

@@ -41,7 +41,16 @@ export async function registerUser(input: RegisterInput) {
   return data;
 }
 
-export async function loginUser(email: string, password: string) {
+/** Accepte un email OU un nom d'utilisateur — Supabase Auth n'authentifie que par email, donc on résout le username avant signInWithPassword (voir get_email_for_login). */
+export async function loginUser(identifier: string, password: string) {
+  let email = identifier;
+  if (!identifier.includes("@")) {
+    const { data: resolved } = await supabase.rpc("get_email_for_login", { p_identifier: identifier });
+    // Aucune correspondance : on laisse passer l'identifiant tel quel pour
+    // que signInWithPassword échoue avec son message générique habituel,
+    // plutôt que de révéler distinctement "ce nom d'utilisateur n'existe pas".
+    if (resolved) email = resolved;
+  }
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data;

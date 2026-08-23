@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Mail, Lock } from "lucide-react";
+import { User, Lock } from "lucide-react";
 import { AuthCard } from "@/components/shared/AuthCard";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -12,7 +12,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const t = useT().login;
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +22,7 @@ export function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const { user } = await loginUser(email, password);
+      const { user } = await loginUser(identifier, password);
       const stateFrom = (location.state as { from?: Location })?.from?.pathname;
       if (stateFrom) {
         navigate(stateFrom, { replace: true });
@@ -54,11 +54,12 @@ export function LoginPage() {
         {error && <Alert tone="error">{error}</Alert>}
         <Input
           label={t.email}
-          type="email"
+          type="text"
+          autoCapitalize="none"
           required
-          leftIcon={<Mail className="size-4" />}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          leftIcon={<User className="size-4" />}
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
           placeholder="vous@exemple.com"
         />
         <Input

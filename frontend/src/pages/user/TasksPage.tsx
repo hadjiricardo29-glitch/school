@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -21,10 +21,11 @@ export function TasksPage() {
   const pathname = useLocation().pathname;
   const socialOnly = pathname === "/tasks/social";
   const quizOnly = pathname === "/tasks/quiz";
+  const [searchParams] = useSearchParams();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(() => searchParams.get("category") ?? "");
 
   const CATEGORY_OPTIONS = useMemo(
     () => [
