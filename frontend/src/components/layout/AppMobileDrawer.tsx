@@ -71,28 +71,42 @@ export function AppMobileDrawer({ open, onClose }: { open: boolean; onClose: () 
               {groups.map(({ item, children }) => (
                 <div key={item.to}>
                   <div className="flex items-center gap-1">
-                    <NavLink
-                      to={item.to}
-                      onClick={onClose}
-                      className={({ isActive }) =>
-                        cn(
-                          "flex flex-1 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                          isActive ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-surface-alt hover:text-text-primary",
-                        )
-                      }
-                    >
-                      <item.icon className="size-[18px]" />
-                      {item.labelKey ? t.nav[item.labelKey] : item.label}
-                    </NavLink>
-                    {children.length > 0 && (
+                    {item.expandOnly ? (
                       <button
                         type="button"
                         onClick={() => toggle(item.to)}
-                        aria-label={expanded.has(item.to) ? "Réduire" : "Développer"}
-                        className="shrink-0 rounded-md p-2.5 text-text-secondary hover:bg-surface-alt hover:text-text-primary"
+                        className="flex flex-1 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-alt hover:text-text-primary"
                       >
-                        <ChevronDown className={cn("size-4 transition-transform", expanded.has(item.to) && "rotate-180")} />
+                        <item.icon className="size-[18px]" />
+                        {item.labelKey ? t.nav[item.labelKey] : item.label}
+                        <ChevronDown className={cn("ml-auto size-4 transition-transform", expanded.has(item.to) && "rotate-180")} />
                       </button>
+                    ) : (
+                      <>
+                        <NavLink
+                          to={item.to}
+                          onClick={onClose}
+                          className={({ isActive }) =>
+                            cn(
+                              "flex flex-1 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                              isActive ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-surface-alt hover:text-text-primary",
+                            )
+                          }
+                        >
+                          <item.icon className="size-[18px]" />
+                          {item.labelKey ? t.nav[item.labelKey] : item.label}
+                        </NavLink>
+                        {children.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => toggle(item.to)}
+                            aria-label={expanded.has(item.to) ? "Réduire" : "Développer"}
+                            className="shrink-0 rounded-md p-2.5 text-text-secondary hover:bg-surface-alt hover:text-text-primary"
+                          >
+                            <ChevronDown className={cn("size-4 transition-transform", expanded.has(item.to) && "rotate-180")} />
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                   {children.length > 0 && expanded.has(item.to) && (

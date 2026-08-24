@@ -36,13 +36,18 @@ export interface NavItem {
   icon: LucideIcon;
   /** Affiché en retrait, comme sous-item du lien juste au-dessus. */
   indent?: boolean;
+  /** Regroupe des sous-catégories réelles (Quiz/Réseaux sociaux/Ads) — atterrir
+   * sur `to` lui-même n'a plus de sens, donc l'item ne navigue pas : il ne
+   * sert qu'à déplier/replier ses enfants (accordéon mobile) ou de simple
+   * libellé non cliquable (desktop, où les enfants restent déjà visibles). */
+  expandOnly?: boolean;
   /** Clé dans translations.<lang>.nav — si absente, `label` (FR) est utilisé tel quel. */
   labelKey?: NavLabelKey;
 }
 
 export const USER_SIDEBAR_NAV: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, labelKey: "dashboard" },
-  { label: "Tâches journalières", to: "/tasks", icon: ListChecks, labelKey: "tasks" },
+  { label: "Tâches journalières", to: "/tasks", icon: ListChecks, labelKey: "tasks", expandOnly: true },
   { label: "Réseaux sociaux", to: "/tasks/social", icon: Video, indent: true, labelKey: "socialTasks" },
   { label: "Quiz", to: "/tasks/quiz", icon: HelpCircle, indent: true, labelKey: "quizTasks" },
   { label: "Ads", to: "/tasks/ads", icon: MousePointerClick, indent: true, labelKey: "adsTasks" },

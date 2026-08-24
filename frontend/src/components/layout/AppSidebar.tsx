@@ -16,22 +16,32 @@ export function AppSidebar() {
         <Logo />
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {USER_SIDEBAR_NAV.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 rounded-md py-2.5 text-sm font-medium transition-colors",
-                item.indent ? "ml-3 pl-4 pr-3 border-l border-border" : "px-3",
-                isActive ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-surface-alt hover:text-text-primary",
-              )
-            }
-          >
-            <item.icon className={item.indent ? "size-4" : "size-[18px]"} />
-            {item.labelKey ? t.nav[item.labelKey] : item.label}
-          </NavLink>
-        ))}
+        {USER_SIDEBAR_NAV.map((item) =>
+          item.expandOnly ? (
+            // Regroupe des sous-catégories déjà toutes affichées juste en
+            // dessous (indent: true) — atterrir sur `to` n'a plus de sens,
+            // donc simple libellé de section, pas un lien.
+            <div key={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-text-secondary">
+              <item.icon className="size-[18px]" />
+              {item.labelKey ? t.nav[item.labelKey] : item.label}
+            </div>
+          ) : (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 rounded-md py-2.5 text-sm font-medium transition-colors",
+                  item.indent ? "ml-3 pl-4 pr-3 border-l border-border" : "px-3",
+                  isActive ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-surface-alt hover:text-text-primary",
+                )
+              }
+            >
+              <item.icon className={item.indent ? "size-4" : "size-[18px]"} />
+              {item.labelKey ? t.nav[item.labelKey] : item.label}
+            </NavLink>
+          ),
+        )}
       </nav>
       <div className="border-t border-border p-3">
         <button

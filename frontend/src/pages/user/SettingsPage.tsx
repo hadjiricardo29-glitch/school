@@ -7,11 +7,13 @@ import { Alert } from "@/components/ui/Alert";
 import { Tabs } from "@/components/ui/Tabs";
 import { updatePassword } from "@/services/auth";
 import { supabase } from "@/services/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useT } from "@/i18n/useT";
 import { notify } from "@/utils/toast";
 
 export function SettingsPage() {
+  const { profile, refreshProfile } = useAuth();
   const { settings } = useSettings();
   const t = useT().settingsPage;
   const [tab, setTab] = useState("security");
@@ -19,6 +21,22 @@ export function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
+
+  async function onToggleLeaderboardVisibility(hide: boolean) {
+    if (!profile) return;
+    setSavingPrivacy(true);
+    try {
+      const { error } = await supabase.from("profiles").update({ hide_from_leaderboard: hide }).eq("id", profile.id);
+      if (error) throw error;
+      await refreshProfile();
+      notify.success(t.leaderboardVisibilityUpdated);
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : t.updateError);
+    } finally {
+      setSavingPrivacy(false);
+    }
+  }
 
   async function onChangePassword(e: FormEvent) {
     e.preventDefault();
@@ -61,6 +79,7 @@ export function SettingsPage() {
         tabs={[
           { value: "security", label: t.tabSecurity },
           { value: "notifications", label: t.tabNotifications },
+          { value: "privacy", label: t.tabPrivacy },
           { value: "regional", label: t.tabRegional },
         ]}
       />
@@ -91,6 +110,25 @@ export function SettingsPage() {
         <Card>
           <CardHeader title={t.notifPrefs} subtitle={t.notifPrefsSubtitle} />
           <Alert tone="info">{t.notifPrefsBody}</Alert>
+        </Card>
+      )}
+
+      {tab === "privacy" && (
+        <Card>
+          <CardHeader title={t.leaderboardPrivacy} />
+          <label className="flex items-start gap-3 text-sm text-text-primary">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-4 accent-primary"
+              checked={profile?.hide_from_leaderboard ?? false}
+              disabled={savingPrivacy}
+              onChange={(e) => onToggleLeaderboardVisibility(e.target.checked)}
+            />
+            <span>
+              {t.hideFromLeaderboard}
+              <span className="mt-1 block text-xs font-normal text-text-secondary">{t.hideFromLeaderboardHint}</span>
+            </span>
+          </label>
         </Card>
       )}
 

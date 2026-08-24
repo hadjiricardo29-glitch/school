@@ -65,6 +65,7 @@ export interface Profile {
   referral_code: string;
   referred_by: string | null;
   avatar_url: string | null;
+  hide_from_leaderboard: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -336,7 +337,8 @@ export interface LeaderboardEntry {
   rank: number;
   username: string;
   avatar_url: string | null;
-  total_earned: number;
+  /** null quand l'appelant a lui-même masqué sa présence — voir get_leaderboard(). */
+  total_earned: number | null;
 }
 
 export interface MyRank {

@@ -4,10 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useT } from "@/i18n/useT";
 import { Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getLeaderboard } from "@/services/referrals";
 import type { LeaderboardEntry } from "@/types/domain";
+import { formatCurrency } from "@/utils/format";
 import { cn } from "@/utils/cn";
 
 const MEDAL_TONE = ["text-[#B7791F]", "text-[#6B7280]", "text-[#820000]"];
@@ -32,6 +34,8 @@ export function LeaderboardPage() {
         <p className="mt-1 text-sm text-text-secondary">{t.subtitle.replace("{platform}", settings.platformName)}</p>
       </div>
 
+      {profile?.hide_from_leaderboard && <Alert tone="info">{t.hiddenNotice}</Alert>}
+
       <Card padded={false}>
         {entries.length === 0 ? (
           <EmptyState icon={Trophy} title={t.empty} />
@@ -52,9 +56,12 @@ export function LeaderboardPage() {
                   >
                     {entry.rank}
                   </span>
-                  <span className="text-sm font-medium text-text-primary">
+                  <span className="flex-1 text-sm font-medium text-text-primary">
                     @{entry.username}
                     {isMe && <span className="ml-1.5 text-xs font-normal text-primary">{t.you}</span>}
+                  </span>
+                  <span className={cn("text-sm font-semibold", entry.total_earned === null ? "text-text-secondary" : "text-primary")}>
+                    {entry.total_earned === null ? t.amountHidden : formatCurrency(entry.total_earned, settings.currencyLabel)}
                   </span>
                 </div>
               );
