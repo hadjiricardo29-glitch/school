@@ -9,7 +9,6 @@ import { StatCard } from "@/components/ui/StatCard";
 import { ChartCard } from "@/components/ui/ChartCard";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { TikTokIcon } from "@/components/shared/SocialIcons";
@@ -316,7 +315,6 @@ export function DashboardPage() {
                 <Link key={task.id} to={`/tasks/${task.id}`} className="flex items-center justify-between rounded-md border border-border p-3 hover:bg-surface-alt">
                   <div>
                     <p className="text-sm font-medium text-text-primary">{task.title}</p>
-                    <Badge tone="neutral" className="mt-1">{task.difficulty}</Badge>
                   </div>
                   <span className="text-sm font-semibold text-primary">{formatCurrency(task.reward, settings.currencyLabel)}</span>
                 </Link>

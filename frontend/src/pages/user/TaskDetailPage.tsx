@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Users, Calendar, ArrowLeft, ExternalLink, Timer, CheckCircle2 } from "lucide-react";
+import { Users, Calendar, ArrowLeft, Timer, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -16,7 +16,7 @@ import { formatCurrency, formatDate } from "@/utils/format";
 import { notify } from "@/utils/toast";
 import { isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
-import { extractTiktokVideoId, tiktokEmbedUrl } from "@/utils/video";
+import { VideoPlayer } from "@/components/shared/VideoPlayer";
 
 const HEARTBEAT_INTERVAL_MS = 4000;
 
@@ -165,7 +165,6 @@ export function TaskDetailPage() {
       <Card>
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone="neutral">{t.enums.taskCategory[task.category]}</Badge>
-          <Badge tone="primary">{t.enums.taskDifficulty[task.difficulty]}</Badge>
         </div>
         <h1 className="mt-3 text-xl font-semibold text-text-primary">{task.title}</h1>
         <p className="mt-3 text-2xl font-semibold text-primary">{formatCurrency(task.reward, settings.currencyLabel)}</p>
@@ -200,28 +199,9 @@ export function TaskDetailPage() {
           {task.video_url && (
             <div>
               <h2 className="text-sm font-semibold text-text-primary">{t.taskDetail.video}</h2>
-              {(() => {
-                const videoId = extractTiktokVideoId(task.video_url!);
-                return videoId ? (
-                  <div className="mx-auto mt-2 aspect-[9/16] w-full max-w-xs overflow-hidden rounded-md border border-border">
-                    <iframe
-                      src={tiktokEmbedUrl(videoId)}
-                      allow="encrypted-media; fullscreen"
-                      className="size-full"
-                      title={task.title}
-                    />
-                  </div>
-                ) : (
-                  <a
-                    href={task.video_url!}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-                  >
-                    {t.taskDetail.openVideo} <ExternalLink className="size-3.5" />
-                  </a>
-                );
-              })()}
+              <div className="mt-2">
+                <VideoPlayer category={task.category} url={task.video_url} title={task.title} openLabel={t.taskDetail.openVideo} />
+              </div>
             </div>
           )}
         </div>

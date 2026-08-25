@@ -12,7 +12,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { createTask, deleteTask, generateQuizQuestions, listAllTasks, listQuizQuestions, replaceQuizQuestions, updateTask } from "@/services/admin";
 import type { Task, TaskCategory, TaskDifficulty, TaskStatus } from "@/types/domain";
-import { TASK_CATEGORY_LABELS, TASK_DIFFICULTY_LABELS } from "@/types/domain";
+import { TASK_CATEGORY_LABELS } from "@/types/domain";
 import { useSettings } from "@/contexts/SettingsContext";
 import { formatCurrency } from "@/utils/format";
 import { notify } from "@/utils/toast";
@@ -37,6 +37,26 @@ const SOCIAL_CATEGORIES: TaskCategory[] = ["TIKTOK", "YOUTUBE"];
 const ENGAGEMENT_CATEGORIES: TaskCategory[] = ["TIKTOK", "YOUTUBE", "ADS"];
 const MAX_QUIZ_OPTIONS = 6;
 
+const WATCH_TIME_OPTIONS: { value: string; label: string }[] = [
+  { value: "15", label: "15 secondes" },
+  { value: "30", label: "30 secondes" },
+  { value: "45", label: "45 secondes" },
+  { value: "60", label: "1 minute" },
+  { value: "90", label: "1 min 30" },
+  { value: "120", label: "2 minutes" },
+  { value: "180", label: "3 minutes" },
+  { value: "300", label: "5 minutes" },
+];
+const DEFAULT_INSTRUCTIONS = "Watch and earn";
+
+// "2026-08-24" -> minuit (UTC) du jour suivant, soit l'instant exact où la
+// tâche datée du 24 doit cesser d'être affichée.
+function endOfDayIso(dateOnly: string): string {
+  const d = new Date(`${dateOnly}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString();
+}
+
 interface QuizDraftQuestion {
   question: string;
   options: string[];
@@ -50,7 +70,6 @@ const EMPTY_FORM = {
   description: "",
   category: "QUIZ" as TaskCategory,
   reward: "",
-  difficulty: "EASY" as TaskDifficulty,
   instructions: "",
   requirements: "",
   max_completions: "",
@@ -104,7 +123,6 @@ export function AdminTasksPage() {
       description: task.description,
       category: task.category,
       reward: String(task.reward),
-      difficulty: task.difficulty,
       instructions: task.instructions ?? "",
       requirements: task.requirements ?? "",
       max_completions: task.max_completions ? String(task.max_completions) : "",
@@ -126,7 +144,6 @@ export function AdminTasksPage() {
       description: task.description,
       category: task.category,
       reward: String(task.reward),
-      difficulty: task.difficulty,
       instructions: task.instructions ?? "",
       requirements: task.requirements ?? "",
       max_completions: task.max_completions ? String(task.max_completions) : "",
@@ -207,6 +224,10 @@ export function AdminTasksPage() {
       notify.error("La durée de vérification doit être supérieure à 0");
       return;
     }
+    if (SOCIAL_CATEGORIES.includes(form.category) && !form.video_url.trim()) {
+      notify.error("L'URL de la vidéo est obligatoire pour une tâche réseaux sociaux");
+      return;
+    }
     if (form.category === "QUIZ") {
       const quizError = validateQuiz();
       if (quizError) {
@@ -222,12 +243,14 @@ export function AdminTasksPage() {
         category: form.category,
         reward: Number(form.reward),
         estimated_time: null,
-        difficulty: isQuiz ? "EASY" as TaskDifficulty : form.difficulty,
-        instructions: isQuiz ? null : form.instructions || null,
+        difficulty: "EASY" as TaskDifficulty,
+        instructions: isQuiz ? null : ENGAGEMENT_CATEGORIES.includes(form.category) ? DEFAULT_INSTRUCTIONS : form.instructions || null,
         requirements: isQuiz ? null : form.requirements || null,
         max_completions: isQuiz ? null : form.max_completions ? Number(form.max_completions) : null,
         single_submission_per_user: form.single_submission_per_user,
-        deadline: isQuiz ? null : form.deadline ? new Date(form.deadline).toISOString() : null,
+        // La deadline marque la fin de la journée choisie : une tâche datée
+        // lundi reste visible jusqu'à 00h mardi (début du jour suivant).
+        deadline: isQuiz || !form.deadline ? null : endOfDayIso(form.deadline),
         status: form.status,
         video_url: ENGAGEMENT_CATEGORIES.includes(form.category) ? form.video_url || null : null,
         auto_verify_seconds: ENGAGEMENT_CATEGORIES.includes(form.category) ? Number(form.auto_verify_seconds) : 1,
@@ -310,22 +333,21 @@ export function AdminTasksPage() {
               setForm({ ...form, category });
             }} />
           ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <Select label="Catégorie" options={ADMIN_TASK_CATEGORIES.map((c) => ({ value: c, label: TASK_CATEGORY_LABELS[c] }))} value={form.category} onChange={(e) => {
-                const category = e.target.value as TaskCategory;
-                setForm({ ...form, category });
-                if (category === "QUIZ" && quizQuestions.length === 0) setQuizQuestions([{ ...EMPTY_QUESTION }]);
-              }} />
-              <Select label="Difficulté" options={(Object.keys(TASK_DIFFICULTY_LABELS) as TaskDifficulty[]).map((d) => ({ value: d, label: TASK_DIFFICULTY_LABELS[d] }))} value={form.difficulty} onChange={(e) => setForm({ ...form, difficulty: e.target.value as TaskDifficulty })} />
-            </div>
+            <Select label="Catégorie" options={ADMIN_TASK_CATEGORIES.map((c) => ({ value: c, label: TASK_CATEGORY_LABELS[c] }))} value={form.category} onChange={(e) => {
+              const category = e.target.value as TaskCategory;
+              setForm({ ...form, category });
+              if (category === "QUIZ" && quizQuestions.length === 0) setQuizQuestions([{ ...EMPTY_QUESTION }]);
+            }} />
           )}
           <Input label={`Récompense (${settings.currencyLabel})`} type="number" value={form.reward} onChange={(e) => setForm({ ...form, reward: e.target.value })} />
           {form.category !== "QUIZ" && (
             <>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-text-primary">Instructions</label>
-                <textarea className="min-h-16 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.instructions} onChange={(e) => setForm({ ...form, instructions: e.target.value })} />
-              </div>
+              {!ENGAGEMENT_CATEGORIES.includes(form.category) && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-text-primary">Instructions</label>
+                  <textarea className="min-h-16 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.instructions} onChange={(e) => setForm({ ...form, instructions: e.target.value })} />
+                </div>
+              )}
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-text-primary">Conditions</label>
                 <textarea className="min-h-16 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} />
@@ -340,16 +362,15 @@ export function AdminTasksPage() {
           {ENGAGEMENT_CATEGORIES.includes(form.category) && (
             <>
               <Input
-                label={form.category === "ADS" ? "Lien à visiter (optionnel)" : "URL vidéo (optionnel)"}
+                label={form.category === "ADS" ? "Lien à visiter (optionnel)" : "URL vidéo"}
                 value={form.video_url}
                 onChange={(e) => setForm({ ...form, video_url: e.target.value })}
                 placeholder={form.category === "ADS" ? "https://exemple.com/offre" : "https://www.tiktok.com/@compte/video/1234567890"}
                 hint={form.category === "ADS" ? "Lien de la publicité — s'ouvre dans un nouvel onglet" : "Lien TikTok — la vidéo s'affiche directement dans l'application"}
               />
-              <Input
-                label="Durée de vérification (secondes)"
-                type="number"
-                min={1}
+              <Select
+                label="Temps de visionnage"
+                options={WATCH_TIME_OPTIONS}
                 value={form.auto_verify_seconds}
                 onChange={(e) => setForm({ ...form, auto_verify_seconds: e.target.value })}
                 hint="Temps que l'utilisateur doit rester sur la page pour être crédité automatiquement — aucune preuve à envoyer"

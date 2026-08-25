@@ -24,8 +24,9 @@ import {
   Video,
   HelpCircle,
   MousePointerClick,
-  type LucideIcon,
 } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
+import { TikTokIcon, YouTubeIcon } from "@/components/shared/SocialIcons";
 import type { translations } from "@/i18n/translations";
 
 type NavLabelKey = keyof typeof translations.en.nav;
@@ -33,7 +34,7 @@ type NavLabelKey = keyof typeof translations.en.nav;
 export interface NavItem {
   label: string;
   to: string;
-  icon: LucideIcon;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   /** Affiché en retrait, comme sous-item du lien juste au-dessus. */
   indent?: boolean;
   /** Regroupe des sous-catégories réelles (Quiz/Réseaux sociaux/Ads) — atterrir
@@ -48,7 +49,8 @@ export interface NavItem {
 export const USER_SIDEBAR_NAV: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, labelKey: "dashboard" },
   { label: "Tâches journalières", to: "/tasks", icon: ListChecks, labelKey: "tasks", expandOnly: true },
-  { label: "Réseaux sociaux", to: "/tasks/social", icon: Video, indent: true, labelKey: "socialTasks" },
+  { label: "TikTok", to: "/tasks/tiktok", icon: TikTokIcon, indent: true, labelKey: "tiktokTasks" },
+  { label: "YouTube", to: "/tasks/youtube", icon: YouTubeIcon, indent: true, labelKey: "youtubeTasks" },
   { label: "Quiz", to: "/tasks/quiz", icon: HelpCircle, indent: true, labelKey: "quizTasks" },
   { label: "Ads", to: "/tasks/ads", icon: MousePointerClick, indent: true, labelKey: "adsTasks" },
   { label: "Formations", to: "/courses", icon: GraduationCap, labelKey: "courses" },

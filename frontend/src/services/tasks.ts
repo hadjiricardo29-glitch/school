@@ -2,7 +2,12 @@ import { supabase } from "@/services/supabase";
 import type { QuizQuestionPublic, QuizResult, Task, TaskCategory, TaskSubmission } from "@/types/domain";
 
 export async function listPublishedTasks(params?: { category?: TaskCategory; search?: string }): Promise<Task[]> {
-  let query = supabase.from("tasks").select("*").eq("status", "PUBLISHED").order("created_at", { ascending: false });
+  let query = supabase
+    .from("tasks")
+    .select("*")
+    .eq("status", "PUBLISHED")
+    .or(`deadline.is.null,deadline.gt.${new Date().toISOString()}`)
+    .order("created_at", { ascending: false });
   if (params?.category) query = query.eq("category", params.category);
   if (params?.search) query = query.ilike("title", `%${params.search}%`);
   const { data, error } = await query;

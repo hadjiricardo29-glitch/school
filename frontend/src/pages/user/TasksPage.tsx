@@ -19,7 +19,8 @@ export function TasksPage() {
   const { settings } = useSettings();
   const t = useT();
   const pathname = useLocation().pathname;
-  const socialOnly = pathname === "/tasks/social";
+  const tiktokOnly = pathname === "/tasks/tiktok";
+  const youtubeOnly = pathname === "/tasks/youtube";
   const quizOnly = pathname === "/tasks/quiz";
   const adsOnly = pathname === "/tasks/ads";
   const [searchParams] = useSearchParams();
@@ -40,13 +41,14 @@ export function TasksPage() {
     setLoading(true);
     listPublishedTasks({ category: (category || undefined) as TaskCategory | undefined, search: search || undefined })
       .then((all) => {
-        if (socialOnly) return setTasks(all.filter((task) => SOCIAL_CATEGORIES.includes(task.category)));
+        if (tiktokOnly) return setTasks(all.filter((task) => task.category === "TIKTOK"));
+        if (youtubeOnly) return setTasks(all.filter((task) => task.category === "YOUTUBE"));
         if (quizOnly) return setTasks(all.filter((task) => task.category === "QUIZ"));
         if (adsOnly) return setTasks(all.filter((task) => task.category === "ADS"));
         setTasks(all);
       })
       .finally(() => setLoading(false));
-  }, [category, search, socialOnly, quizOnly, adsOnly]);
+  }, [category, search, tiktokOnly, youtubeOnly, quizOnly, adsOnly]);
 
   const remainingSlots = useMemo(
     () => (task: Task) => (task.max_completions ? Math.max(task.max_completions - task.completions_count, 0) : null),
@@ -57,10 +59,10 @@ export function TasksPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-xl font-semibold text-text-primary">
-          {quizOnly ? t.tasks.quizTitle : socialOnly ? t.tasks.socialTitle : adsOnly ? t.tasks.adsTitle : t.tasks.title}
+          {quizOnly ? t.tasks.quizTitle : tiktokOnly ? t.tasks.tiktokTitle : youtubeOnly ? t.tasks.youtubeTitle : adsOnly ? t.tasks.adsTitle : t.tasks.title}
         </h1>
         <p className="mt-1 text-sm text-text-secondary">
-          {quizOnly ? t.tasks.quizSubtitle : socialOnly ? t.tasks.socialSubtitle : adsOnly ? t.tasks.adsSubtitle : t.tasks.subtitle}
+          {quizOnly ? t.tasks.quizSubtitle : tiktokOnly ? t.tasks.tiktokSubtitle : youtubeOnly ? t.tasks.youtubeSubtitle : adsOnly ? t.tasks.adsSubtitle : t.tasks.subtitle}
         </p>
       </div>
 
@@ -72,7 +74,7 @@ export function TasksPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-xs"
         />
-        {!socialOnly && !quizOnly && !adsOnly && (
+        {!tiktokOnly && !youtubeOnly && !quizOnly && !adsOnly && (
           <Select options={CATEGORY_OPTIONS} value={category} onChange={(e) => setCategory(e.target.value)} className="sm:max-w-xs" />
         )}
       </div>
@@ -92,7 +94,6 @@ export function TasksPage() {
                     <Badge tone={SOCIAL_CATEGORIES.includes(task.category) ? "oled" : "neutral"}>
                       {t.enums.taskCategory[task.category]}
                     </Badge>
-                    <Badge tone="primary">{t.enums.taskDifficulty[task.difficulty]}</Badge>
                   </div>
                   <p className="mt-3 text-sm font-semibold text-text-primary">{task.title}</p>
                   {task.category !== "QUIZ" && (
