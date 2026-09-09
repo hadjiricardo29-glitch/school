@@ -7,7 +7,7 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { COUNTRIES } from "@/config/countries";
-import { registerUser } from "@/services/auth";
+import { registerUser, recordLogin } from "@/services/auth";
 import { useT } from "@/i18n/useT";
 import { cn } from "@/utils/cn";
 
@@ -82,6 +82,11 @@ export function RegisterPage() {
       });
 
       if (result.session) {
+        // Capture l'IP de création du compte dès que possible — sans
+        // confirmation email requise, c'est ce tout premier appel qui
+        // l'enregistre (voir record_login : signup_ip n'est jamais écrasé
+        // une fois posé).
+        recordLogin();
         navigate("/dashboard", { replace: true });
       } else {
         setConfirmationSent(true);

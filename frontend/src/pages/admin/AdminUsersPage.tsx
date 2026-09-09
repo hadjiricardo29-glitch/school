@@ -36,6 +36,7 @@ export function AdminUsersPage() {
   const [suspendReason, setSuspendReason] = useState("");
   const [confirmingSuspend, setConfirmingSuspend] = useState(false);
   const [dupIpCount, setDupIpCount] = useState(0);
+  const [dupSignupIpCount, setDupSignupIpCount] = useState(0);
   const [loginHistory, setLoginHistory] = useState<LoginEvent[]>([]);
 
   // Combien d'AUTRES comptes se sont connectés depuis la même IP — signal
@@ -52,6 +53,21 @@ export function AdminUsersPage() {
       .neq("id", selected.id)
       .then(({ count }) => setDupIpCount(count ?? 0));
   }, [selected?.id, selected?.last_login_ip]);
+
+  // Même signal, mais sur l'IP de CRÉATION du compte — plusieurs inscriptions
+  // depuis la même IP est un signal encore plus direct de multi-comptes.
+  useEffect(() => {
+    if (!selected?.signup_ip) {
+      setDupSignupIpCount(0);
+      return;
+    }
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("signup_ip", selected.signup_ip)
+      .neq("id", selected.id)
+      .then(({ count }) => setDupSignupIpCount(count ?? 0));
+  }, [selected?.id, selected?.signup_ip]);
 
   // Historique complet, pas que la dernière IP — utile pour repérer un
   // changement brutal de localisation ou une IP récurrente sur ce compte.
@@ -149,6 +165,17 @@ export function AdminUsersPage() {
               <div><p className="text-text-secondary">Pays</p><p className="font-medium text-text-primary">{selected.country ?? "—"}</p></div>
               <div><p className="text-text-secondary">Téléphone</p><p className="font-medium text-text-primary">{selected.phone_code} {selected.phone}</p></div>
               <div><p className="text-text-secondary">Code parrainage</p><p className="font-medium text-text-primary">{selected.referral_code}</p></div>
+              <div>
+                <p className="text-text-secondary">IP de création du compte</p>
+                <p className="flex items-center gap-1.5 font-medium text-text-primary">
+                  {selected.signup_ip ?? "—"}
+                  {dupSignupIpCount > 0 && (
+                    <span className="flex items-center gap-1 rounded-full bg-warning-bg px-1.5 py-0.5 text-[11px] font-medium text-warning">
+                      <AlertTriangle className="size-3" /> {dupSignupIpCount} autre{dupSignupIpCount > 1 ? "s" : ""} compte{dupSignupIpCount > 1 ? "s" : ""} créé{dupSignupIpCount > 1 ? "s" : ""} depuis cette IP
+                    </span>
+                  )}
+                </p>
+              </div>
               <div>
                 <p className="text-text-secondary">Dernière connexion</p>
                 <p className="font-medium text-text-primary">{selected.last_login_at ? formatDateTimeSeconds(selected.last_login_at) : "—"}</p>

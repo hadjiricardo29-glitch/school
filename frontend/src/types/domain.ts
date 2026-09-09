@@ -70,6 +70,8 @@ export interface Profile {
   /** Suivi anti-fraude — lisible par le propriétaire (comme Google/FB) et le staff. */
   last_login_ip: string | null;
   last_login_at: string | null;
+  /** IP au moment de la création du compte — jamais écrasée ensuite. */
+  signup_ip: string | null;
   /** Motif choisi par l'admin en suspendant le compte — null si non suspendu. */
   suspension_reason: string | null;
   created_at: string;
