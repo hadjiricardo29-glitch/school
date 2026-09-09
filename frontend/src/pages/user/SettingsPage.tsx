@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Tabs } from "@/components/ui/Tabs";
-import { updatePassword } from "@/services/auth";
+import { updatePassword, verifyCurrentPassword } from "@/services/auth";
 import { supabase } from "@/services/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -13,10 +13,11 @@ import { useT } from "@/i18n/useT";
 import { notify } from "@/utils/toast";
 
 export function SettingsPage() {
-  const { profile, refreshProfile } = useAuth();
+  const { profile, session, refreshProfile } = useAuth();
   const { settings } = useSettings();
   const t = useT().settingsPage;
   const [tab, setTab] = useState("security");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
@@ -41,6 +42,10 @@ export function SettingsPage() {
   async function onChangePassword(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!currentPassword) {
+      setError(t.currentPasswordRequired);
+      return;
+    }
     if (password !== confirmPassword) {
       setError(t.passwordMismatch);
       return;
@@ -51,8 +56,11 @@ export function SettingsPage() {
     }
     setSaving(true);
     try {
+      if (!session?.user.email) throw new Error(t.updateError);
+      await verifyCurrentPassword(session.user.email, currentPassword);
       await updatePassword(password);
       notify.success(t.passwordUpdated);
+      setCurrentPassword("");
       setPassword("");
       setConfirmPassword("");
     } catch (err) {
@@ -89,6 +97,7 @@ export function SettingsPage() {
           <CardHeader title={t.changePassword} />
           <form onSubmit={onChangePassword} className="flex flex-col gap-4">
             {error && <Alert tone="error">{error}</Alert>}
+            <Input label={t.currentPassword} type="password" leftIcon={<Lock className="size-4" />} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
             <Input label={t.newPassword} type="password" leftIcon={<Lock className="size-4" />} value={password} onChange={(e) => setPassword(e.target.value)} />
             <Input label={t.confirm} type="password" leftIcon={<Lock className="size-4" />} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
             <Button type="submit" loading={saving} className="self-start">

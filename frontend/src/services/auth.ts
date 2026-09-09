@@ -63,6 +63,18 @@ export async function isStaffUser(userId: string): Promise<boolean> {
   return !!data && STAFF_ROLES.includes(data.role);
 }
 
+/**
+ * Ré-authentifie avec le mot de passe actuel avant tout changement — sinon
+ * quelqu'un avec une session volée (mais pas le mot de passe) pourrait
+ * verrouiller le vrai propriétaire hors de son compte. signInWithPassword
+ * est le seul moyen que Supabase Auth expose pour vérifier un mot de passe
+ * sans le stocker/comparer nous-mêmes.
+ */
+export async function verifyCurrentPassword(email: string, currentPassword: string): Promise<void> {
+  const { error } = await supabase.auth.signInWithPassword({ email, password: currentPassword });
+  if (error) throw new Error("Mot de passe actuel incorrect");
+}
+
 export async function updatePassword(newPassword: string) {
   const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) throw error;
