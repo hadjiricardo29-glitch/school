@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Users, Smartphone, KeyRound } from "lucide-react";
+import { ArrowLeft, Users, Smartphone, KeyRound, Wallet as WalletIcon } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -19,6 +19,8 @@ import { isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
 import { COUNTRIES } from "@/config/countries";
 import { getOperatorsForCountry } from "@/config/operators";
+import { WITHDRAWAL_TIERS } from "@/config/withdrawalTiers";
+import { cn } from "@/utils/cn";
 
 export function WithdrawPage() {
   const navigate = useNavigate();
@@ -56,6 +58,13 @@ export function WithdrawPage() {
     });
   const bucketBalance = balances.find((wb) => wb.bucket === bucket)?.available_balance ?? 0;
 
+  // Un palier choisi pour un bucket peut dépasser le solde d'un autre — on
+  // réinitialise la sélection au changement de catégorie plutôt que de
+  // laisser un montant invalide sélectionné silencieusement.
+  useEffect(() => {
+    setAmount("");
+  }, [bucket]);
+
   const referralsRequired = settings.withdrawalMinReferrals;
   const referralsMissing = referralsRequired > 0 && (activatedReferrals ?? 0) < referralsRequired;
 
@@ -75,8 +84,8 @@ export function WithdrawPage() {
     e.preventDefault();
     setError(null);
 
-    if (numericAmount < settings.withdrawalMinAmount) {
-      setError(tw.minAmountError.replace("{min}", formatCurrency(settings.withdrawalMinAmount, settings.currencyLabel)));
+    if (numericAmount <= 0) {
+      setError(tw.chooseAmountError);
       return;
     }
     if (numericAmount > bucketBalance) {
@@ -112,9 +121,15 @@ export function WithdrawPage() {
 
       <Card>
         <h1 className="text-lg font-semibold text-text-primary">{tw.title}</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          {tw.availableBalance} <strong className="text-text-primary">{formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}</strong>
-        </p>
+        <div className="mt-3 flex items-center gap-3 rounded-md border border-primary/30 bg-primary/5 p-4">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary text-white shadow-[0_0_16px_-4px_rgba(220,38,38,0.65)]">
+            <WalletIcon className="size-5" />
+          </span>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">{tw.availableBalance}</p>
+            <p className="text-xl font-bold text-primary">{formatCurrency(wallet?.available_balance ?? 0, settings.currencyLabel)}</p>
+          </div>
+        </div>
 
         {!isAccountActivated(wallet, settings, profile?.role) ? (
           <div className="mt-5">
@@ -162,18 +177,37 @@ export function WithdrawPage() {
             hint={tw.withdrawFromHint}
           />
 
-          <Input
-            label={tw.amount.replace("{currency}", settings.currencyLabel)}
-            type="number"
-            min={settings.withdrawalMinAmount}
-            max={bucketBalance}
-            required
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            hint={tw.amountHint
-              .replace("{min}", formatCurrency(settings.withdrawalMinAmount, settings.currencyLabel))
-              .replace("{available}", formatCurrency(bucketBalance, settings.currencyLabel))}
-          />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-text-primary">{tw.amount.replace("{currency}", settings.currencyLabel)}</label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {WITHDRAWAL_TIERS.map((tier) => {
+                const disabled = tier > bucketBalance;
+                return (
+                  <button
+                    type="button"
+                    key={tier}
+                    disabled={disabled}
+                    onClick={() => setAmount(String(tier))}
+                    className={cn(
+                      "rounded-md border px-3 py-2.5 text-sm font-medium transition-colors",
+                      disabled
+                        ? "cursor-not-allowed border-border text-text-secondary/40"
+                        : numericAmount === tier
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-text-secondary hover:bg-surface-alt",
+                    )}
+                  >
+                    {formatCurrency(tier, settings.currencyLabel)}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-text-secondary">
+              {tw.amountHint
+                .replace("{min}", formatCurrency(settings.withdrawalMinAmount, settings.currencyLabel))
+                .replace("{available}", formatCurrency(bucketBalance, settings.currencyLabel))}
+            </p>
+          </div>
 
           <div className="flex items-center gap-3 rounded-md border border-border bg-surface-alt p-4">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary text-white">
