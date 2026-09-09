@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Copy, Share2, Users, Network, Coins, MoonStar, UploadCloud } from "lucide-react";
+import { Check, Copy, Share2, Users, Network, Coins, MoonStar, UploadCloud, CheckCircle2, Lock } from "lucide-react";
+import { cn } from "@/utils/cn";
 import { TelegramIcon, WhatsAppIcon } from "@/components/shared/SocialIcons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -13,6 +14,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { Avatar } from "@/components/ui/Avatar";
 import {
+  countActivatedReferrals,
   getCommissionRules,
   getDirectReferralsWithStatus,
   getReferralStats,
@@ -31,6 +33,7 @@ export function ReferralsPage() {
   const [stats, setStats] = useState<ReferralStats | null>(null);
   const [referrals, setReferrals] = useState<ReferralWithStatus[]>([]);
   const [rules, setRules] = useState<CommissionRule[]>([]);
+  const [activatedReferrals, setActivatedReferrals] = useState(0);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState("active");
@@ -39,14 +42,23 @@ export function ReferralsPage() {
 
   useEffect(() => {
     if (!profile) return;
-    Promise.all([getReferralStats(profile.id), getDirectReferralsWithStatus(profile.id), getCommissionRules()])
-      .then(([s, refs, r]) => {
+    Promise.all([
+      getReferralStats(profile.id),
+      getDirectReferralsWithStatus(profile.id),
+      getCommissionRules(),
+      countActivatedReferrals(profile.id),
+    ])
+      .then(([s, refs, r, activated]) => {
         setStats(s);
         setReferrals(refs);
         setRules(r.filter((rule) => rule.active));
+        setActivatedReferrals(activated);
       })
       .finally(() => setLoading(false));
   }, [profile]);
+
+  const withdrawalMinReferrals = settings.withdrawalMinReferrals;
+  const withdrawalRequirementMet = withdrawalMinReferrals === 0 || activatedReferrals >= withdrawalMinReferrals;
 
   const activeReferrals = useMemo(() => referrals.filter((r) => r.activated), [referrals]);
   const dormantReferrals = useMemo(() => referrals.filter((r) => !r.activated), [referrals]);
@@ -168,7 +180,32 @@ export function ReferralsPage() {
             </div>
           ))}
         </div>
-        <p className="mt-4 border-t border-border pt-4 text-xs text-text-secondary">{t.withdrawalPerk}</p>
+        {withdrawalMinReferrals > 0 && (
+          <div
+            className={cn(
+              "mt-4 flex items-center gap-3 rounded-md border p-4",
+              withdrawalRequirementMet ? "border-success/30 bg-success/5" : "border-warning/30 bg-warning-bg",
+            )}
+          >
+            <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-md", withdrawalRequirementMet ? "bg-success text-white" : "bg-warning text-white")}>
+              {withdrawalRequirementMet ? <CheckCircle2 className="size-5" /> : <Lock className="size-5" />}
+            </span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-text-primary">{t.withdrawalUnlockTitle}</p>
+              <p className="text-xs text-text-secondary">
+                {withdrawalRequirementMet
+                  ? t.withdrawalUnlockMet
+                  : t.withdrawalUnlockBody.replace("{current}", String(activatedReferrals)).replace("{required}", String(withdrawalMinReferrals))}
+              </p>
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-alt">
+                <div
+                  className={cn("h-full rounded-full transition-all", withdrawalRequirementMet ? "bg-success" : "bg-warning")}
+                  style={{ width: `${Math.min(100, (activatedReferrals / withdrawalMinReferrals) * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </Card>
 
       {(settings.communityTelegramUrl || settings.communityWhatsappUrl) && (
