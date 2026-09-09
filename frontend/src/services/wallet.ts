@@ -1,6 +1,45 @@
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { supabase } from "@/services/supabase";
-import type { Deposit, EarningBucket, Transaction, Wallet, WalletBalance, WithdrawalRequest } from "@/types/domain";
+import type { Deposit, EarningBucket, PayoutAccount, Transaction, Wallet, WalletBalance, WithdrawalRequest } from "@/types/domain";
+
+export async function getPayoutAccount(userId: string): Promise<PayoutAccount | null> {
+  const { data, error } = await supabase.from("payout_accounts").select("*").eq("user_id", userId).maybeSingle();
+  if (error) throw error;
+  return data as PayoutAccount | null;
+}
+
+export async function savePayoutAccount(params: {
+  accountName: string;
+  country: string;
+  operator: string;
+  phone: string;
+}): Promise<void> {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) throw userError ?? new Error("Not authenticated");
+  const { error } = await supabase.from("payout_accounts").upsert(
+    {
+      user_id: userData.user.id,
+      account_name: params.accountName,
+      country: params.country,
+      operator: params.operator,
+      phone: params.phone,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
+  if (error) throw error;
+}
+
+export async function hasWithdrawalPin(): Promise<boolean> {
+  const { data, error } = await supabase.rpc("has_withdrawal_pin");
+  if (error) throw error;
+  return Boolean(data);
+}
+
+export async function setWithdrawalPin(newPin: string, currentPin?: string): Promise<void> {
+  const { error } = await supabase.rpc("set_withdrawal_pin", { p_new_pin: newPin, p_current_pin: currentPin ?? null });
+  if (error) throw error;
+}
 
 export async function getWallet(userId: string): Promise<Wallet | null> {
   const { data, error } = await supabase.from("wallets").select("*").eq("user_id", userId).maybeSingle();
@@ -27,19 +66,19 @@ export async function getTransactions(userId: string, limit = 50): Promise<Trans
 
 export async function createWithdrawalRequest(params: {
   amount: number;
-  method: string;
-  destination: Record<string, unknown>;
+  pin: string;
   bucket?: EarningBucket;
 }): Promise<string> {
   // Passe par l'Edge Function (comme les dépôts) plutôt que par le RPC
   // directement : c'est le seul endroit qui voit la vraie IP réseau du
   // client, capturée et transmise à la RPC pour que le staff puisse la
-  // consulter en validant la demande depuis /admin/withdrawals.
+  // consulter en validant la demande depuis /admin/withdrawals. La
+  // destination n'est plus envoyée par le client — le serveur utilise le
+  // compte enregistré (payout_accounts) une fois le PIN vérifié.
   const { data, error } = await supabase.functions.invoke("payments/withdraw", {
     body: {
       amount: params.amount,
-      method: params.method,
-      destination: params.destination,
+      pin: params.pin,
       bucket: params.bucket ?? "WALLET",
     },
   });

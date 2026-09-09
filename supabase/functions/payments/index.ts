@@ -1,6 +1,6 @@
 // Edge Function "payments" — point d'entrée unique pour l'abstraction PaymentProvider.
 // POST /payments/deposit         { amount, method, provider? }  (JWT utilisateur requis)
-// POST /payments/withdraw        { amount, method, destination, bucket? } (JWT utilisateur requis)
+// POST /payments/withdraw        { amount, pin, bucket? } (JWT utilisateur requis)
 // POST /payments/webhook         { event, data: { id, status, ... } } (SASpay — pas de JWT utilisateur, signature HMAC)
 // POST /payments/test-connection {}                              (staff uniquement, lecture seule, aucun mouvement d'argent)
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -104,11 +104,13 @@ Deno.serve(async (req: Request) => {
 
       const body = await req.json();
       const amount = Number(body.amount);
-      const method = String(body.method ?? "");
-      const destination = body.destination ?? {};
+      const pin = body.pin ? String(body.pin) : null;
       const bucket = body.bucket ? String(body.bucket) : "WALLET";
       if (!amount || amount <= 0) {
         return json({ error: "Invalid amount" }, 400);
+      }
+      if (!pin) {
+        return json({ error: "Withdrawal PIN is required" }, 400);
       }
 
       // Seul point du système qui voit le vrai en-tête réseau du client —
@@ -119,10 +121,11 @@ Deno.serve(async (req: Request) => {
       const forwardedFor = req.headers.get("x-forwarded-for");
       const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : req.headers.get("x-real-ip");
 
+      // La destination n'est plus fournie par le client : la RPC utilise le
+      // compte enregistré (payout_accounts) une fois le PIN vérifié.
       const { data: withdrawalId, error: rpcError } = await supabase.rpc("create_withdrawal_request", {
         p_amount: amount,
-        p_method: method,
-        p_destination: destination,
+        p_pin: pin,
         p_bucket: bucket,
         p_ip_address: ip,
       });

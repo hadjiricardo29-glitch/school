@@ -1,35 +1,22 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Clock, ShieldAlert } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, ShieldAlert, Smartphone } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useT } from "@/i18n/useT";
-import { cancelDeposit, createDepositRequest, getDeposits, getWallet } from "@/services/wallet";
+import { cancelDeposit, createDepositRequest, getDeposits, getPayoutAccount, getWallet } from "@/services/wallet";
 import { isAccountActivated } from "@/utils/activation";
 import { notify } from "@/utils/toast";
 import { formatCurrency } from "@/utils/format";
 import { WEST_AFRICA_COUNTRIES } from "@/config/countries";
 import { getOperatorsForCountry } from "@/config/operators";
-import type { Deposit, Wallet } from "@/types/domain";
+import type { Deposit, PayoutAccount, Wallet } from "@/types/domain";
 import { cn } from "@/utils/cn";
-
-// Paliers de recharge proposés une fois le compte déjà activé (les frais
-// d'activation eux restent un montant fixe, non lié à ces paliers). Les noms
-// sont purement décoratifs (distinguer visuellement les montants) — aucun
-// statut, aucun avantage ni récompense différenciée n'y est associé.
-const TOP_UP_TIERS: { amount: number; label: string }[] = [
-  { amount: 8800, label: "Bronze" },
-  { amount: 38000, label: "Argent" },
-  { amount: 98000, label: "Or" },
-  { amount: 315000, label: "Platine" },
-  { amount: 720000, label: "Diamant" },
-];
+import { DEPOSIT_TIERS as TOP_UP_TIERS } from "@/config/depositTiers";
 
 export function DepositPage() {
   const navigate = useNavigate();
@@ -37,21 +24,20 @@ export function DepositPage() {
   const { settings } = useSettings();
   const td = useT().deposit;
   const [selectedTier, setSelectedTier] = useState(TOP_UP_TIERS[0].amount);
-  const [country, setCountry] = useState(WEST_AFRICA_COUNTRIES.find((c) => c.name === profile?.country)?.code ?? "CI");
-  const [operator, setOperator] = useState(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
-  const [phone, setPhone] = useState(profile?.phone ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [deposits, setDeposits] = useState<Deposit[]>([]);
+  const [payoutAccount, setPayoutAccount] = useState<PayoutAccount | null>(null);
   const [checking, setChecking] = useState(true);
   const [cancelling, setCancelling] = useState(false);
 
   async function reload() {
     if (!profile) return;
-    const [w, d] = await Promise.all([getWallet(profile.id), getDeposits(profile.id)]);
+    const [w, d, a] = await Promise.all([getWallet(profile.id), getDeposits(profile.id), getPayoutAccount(profile.id)]);
     setWallet(w);
     setDeposits(d);
+    setPayoutAccount(a);
   }
 
   useEffect(() => {
@@ -59,13 +45,12 @@ export function DepositPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
 
-  useEffect(() => {
-    setOperator(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
-  }, [country]);
-
   const needsActivation = !isAccountActivated(wallet, settings, profile?.role);
   const amount = needsActivation ? settings.accountActivationMinDeposit : selectedTier;
-  const selectedCountry = WEST_AFRICA_COUNTRIES.find((c) => c.code === country);
+  const operatorLabel = payoutAccount
+    ? getOperatorsForCountry(payoutAccount.country).find((o) => o.value === payoutAccount.operator)?.label ?? payoutAccount.operator
+    : "";
+  const countryLabel = payoutAccount ? WEST_AFRICA_COUNTRIES.find((c) => c.code === payoutAccount.country)?.name ?? payoutAccount.country : "";
   // Une fois activé, un dépôt COMPLETED passé (l'activation elle-même, ou une
   // recharge précédente) ne doit plus bloquer la page — seul un dépôt encore
   // PENDING justifie l'écran d'attente/suivi.
@@ -124,13 +109,16 @@ export function DepositPage() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!phone.trim()) {
-      setError(td.phoneRequired);
-      return;
-    }
+    if (!payoutAccount) return;
     setLoading(true);
     try {
-      await createDepositRequest({ amount, method: operator, provider: settings.paymentProvider, country, phone: phone.trim() });
+      await createDepositRequest({
+        amount,
+        method: payoutAccount.operator,
+        provider: settings.paymentProvider,
+        country: payoutAccount.country,
+        phone: payoutAccount.phone,
+      });
       if (settings.paymentProvider === "mock") {
         notify.success(td.demoPaid.replace("{amount}", formatCurrency(amount, settings.currencyLabel)));
       }
@@ -146,6 +134,24 @@ export function DepositPage() {
   }
 
   if (checking) return <LoadingState label={td.checking} />;
+
+  if (!payoutAccount) {
+    return (
+      <div className="mx-auto flex max-w-lg flex-col gap-6">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary">
+          <ArrowLeft className="size-4" /> {td.back}
+        </button>
+        <Card className="flex flex-col items-center gap-3 py-10 text-center">
+          <Smartphone className="size-10 text-primary" />
+          <h1 className="text-lg font-semibold text-text-primary">{td.noAccountTitle}</h1>
+          <p className="max-w-sm text-sm text-text-secondary">{td.noAccountBody}</p>
+          <Link to="/profile" className="mt-2">
+            <Button>{td.configureAccount}</Button>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
 
   if (activeDeposit?.status === "COMPLETED") {
     return (
@@ -243,28 +249,18 @@ export function DepositPage() {
               </div>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-3">
-            <Select
-              label={td.country}
-              options={WEST_AFRICA_COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-            />
-            <Select
-              label={td.operator}
-              options={getOperatorsForCountry(country)}
-              value={operator}
-              onChange={(e) => setOperator(e.target.value)}
-            />
+          <div className="flex items-center gap-3 rounded-md border border-border bg-surface-alt p-4">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary text-white">
+              <Smartphone className="size-4" />
+            </span>
+            <div className="flex-1 text-sm">
+              <p className="font-medium text-text-primary">{payoutAccount.account_name}</p>
+              <p className="text-text-secondary">{operatorLabel} — {payoutAccount.phone} ({countryLabel})</p>
+            </div>
+            <Link to="/profile" className="shrink-0 text-xs font-medium text-primary hover:underline">
+              {td.change}
+            </Link>
           </div>
-          <Input
-            label={td.phone}
-            required
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder={`${selectedCountry?.phoneCode ?? ""} 00 00 00 00`}
-          />
-          <p className="-mt-2 text-xs text-text-secondary">{td.phoneHint}</p>
           <Button type="submit" fullWidth loading={loading}>
             {needsActivation ? (settings.paymentProvider === "mock" ? td.activateDemo : td.activate) : td.topUp}
           </Button>

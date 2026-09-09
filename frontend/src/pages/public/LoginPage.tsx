@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { User, Lock } from "lucide-react";
+import { User, Lock, ShieldCheck } from "lucide-react";
 import { AuthCard } from "@/components/shared/AuthCard";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -56,6 +56,7 @@ export function LoginPage() {
           label={t.email}
           type="text"
           autoCapitalize="none"
+          autoFocus
           required
           leftIcon={<User className="size-4" />}
           value={identifier}
@@ -74,6 +75,9 @@ export function LoginPage() {
         <Button type="submit" fullWidth loading={loading}>
           {t.submit}
         </Button>
+        <p className="flex items-center justify-center gap-1.5 text-center text-xs text-text-secondary">
+          <ShieldCheck className="size-3.5 shrink-0" /> {t.secureNotice}
+        </p>
       </form>
     </AuthCard>
   );

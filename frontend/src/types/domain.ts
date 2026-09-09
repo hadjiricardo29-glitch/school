@@ -83,6 +83,16 @@ export interface Wallet {
   updated_at: string;
 }
 
+/** Compte Mobile Money enregistré une fois, réutilisé pour dépôts et retraits. */
+export interface PayoutAccount {
+  user_id: string;
+  account_name: string;
+  country: string;
+  operator: string;
+  phone: string;
+  updated_at: string;
+}
+
 // TIKTOK/YOUTUBE/VIDEOS/ADS/SURVEYS restent dans le type pour la
 // rétrocompatibilité (anciennes tâches encore en base) mais ne sont plus
 // des catégories actives — voir CURRENT_EARNING_BUCKETS plus bas, utilisé

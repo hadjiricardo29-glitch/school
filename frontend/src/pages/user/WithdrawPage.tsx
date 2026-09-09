@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Users } from "lucide-react";
+import { ArrowLeft, Users, Smartphone, KeyRound } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -9,11 +9,11 @@ import { Alert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useT } from "@/i18n/useT";
-import { createWithdrawalRequest, getWallet, getWalletBalances } from "@/services/wallet";
+import { createWithdrawalRequest, getPayoutAccount, getWallet, getWalletBalances, hasWithdrawalPin } from "@/services/wallet";
 import { countActivatedReferrals } from "@/services/referrals";
 import { formatCurrency } from "@/utils/format";
 import { notify } from "@/utils/toast";
-import type { EarningBucket, Wallet, WalletBalance } from "@/types/domain";
+import type { EarningBucket, PayoutAccount, Wallet, WalletBalance } from "@/types/domain";
 import { CURRENT_EARNING_BUCKETS } from "@/types/domain";
 import { isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
@@ -28,11 +28,11 @@ export function WithdrawPage() {
   const tw = t.withdraw;
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [balances, setBalances] = useState<WalletBalance[]>([]);
+  const [payoutAccount, setPayoutAccount] = useState<PayoutAccount | null>(null);
+  const [pinConfigured, setPinConfigured] = useState<boolean | null>(null);
   const [amount, setAmount] = useState("");
   const [bucket, setBucket] = useState<EarningBucket>("WALLET");
-  const [country, setCountry] = useState(COUNTRIES.find((c) => c.name === profile?.country)?.code ?? "CI");
-  const [operator, setOperator] = useState(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
-  const [phone, setPhone] = useState("");
+  const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activatedReferrals, setActivatedReferrals] = useState<number | null>(null);
@@ -41,12 +41,10 @@ export function WithdrawPage() {
     if (!profile) return;
     getWallet(profile.id).then(setWallet);
     getWalletBalances(profile.id).then(setBalances).catch(() => setBalances([]));
+    getPayoutAccount(profile.id).then(setPayoutAccount).catch(() => setPayoutAccount(null));
+    hasWithdrawalPin().then(setPinConfigured).catch(() => setPinConfigured(false));
     countActivatedReferrals(profile.id).then(setActivatedReferrals).catch(() => setActivatedReferrals(0));
   }, [profile]);
-
-  useEffect(() => {
-    setOperator(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
-  }, [country]);
 
   // N'affiche que les catégories actuelles, sauf une ancienne (TikTok...)
   // qui garderait encore un solde — jamais stranded, toujours retirable.
@@ -60,6 +58,11 @@ export function WithdrawPage() {
 
   const referralsRequired = settings.withdrawalMinReferrals;
   const referralsMissing = referralsRequired > 0 && (activatedReferrals ?? 0) < referralsRequired;
+
+  const operatorLabel = payoutAccount
+    ? getOperatorsForCountry(payoutAccount.country).find((o) => o.value === payoutAccount.operator)?.label ?? payoutAccount.operator
+    : "";
+  const countryLabel = payoutAccount ? COUNTRIES.find((c) => c.code === payoutAccount.country)?.name ?? payoutAccount.country : "";
 
   const numericAmount = Number(amount) || 0;
   const fee = useMemo(
@@ -84,19 +87,14 @@ export function WithdrawPage() {
       );
       return;
     }
-    if (!phone) {
-      setError(tw.phoneRequiredError);
+    if (!/^[0-9]{4,6}$/.test(pin)) {
+      setError(tw.pinInvalid);
       return;
     }
 
     setLoading(true);
     try {
-      await createWithdrawalRequest({
-        amount: numericAmount,
-        method: operator,
-        destination: { phone, country, operator },
-        bucket,
-      });
+      await createWithdrawalRequest({ amount: numericAmount, pin, bucket });
       notify.success(tw.requestSent);
       navigate("/wallet");
     } catch (err) {
@@ -139,6 +137,19 @@ export function WithdrawPage() {
               <Button size="sm">{tw.inviteFriends}</Button>
             </Link>
           </div>
+        ) : !payoutAccount || !pinConfigured ? (
+          <div className="mt-5 flex flex-col items-start gap-3 rounded-md border border-warning/30 bg-warning-bg p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-3">
+              <Smartphone className="mt-0.5 size-5 shrink-0 text-warning" />
+              <div>
+                <p className="text-sm font-semibold text-text-primary">{!payoutAccount ? tw.noAccountTitle : tw.noPinTitle}</p>
+                <p className="mt-0.5 text-sm text-text-secondary">{!payoutAccount ? tw.noAccountBody : tw.noPinBody}</p>
+              </div>
+            </div>
+            <Link to="/profile" className="shrink-0">
+              <Button size="sm">{tw.goToProfile}</Button>
+            </Link>
+          </div>
         ) : (
         <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-4">
           {error && <Alert tone="error">{error}</Alert>}
@@ -164,27 +175,29 @@ export function WithdrawPage() {
               .replace("{available}", formatCurrency(bucketBalance, settings.currencyLabel))}
           />
 
-          <div className="grid grid-cols-2 gap-3">
-            <Select
-              label={tw.country}
-              options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-            />
-            <Select
-              label={tw.operator}
-              options={getOperatorsForCountry(country)}
-              value={operator}
-              onChange={(e) => setOperator(e.target.value)}
-            />
+          <div className="flex items-center gap-3 rounded-md border border-border bg-surface-alt p-4">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary text-white">
+              <Smartphone className="size-4" />
+            </span>
+            <div className="flex-1 text-sm">
+              <p className="font-medium text-text-primary">{payoutAccount.account_name}</p>
+              <p className="text-text-secondary">{operatorLabel} — {payoutAccount.phone} ({countryLabel})</p>
+            </div>
+            <Link to="/profile" className="shrink-0 text-xs font-medium text-primary hover:underline">
+              {tw.change}
+            </Link>
           </div>
 
           <Input
-            label={tw.phone}
+            label={tw.pin}
+            type="password"
+            inputMode="numeric"
             required
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder={`${COUNTRIES.find((c) => c.code === country)?.phoneCode ?? ""} 00 00 00 00`}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            placeholder="••••"
+            leftIcon={<KeyRound className="size-4" />}
+            hint={tw.pinHint}
           />
 
           {numericAmount > 0 && (
