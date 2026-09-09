@@ -12,14 +12,15 @@ export async function getNotifications(userId: string, limit = 30): Promise<AppN
   return (data ?? []) as AppNotification[];
 }
 
-export async function getUnreadCount(userId: string): Promise<number> {
-  const { count, error } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("read", false);
+// userId n'est plus utilisé (la RPC scope sur auth.uid() côté serveur) —
+// gardé dans la signature pour ne pas toucher les appelants. Passe par une
+// RPC plutôt qu'une requête HEAD + count PostgREST : cette dernière échoue
+// silencieusement ("Fetch failed loading", pas une erreur HTTP) dans
+// certains navigateurs/bloqueurs de pub/proxys.
+export async function getUnreadCount(_userId: string): Promise<number> {
+  const { data, error } = await supabase.rpc("get_unread_notification_count");
   if (error) throw error;
-  return count ?? 0;
+  return (data as number) ?? 0;
 }
 
 export async function markAsRead(notificationId: string): Promise<void> {
