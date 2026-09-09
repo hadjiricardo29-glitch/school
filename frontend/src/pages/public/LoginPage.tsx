@@ -5,7 +5,7 @@ import { AuthCard } from "@/components/shared/AuthCard";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
-import { isStaffUser, loginUser } from "@/services/auth";
+import { isStaffUser, loginUser, recordLogin } from "@/services/auth";
 import { useT } from "@/i18n/useT";
 
 export function LoginPage() {
@@ -23,6 +23,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       const { user } = await loginUser(identifier, password);
+      recordLogin(); // fire-and-forget, ne bloque jamais la connexion
       const stateFrom = (location.state as { from?: Location })?.from?.pathname;
       if (stateFrom) {
         navigate(stateFrom, { replace: true });

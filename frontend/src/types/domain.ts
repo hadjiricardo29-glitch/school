@@ -67,6 +67,11 @@ export interface Profile {
   referred_by: string | null;
   avatar_url: string | null;
   hide_from_leaderboard: boolean;
+  /** Suivi anti-fraude — lisible par le propriétaire (comme Google/FB) et le staff. */
+  last_login_ip: string | null;
+  last_login_at: string | null;
+  /** Motif choisi par l'admin en suspendant le compte — null si non suspendu. */
+  suspension_reason: string | null;
   created_at: string;
   updated_at: string;
 }

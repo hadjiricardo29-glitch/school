@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Card } from "@/components/ui/Card";
@@ -11,6 +11,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Pagination } from "@/components/ui/Pagination";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { changeUserRole, listUsers, setUserStatus } from "@/services/admin";
+import { supabase } from "@/services/supabase";
 import type { Profile, UserRole } from "@/types/domain";
 import { ROLE_LABELS } from "@/types/domain";
 import { formatDate } from "@/utils/format";
@@ -32,6 +33,24 @@ export function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Profile | null>(null);
   const [saving, setSaving] = useState(false);
+  const [suspendReason, setSuspendReason] = useState("");
+  const [confirmingSuspend, setConfirmingSuspend] = useState(false);
+  const [dupIpCount, setDupIpCount] = useState(0);
+
+  // Combien d'AUTRES comptes se sont connectés depuis la même IP — signal
+  // classique de multi-comptes/usurpation, à vérifier avant de trancher.
+  useEffect(() => {
+    if (!selected?.last_login_ip) {
+      setDupIpCount(0);
+      return;
+    }
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("last_login_ip", selected.last_login_ip)
+      .neq("id", selected.id)
+      .then(({ count }) => setDupIpCount(count ?? 0));
+  }, [selected?.id, selected?.last_login_ip]);
 
   async function load() {
     setLoading(true);
@@ -46,13 +65,15 @@ export function AdminUsersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, role, page]);
 
-  async function toggleStatus(user: Profile) {
+  async function toggleStatus(user: Profile, reason?: string) {
     setSaving(true);
     try {
-      await setUserStatus(user.id, user.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE");
-      notify.success(user.status === "ACTIVE" ? "Utilisateur suspendu" : "Utilisateur activé");
+      await setUserStatus(user.id, user.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE", reason);
+      notify.success(user.status === "ACTIVE" ? "Utilisateur suspendu — notifié du motif" : "Utilisateur activé");
       await load();
       setSelected(null);
+      setConfirmingSuspend(false);
+      setSuspendReason("");
     } catch (err) {
       notify.error(err instanceof Error ? err.message : "Action impossible");
     } finally {
@@ -109,7 +130,7 @@ export function AdminUsersPage() {
 
       <Pagination page={page} totalPages={Math.max(1, Math.ceil(count / PAGE_SIZE))} onChange={setPage} />
 
-      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected ? `@${selected.username}` : ""}>
+      <Modal open={!!selected} onClose={() => { setSelected(null); setConfirmingSuspend(false); setSuspendReason(""); }} title={selected ? `@${selected.username}` : ""}>
         {selected && (
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -117,7 +138,29 @@ export function AdminUsersPage() {
               <div><p className="text-text-secondary">Pays</p><p className="font-medium text-text-primary">{selected.country ?? "—"}</p></div>
               <div><p className="text-text-secondary">Téléphone</p><p className="font-medium text-text-primary">{selected.phone_code} {selected.phone}</p></div>
               <div><p className="text-text-secondary">Code parrainage</p><p className="font-medium text-text-primary">{selected.referral_code}</p></div>
+              <div>
+                <p className="text-text-secondary">Dernière connexion</p>
+                <p className="font-medium text-text-primary">{selected.last_login_at ? formatDate(selected.last_login_at) : "—"}</p>
+              </div>
+              <div>
+                <p className="text-text-secondary">Dernière IP</p>
+                <p className="flex items-center gap-1.5 font-medium text-text-primary">
+                  {selected.last_login_ip ?? "—"}
+                  {dupIpCount > 0 && (
+                    <span className="flex items-center gap-1 rounded-full bg-warning-bg px-1.5 py-0.5 text-[11px] font-medium text-warning">
+                      <AlertTriangle className="size-3" /> partagée par {dupIpCount} autre{dupIpCount > 1 ? "s" : ""} compte{dupIpCount > 1 ? "s" : ""}
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
+
+            {selected.status === "SUSPENDED" && selected.suspension_reason && (
+              <div className="rounded-md border border-error/30 bg-error-bg p-3 text-sm text-text-primary">
+                <p className="font-medium">Motif de la suspension</p>
+                <p className="mt-0.5 text-text-secondary">{selected.suspension_reason}</p>
+              </div>
+            )}
 
             <div className="border-t border-border pt-4">
               <label className="text-sm font-medium text-text-primary">Changer le rôle</label>
@@ -130,13 +173,31 @@ export function AdminUsersPage() {
               />
             </div>
 
-            <Button
-              variant={selected.status === "ACTIVE" ? "danger" : "primary"}
-              loading={saving}
-              onClick={() => toggleStatus(selected)}
-            >
-              {selected.status === "ACTIVE" ? "Suspendre le compte" : "Activer le compte"}
-            </Button>
+            {selected.status === "ACTIVE" && confirmingSuspend ? (
+              <div className="flex flex-col gap-2 rounded-md border border-error/30 p-3">
+                <label className="text-sm font-medium text-text-primary">Motif (envoyé à l'utilisateur)</label>
+                <textarea
+                  className="min-h-16 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  value={suspendReason}
+                  onChange={(e) => setSuspendReason(e.target.value)}
+                  placeholder="Ex : activité suspecte détectée sur ce compte, contactez le support pour vérifier votre identité."
+                />
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => { setConfirmingSuspend(false); setSuspendReason(""); }}>Annuler</Button>
+                  <Button variant="danger" loading={saving} onClick={() => toggleStatus(selected, suspendReason.trim() || undefined)}>
+                    Confirmer la suspension
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant={selected.status === "ACTIVE" ? "danger" : "primary"}
+                loading={saving}
+                onClick={() => (selected.status === "ACTIVE" ? setConfirmingSuspend(true) : toggleStatus(selected))}
+              >
+                {selected.status === "ACTIVE" ? "Suspendre le compte" : "Activer le compte"}
+              </Button>
+            )}
           </div>
         )}
       </Modal>

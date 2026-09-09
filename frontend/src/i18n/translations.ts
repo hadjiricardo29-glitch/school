@@ -214,6 +214,8 @@ export const translations = {
       checkingAccess: "Checking access...",
       pageNotFound: "This page doesn't exist anymore.",
       backHome: "Back to home",
+      accountSuspendedTitle: "Account suspended",
+      accountSuspendedDefaultBody: "Your account has been temporarily suspended for security reasons. Contact support for more information.",
     },
     tasks: {
       title: "Daily tasks",
@@ -848,6 +850,8 @@ export const translations = {
       checkingAccess: "Vérification des accès...",
       pageNotFound: "Cette page n'existe pas ou plus.",
       backHome: "Retour à l'accueil",
+      accountSuspendedTitle: "Compte suspendu",
+      accountSuspendedDefaultBody: "Votre compte a été temporairement suspendu pour des raisons de sécurité. Contactez le support pour plus d'informations.",
     },
     tasks: {
       title: "Tâches journalières",

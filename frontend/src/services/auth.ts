@@ -67,3 +67,17 @@ export async function updatePassword(newPassword: string) {
   const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) throw error;
 }
+
+/**
+ * Capture l'IP de connexion côté Edge Function (seul endroit qui voit le
+ * vrai en-tête réseau) pour le suivi anti-fraude admin. Volontairement
+ * silencieux : un échec ici ne doit jamais empêcher l'utilisateur de se
+ * connecter, donc on avale l'erreur plutôt que de la remonter à l'appelant.
+ */
+export async function recordLogin(): Promise<void> {
+  try {
+    await supabase.functions.invoke("record-login", { body: { userAgent: navigator.userAgent } });
+  } catch {
+    // silencieux — voir commentaire ci-dessus
+  }
+}

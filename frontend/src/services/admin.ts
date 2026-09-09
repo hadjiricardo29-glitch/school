@@ -26,8 +26,8 @@ export async function listUsers(params?: { search?: string; role?: UserRole; pag
   return { rows: (data ?? []) as Profile[], count: count ?? 0 };
 }
 
-export async function setUserStatus(userId: string, status: "ACTIVE" | "SUSPENDED") {
-  const { error } = await supabase.rpc("admin_set_user_status", { p_user_id: userId, p_status: status });
+export async function setUserStatus(userId: string, status: "ACTIVE" | "SUSPENDED", reason?: string) {
+  const { error } = await supabase.rpc("admin_set_user_status", { p_user_id: userId, p_status: status, p_reason: reason ?? null });
   if (error) throw error;
 }
 

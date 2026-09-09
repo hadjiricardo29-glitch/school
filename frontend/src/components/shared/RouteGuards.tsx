@@ -1,20 +1,43 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { ShieldAlert } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useT } from "@/i18n/useT";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { getWallet } from "@/services/wallet";
 import { isAccountActivated } from "@/utils/activation";
 import type { UserRole, Wallet } from "@/types/domain";
 
+// Bloque tout accès protégé dès que profiles.status = SUSPENDED — vérifié à
+// chaque chargement de session/navigation (comme RequireActivation),
+// affiche le motif choisi par l'admin plutôt qu'un simple refus muet. Le
+// blocage côté serveur (RPC) reste la vraie barrière — ceci n'est que l'UI.
+function SuspendedScreen({ reason }: { reason: string | null }) {
+  const t = useT();
+  const { signOut } = useAuth();
+  return (
+    <div className="flex min-h-dvh items-center justify-center bg-surface-alt p-4">
+      <Card className="flex max-w-md flex-col items-center gap-3 py-10 text-center">
+        <ShieldAlert className="size-10 text-error" />
+        <h1 className="text-lg font-semibold text-text-primary">{t.common.accountSuspendedTitle}</h1>
+        <p className="text-sm text-text-secondary">{reason ?? t.common.accountSuspendedDefaultBody}</p>
+        <Button variant="outline" className="mt-2" onClick={signOut}>{t.nav.logout}</Button>
+      </Card>
+    </div>
+  );
+}
+
 export function RequireAuth({ children }: { children: ReactNode }) {
-  const { session, loading } = useAuth();
+  const { session, profile, loading } = useAuth();
   const location = useLocation();
   const t = useT().common;
 
   if (loading) return <LoadingState className="min-h-dvh" label={t.loadingSession} />;
   if (!session) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (profile?.status === "SUSPENDED") return <SuspendedScreen reason={profile.suspension_reason} />;
   return <>{children}</>;
 }
 
