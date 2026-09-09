@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Pagination } from "@/components/ui/Pagination";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { changeUserRole, listUsers, setUserStatus } from "@/services/admin";
+import { changeUserRole, getLoginHistory, listUsers, setUserStatus } from "@/services/admin";
 import { supabase } from "@/services/supabase";
-import type { Profile, UserRole } from "@/types/domain";
+import type { LoginEvent, Profile, UserRole } from "@/types/domain";
 import { ROLE_LABELS } from "@/types/domain";
-import { formatDate } from "@/utils/format";
+import { formatDate, formatDateTimeSeconds } from "@/utils/format";
 import { notify } from "@/utils/toast";
 
 const ROLE_OPTIONS: { value: string; label: string }[] = [
@@ -36,6 +36,7 @@ export function AdminUsersPage() {
   const [suspendReason, setSuspendReason] = useState("");
   const [confirmingSuspend, setConfirmingSuspend] = useState(false);
   const [dupIpCount, setDupIpCount] = useState(0);
+  const [loginHistory, setLoginHistory] = useState<LoginEvent[]>([]);
 
   // Combien d'AUTRES comptes se sont connectés depuis la même IP — signal
   // classique de multi-comptes/usurpation, à vérifier avant de trancher.
@@ -51,6 +52,16 @@ export function AdminUsersPage() {
       .neq("id", selected.id)
       .then(({ count }) => setDupIpCount(count ?? 0));
   }, [selected?.id, selected?.last_login_ip]);
+
+  // Historique complet, pas que la dernière IP — utile pour repérer un
+  // changement brutal de localisation ou une IP récurrente sur ce compte.
+  useEffect(() => {
+    if (!selected?.id) {
+      setLoginHistory([]);
+      return;
+    }
+    getLoginHistory(selected.id).then(setLoginHistory).catch(() => setLoginHistory([]));
+  }, [selected?.id]);
 
   async function load() {
     setLoading(true);
@@ -140,7 +151,7 @@ export function AdminUsersPage() {
               <div><p className="text-text-secondary">Code parrainage</p><p className="font-medium text-text-primary">{selected.referral_code}</p></div>
               <div>
                 <p className="text-text-secondary">Dernière connexion</p>
-                <p className="font-medium text-text-primary">{selected.last_login_at ? formatDate(selected.last_login_at) : "—"}</p>
+                <p className="font-medium text-text-primary">{selected.last_login_at ? formatDateTimeSeconds(selected.last_login_at) : "—"}</p>
               </div>
               <div>
                 <p className="text-text-secondary">Dernière IP</p>
@@ -154,6 +165,20 @@ export function AdminUsersPage() {
                 </p>
               </div>
             </div>
+
+            {loginHistory.length > 0 && (
+              <div className="border-t border-border pt-4">
+                <p className="text-sm font-medium text-text-primary">Historique des connexions</p>
+                <div className="mt-2 flex flex-col divide-y divide-border overflow-hidden rounded-md border border-border">
+                  {loginHistory.map((ev) => (
+                    <div key={ev.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                      <span className="text-text-secondary">{formatDateTimeSeconds(ev.created_at)}</span>
+                      <span className="font-medium text-text-primary">{ev.ip_address ?? "—"}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {selected.status === "SUSPENDED" && selected.suspension_reason && (
               <div className="rounded-md border border-error/30 bg-error-bg p-3 text-sm text-text-primary">

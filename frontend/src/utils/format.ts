@@ -39,6 +39,19 @@ export function formatDateTime(value: string | Date): string {
   }).format(date);
 }
 
+/** Précision à la seconde — suivi anti-fraude (dernière connexion, IP). */
+export function formatDateTimeSeconds(value: string | Date): string {
+  const date = typeof value === "string" ? new Date(value) : value;
+  return new Intl.DateTimeFormat(currentLocale, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(date);
+}
+
 export function formatRelativeTime(value: string | Date): string {
   const date = typeof value === "string" ? new Date(value) : value;
   const diffSec = Math.round((date.getTime() - Date.now()) / 1000);

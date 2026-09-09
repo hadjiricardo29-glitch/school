@@ -76,6 +76,15 @@ export interface Profile {
   updated_at: string;
 }
 
+/** Historique complet des connexions (staff uniquement) — pas que la dernière IP. */
+export interface LoginEvent {
+  id: string;
+  user_id: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+}
+
 export interface Wallet {
   id: string;
   user_id: string;

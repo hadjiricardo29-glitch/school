@@ -5,6 +5,7 @@ import type {
   Course,
   Deposit,
   FraudFlag,
+  LoginEvent,
   Profile,
   SupportTicket,
   SupportTicketStatus,
@@ -24,6 +25,17 @@ export async function listUsers(params?: { search?: string; role?: UserRole; pag
   const { data, error, count } = await query.range((page - 1) * pageSize, page * pageSize - 1);
   if (error) throw error;
   return { rows: (data ?? []) as Profile[], count: count ?? 0 };
+}
+
+export async function getLoginHistory(userId: string, limit = 10): Promise<LoginEvent[]> {
+  const { data, error } = await supabase
+    .from("login_events")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as LoginEvent[];
 }
 
 export async function setUserStatus(userId: string, status: "ACTIVE" | "SUSPENDED", reason?: string) {
