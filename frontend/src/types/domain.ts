@@ -7,7 +7,6 @@ export type UserRole = "USER" | "ADMIN" | "MODERATOR" | "FINANCE_ADMIN" | "TASK_
 export type AccountStatus = "ACTIVE" | "SUSPENDED" | "PENDING_VERIFICATION";
 
 export type TaskStatus = "DRAFT" | "PUBLISHED" | "PAUSED" | "COMPLETED" | "EXPIRED";
-export type TaskDifficulty = "EASY" | "MEDIUM" | "HARD";
 export type TaskCategory =
   | "SOCIAL_MEDIA"
   | "CONTENT"
@@ -21,6 +20,8 @@ export type TaskCategory =
   | "TIKTOK"
   | "YOUTUBE"
   | "QUIZ"
+  | "LABELING"
+  | "AI_EVALUATION"
   | "OTHER";
 
 export type SubmissionStatus = "STARTED" | "SUBMITTED" | "UNDER_REVIEW" | "APPROVED" | "REJECTED";
@@ -133,7 +134,6 @@ export interface Task {
   reward: number;
   currency: string;
   estimated_time: string | null;
-  difficulty: TaskDifficulty;
   instructions: string | null;
   requirements: string | null;
   max_completions: number | null;
@@ -142,6 +142,7 @@ export interface Task {
   deadline: string | null;
   status: TaskStatus;
   video_url: string | null;
+  image_url: string | null;
   auto_verify_seconds: number;
   created_by: string | null;
   created_at: string;
@@ -224,6 +225,7 @@ export interface WithdrawalRequest {
   method: string;
   destination: Record<string, unknown>;
   status: WithdrawalStatus;
+  ip_address: string | null;
   processed_by: string | null;
   processed_at: string | null;
   rejection_reason: string | null;
@@ -359,13 +361,9 @@ export const TASK_CATEGORY_LABELS: Record<TaskCategory, string> = {
   TIKTOK: "TikTok",
   YOUTUBE: "YouTube",
   QUIZ: "Quiz",
+  LABELING: "Annotation",
+  AI_EVALUATION: "Évaluation IA",
   OTHER: "Autre",
-};
-
-export const TASK_DIFFICULTY_LABELS: Record<TaskDifficulty, string> = {
-  EASY: "Facile",
-  MEDIUM: "Intermédiaire",
-  HARD: "Difficile",
 };
 
 export const ROLE_LABELS: Record<UserRole, string> = {

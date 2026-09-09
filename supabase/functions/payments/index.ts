@@ -1,5 +1,6 @@
 // Edge Function "payments" — point d'entrée unique pour l'abstraction PaymentProvider.
 // POST /payments/deposit         { amount, method, provider? }  (JWT utilisateur requis)
+// POST /payments/withdraw        { amount, method, destination, bucket? } (JWT utilisateur requis)
 // POST /payments/webhook         { event, data: { id, status, ... } } (SASpay — pas de JWT utilisateur, signature HMAC)
 // POST /payments/test-connection {}                              (staff uniquement, lecture seule, aucun mouvement d'argent)
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -84,6 +85,50 @@ Deno.serve(async (req: Request) => {
       if (rpcError) throw rpcError;
 
       return json({ depositId, reference: intent.reference, status: intent.status });
+    }
+
+    if (route === "withdraw") {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) {
+        return json({ error: "Missing Authorization header" }, 401);
+      }
+
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        return json({ error: "Invalid session" }, 401);
+      }
+
+      const body = await req.json();
+      const amount = Number(body.amount);
+      const method = String(body.method ?? "");
+      const destination = body.destination ?? {};
+      const bucket = body.bucket ? String(body.bucket) : "WALLET";
+      if (!amount || amount <= 0) {
+        return json({ error: "Invalid amount" }, 400);
+      }
+
+      // Seul point du système qui voit le vrai en-tête réseau du client —
+      // posé par l'edge network en amont de la fonction, donc pas falsifiable
+      // par l'appelant (contrairement à un champ "ip" dans le corps JSON).
+      // x-forwarded-for peut lister plusieurs relais ("client, proxy1, ...") ;
+      // seul le premier maillon est le client d'origine.
+      const forwardedFor = req.headers.get("x-forwarded-for");
+      const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : req.headers.get("x-real-ip");
+
+      const { data: withdrawalId, error: rpcError } = await supabase.rpc("create_withdrawal_request", {
+        p_amount: amount,
+        p_method: method,
+        p_destination: destination,
+        p_bucket: bucket,
+        p_ip_address: ip,
+      });
+      if (rpcError) throw rpcError;
+
+      return json({ withdrawalId });
     }
 
     if (route === "test-connection") {

@@ -155,6 +155,15 @@ export async function uploadCourseThumbnail(file: File): Promise<string> {
   return supabase.storage.from("course-thumbnails").getPublicUrl(path).data.publicUrl;
 }
 
+/** Image de contexte d'une tâche (ex: photo à annoter) — même mécanique que uploadCourseThumbnail. */
+export async function uploadTaskImage(file: File): Promise<string> {
+  const ext = (file.name.split(".").pop() ?? "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+  const path = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("task-images").upload(path, file, { upsert: true });
+  if (error) throw error;
+  return supabase.storage.from("task-images").getPublicUrl(path).data.publicUrl;
+}
+
 // ---------- Withdrawals ----------
 export async function listWithdrawals(status?: string): Promise<WithdrawalRequest[]> {
   let query = supabase

@@ -13,16 +13,16 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useT } from "@/i18n/useT";
 import { formatCurrency } from "@/utils/format";
 
-const SOCIAL_CATEGORIES: TaskCategory[] = ["TIKTOK", "YOUTUBE"];
+// QUIZ/LABELING/AI_EVALUATION partagent le même mécanisme (voir TaskDetailPage) :
+// description = titre, pas de contenu séparé à afficher.
+const QUIZ_LIKE_CATEGORIES: TaskCategory[] = ["QUIZ", "LABELING", "AI_EVALUATION"];
 
 export function TasksPage() {
   const { settings } = useSettings();
   const t = useT();
   const pathname = useLocation().pathname;
-  const tiktokOnly = pathname === "/tasks/tiktok";
-  const youtubeOnly = pathname === "/tasks/youtube";
-  const quizOnly = pathname === "/tasks/quiz";
-  const adsOnly = pathname === "/tasks/ads";
+  const labelingOnly = pathname === "/tasks/labeling";
+  const evaluationOnly = pathname === "/tasks/evaluation";
   const [searchParams] = useSearchParams();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,14 +41,12 @@ export function TasksPage() {
     setLoading(true);
     listPublishedTasks({ category: (category || undefined) as TaskCategory | undefined, search: search || undefined })
       .then((all) => {
-        if (tiktokOnly) return setTasks(all.filter((task) => task.category === "TIKTOK"));
-        if (youtubeOnly) return setTasks(all.filter((task) => task.category === "YOUTUBE"));
-        if (quizOnly) return setTasks(all.filter((task) => task.category === "QUIZ"));
-        if (adsOnly) return setTasks(all.filter((task) => task.category === "ADS"));
+        if (labelingOnly) return setTasks(all.filter((task) => task.category === "LABELING"));
+        if (evaluationOnly) return setTasks(all.filter((task) => task.category === "AI_EVALUATION"));
         setTasks(all);
       })
       .finally(() => setLoading(false));
-  }, [category, search, tiktokOnly, youtubeOnly, quizOnly, adsOnly]);
+  }, [category, search, labelingOnly, evaluationOnly]);
 
   const remainingSlots = useMemo(
     () => (task: Task) => (task.max_completions ? Math.max(task.max_completions - task.completions_count, 0) : null),
@@ -59,10 +57,10 @@ export function TasksPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-xl font-semibold text-text-primary">
-          {quizOnly ? t.tasks.quizTitle : tiktokOnly ? t.tasks.tiktokTitle : youtubeOnly ? t.tasks.youtubeTitle : adsOnly ? t.tasks.adsTitle : t.tasks.title}
+          {labelingOnly ? t.tasks.labelingTitle : evaluationOnly ? t.tasks.evaluationTitle : t.tasks.title}
         </h1>
         <p className="mt-1 text-sm text-text-secondary">
-          {quizOnly ? t.tasks.quizSubtitle : tiktokOnly ? t.tasks.tiktokSubtitle : youtubeOnly ? t.tasks.youtubeSubtitle : adsOnly ? t.tasks.adsSubtitle : t.tasks.subtitle}
+          {labelingOnly ? t.tasks.labelingSubtitle : evaluationOnly ? t.tasks.evaluationSubtitle : t.tasks.subtitle}
         </p>
       </div>
 
@@ -74,7 +72,7 @@ export function TasksPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-xs"
         />
-        {!tiktokOnly && !youtubeOnly && !quizOnly && !adsOnly && (
+        {!labelingOnly && !evaluationOnly && (
           <Select options={CATEGORY_OPTIONS} value={category} onChange={(e) => setCategory(e.target.value)} className="sm:max-w-xs" />
         )}
       </div>
@@ -87,16 +85,15 @@ export function TasksPage() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {tasks.map((task) => {
             const slots = remainingSlots(task);
+            const isQuizLike = QUIZ_LIKE_CATEGORIES.includes(task.category);
             return (
               <Link key={task.id} to={`/tasks/${task.id}`}>
                 <Card className="flex h-full flex-col transition-shadow hover:shadow-md">
                   <div className="flex items-center justify-between">
-                    <Badge tone={SOCIAL_CATEGORIES.includes(task.category) ? "oled" : "neutral"}>
-                      {t.enums.taskCategory[task.category]}
-                    </Badge>
+                    <Badge tone="neutral">{t.enums.taskCategory[task.category]}</Badge>
                   </div>
                   <p className="mt-3 text-sm font-semibold text-text-primary">{task.title}</p>
-                  {task.category !== "QUIZ" && (
+                  {!isQuizLike && (
                     <p className="mt-1.5 line-clamp-2 flex-1 text-sm text-text-secondary">{task.description}</p>
                   )}
                   <div className="mt-4 flex items-center justify-end border-t border-border pt-3">

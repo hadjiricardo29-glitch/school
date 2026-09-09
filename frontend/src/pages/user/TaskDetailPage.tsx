@@ -40,7 +40,9 @@ export function TaskDetailPage() {
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   const reloadingRef = useRef(false);
 
-  const isQuiz = task?.category === "QUIZ";
+  // QUIZ, LABELING et AI_EVALUATION partagent le même mécanisme : questions à
+  // choix unique, correction et crédit automatiques (voir submit_quiz_answers).
+  const isQuiz = task ? (["QUIZ", "LABELING", "AI_EVALUATION"] as string[]).includes(task.category) : false;
 
   async function load() {
     if (!id) return;
@@ -178,7 +180,13 @@ export function TaskDetailPage() {
         </div>
 
         <div className="mt-6 flex flex-col gap-4 border-t border-border pt-6">
-          {!isQuiz && (
+          {task.image_url && (
+            <img src={task.image_url} alt="" className="max-h-80 w-full rounded-md border border-border object-contain" />
+          )}
+          {/* Pour QUIZ/LABELING/AI_EVALUATION la description = titre par défaut
+              (rien d'utile à répéter) — seulement affichée quand l'admin a
+              écrit un contexte distinct pour aider à répondre. */}
+          {task.description !== task.title && (
             <div>
               <h2 className="text-sm font-semibold text-text-primary">{t.taskDetail.description}</h2>
               <p className="mt-1.5 whitespace-pre-line text-sm text-text-secondary">{task.description}</p>

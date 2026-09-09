@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { Link } from "react-router-dom";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowRight, ListChecks, Share2, Wallet as WalletIcon, ArrowDownToLine, Sparkles, Trophy, HelpCircle, PlayCircle, MousePointerClick, ChevronRight } from "lucide-react";
+import { ArrowRight, ListChecks, Share2, Wallet as WalletIcon, ArrowDownToLine, Sparkles, Trophy, Tags, Scale, ChevronRight } from "lucide-react";
 import motosuImage from "@/assets/motosu.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -11,7 +11,6 @@ import { Card, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { TikTokIcon } from "@/components/shared/SocialIcons";
 import { getDeposits, getTransactions, getWallet, getWalletBalances } from "@/services/wallet";
 import { listPublishedTasks } from "@/services/tasks";
 import { getDirectReferrals, getMyRank, type ReferralWithStatus } from "@/services/referrals";
@@ -34,11 +33,11 @@ const WEEKLY_SCHEDULE: {
   icon: ComponentType<{ className?: string }>;
   to: string;
 }[] = [
-  { weekday: 1, category: "QUIZ", bucket: "WALLET", type: "answer", icon: HelpCircle, to: "/tasks/quiz" },
-  { weekday: 2, category: "TIKTOK", bucket: "TIKTOK", type: "watch", icon: TikTokIcon, to: "/tasks?category=TIKTOK" },
-  { weekday: 3, category: "YOUTUBE", bucket: "YOUTUBE", type: "watch", icon: PlayCircle, to: "/tasks?category=YOUTUBE" },
-  { weekday: 4, category: "ADS", bucket: "ADS", type: "click", icon: MousePointerClick, to: "/tasks/ads" },
-  { weekday: 5, category: "TIKTOK", bucket: "TIKTOK", type: "watch", icon: TikTokIcon, to: "/tasks?category=TIKTOK" },
+  { weekday: 1, category: "LABELING", bucket: "WALLET", type: "answer", icon: Tags, to: "/tasks/labeling" },
+  { weekday: 2, category: "AI_EVALUATION", bucket: "WALLET", type: "answer", icon: Scale, to: "/tasks/evaluation" },
+  { weekday: 3, category: "LABELING", bucket: "WALLET", type: "answer", icon: Tags, to: "/tasks/labeling" },
+  { weekday: 4, category: "AI_EVALUATION", bucket: "WALLET", type: "answer", icon: Scale, to: "/tasks/evaluation" },
+  { weekday: 5, category: "LABELING", bucket: "WALLET", type: "answer", icon: Tags, to: "/tasks/labeling" },
 ];
 
 export function DashboardPage() {

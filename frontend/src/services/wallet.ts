@@ -31,14 +31,28 @@ export async function createWithdrawalRequest(params: {
   destination: Record<string, unknown>;
   bucket?: EarningBucket;
 }): Promise<string> {
-  const { data, error } = await supabase.rpc("create_withdrawal_request", {
-    p_amount: params.amount,
-    p_method: params.method,
-    p_destination: params.destination,
-    p_bucket: params.bucket ?? "WALLET",
+  // Passe par l'Edge Function (comme les dépôts) plutôt que par le RPC
+  // directement : c'est le seul endroit qui voit la vraie IP réseau du
+  // client, capturée et transmise à la RPC pour que le staff puisse la
+  // consulter en validant la demande depuis /admin/withdrawals.
+  const { data, error } = await supabase.functions.invoke("payments/withdraw", {
+    body: {
+      amount: params.amount,
+      method: params.method,
+      destination: params.destination,
+      bucket: params.bucket ?? "WALLET",
+    },
   });
-  if (error) throw error;
-  return data as string;
+  if (error) {
+    // Le SDK ne remonte que "Edge Function returned a non-2xx status code" par
+    // défaut — le vrai message ({ error }) vit dans le corps de la réponse HTTP.
+    if (error instanceof FunctionsHttpError) {
+      const body = await error.context.json().catch(() => null);
+      throw new Error(body?.error ?? error.message);
+    }
+    throw error;
+  }
+  return (data as { withdrawalId: string }).withdrawalId;
 }
 
 export async function getWithdrawals(userId: string): Promise<WithdrawalRequest[]> {

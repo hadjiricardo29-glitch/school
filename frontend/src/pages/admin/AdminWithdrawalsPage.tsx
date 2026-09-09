@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import { Tabs } from "@/components/ui/Tabs";
 import { Card } from "@/components/ui/Card";
 import { Table, type Column } from "@/components/ui/Table";
@@ -12,6 +13,7 @@ import type { WithdrawalRequest } from "@/types/domain";
 import { useSettings } from "@/contexts/SettingsContext";
 import { formatCurrency, formatDateTime } from "@/utils/format";
 import { notify } from "@/utils/toast";
+import { cn } from "@/utils/cn";
 
 const TABS = [
   { value: "PENDING", label: "En attente" },
@@ -38,6 +40,19 @@ export function AdminWithdrawalsPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
+
+  // Plusieurs comptes différents demandant un retrait depuis la même IP est
+  // un signal classique de multi-comptes — comparé seulement entre requêtes
+  // d'utilisateurs distincts (même IP, même personne = normal).
+  const duplicateIps = useMemo(() => {
+    const usersByIp = new Map<string, Set<string>>();
+    for (const w of rows) {
+      if (!w.ip_address) continue;
+      if (!usersByIp.has(w.ip_address)) usersByIp.set(w.ip_address, new Set());
+      usersByIp.get(w.ip_address)!.add(w.user_id);
+    }
+    return new Set([...usersByIp.entries()].filter(([, users]) => users.size > 1).map(([ip]) => ip));
+  }, [rows]);
 
   async function handleApprove(id: string) {
     setSaving(true);
@@ -73,6 +88,16 @@ export function AdminWithdrawalsPage() {
     { key: "method", header: "Méthode", render: (w) => w.method },
     { key: "amount", header: "Montant", render: (w) => formatCurrency(w.amount, settings.currencyLabel) },
     { key: "net", header: "Net", render: (w) => formatCurrency(w.net_amount, settings.currencyLabel) },
+    {
+      key: "ip",
+      header: "IP",
+      render: (w) => (
+        <span className={cn("inline-flex items-center gap-1", w.ip_address && duplicateIps.has(w.ip_address) && "font-medium text-warning")}>
+          {w.ip_address && duplicateIps.has(w.ip_address) && <AlertTriangle className="size-3.5" />}
+          {w.ip_address ?? "—"}
+        </span>
+      ),
+    },
     { key: "date", header: "Demandé le", render: (w) => formatDateTime(w.created_at) },
     { key: "status", header: "Statut", render: (w) => <StatusBadge status={w.status} /> },
   ];
@@ -98,7 +123,18 @@ export function AdminWithdrawalsPage() {
               <div><p className="text-text-secondary">Frais</p><p className="font-medium text-text-primary">{formatCurrency(detail.fee, settings.currencyLabel)}</p></div>
               <div><p className="text-text-secondary">Net à verser</p><p className="font-medium text-text-primary">{formatCurrency(detail.net_amount, settings.currencyLabel)}</p></div>
               <div><p className="text-text-secondary">Destination</p><p className="font-medium text-text-primary">{JSON.stringify(detail.destination)}</p></div>
+              <div>
+                <p className="text-text-secondary">Adresse IP</p>
+                <p className="font-medium text-text-primary">{detail.ip_address ?? "—"}</p>
+              </div>
             </div>
+
+            {detail.ip_address && duplicateIps.has(detail.ip_address) && (
+              <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning-bg p-3 text-sm text-text-primary">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" />
+                Cette IP est aussi utilisée par au moins un autre compte demandant un retrait — à vérifier avant d'approuver.
+              </div>
+            )}
 
             {detail.status === "PENDING" || detail.status === "PROCESSING" ? (
               <div className="flex flex-col gap-3 border-t border-border pt-4">

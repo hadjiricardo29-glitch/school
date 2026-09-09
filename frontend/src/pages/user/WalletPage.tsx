@@ -74,6 +74,11 @@ export function WalletPage() {
               <Button variant="success" icon={<ArrowDownToLine className="size-4" />}>{tw.activate}</Button>
             </Link>
           )}
+          {!needsActivation && (
+            <Link to="/wallet/deposit">
+              <Button variant="success" icon={<ArrowDownToLine className="size-4" />}>{tw.addFunds}</Button>
+            </Link>
+          )}
           <Link to="/wallet/withdraw">
             <Button variant="info" icon={<ArrowUpFromLine className="size-4" />}>{tw.withdraw}</Button>
           </Link>

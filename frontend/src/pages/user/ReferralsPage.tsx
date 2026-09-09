@@ -144,16 +144,31 @@ export function ReferralsPage() {
 
       <Card>
         <CardHeader title={t.commissionScale} subtitle={t.commissionScaleSubtitle} />
+        <div className="mb-4 rounded-md border border-primary/20 bg-primary/5 p-4">
+          <p className="text-sm font-semibold text-text-primary">{t.howItWorksTitle}</p>
+          <p className="mt-1.5 text-sm text-text-secondary">{t.howItWorksBody}</p>
+        </div>
         <div className="flex flex-col divide-y divide-border">
           {rules.map((rule) => (
-            <div key={rule.id} className="flex items-center justify-between py-3 text-sm">
-              <span className="text-text-secondary">{t.level} {rule.level}</span>
-              <span className="font-semibold text-primary">
-                {rule.percentage}%{rule.fixed_amount > 0 ? ` + ${formatCurrency(rule.fixed_amount, settings.currencyLabel)}` : ""}
-              </span>
+            <div key={rule.id} className="flex items-center justify-between gap-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-text-primary">{t.level} {rule.level}</p>
+                <p className="text-xs text-text-secondary">
+                  {rule.level === 1 ? t.levelDirect : t.levelIndirect.replace("{parent}", String(rule.level - 1))}
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="font-semibold text-primary">
+                  {[rule.percentage > 0 ? `${rule.percentage}%` : null, rule.fixed_amount > 0 ? formatCurrency(rule.fixed_amount, settings.currencyLabel) : null]
+                    .filter(Boolean)
+                    .join(" + ")}
+                </p>
+                <p className="text-xs text-text-secondary">{t.perTaskCommission}</p>
+              </div>
             </div>
           ))}
         </div>
+        <p className="mt-4 border-t border-border pt-4 text-xs text-text-secondary">{t.withdrawalPerk}</p>
       </Card>
 
       {(settings.communityTelegramUrl || settings.communityWhatsappUrl) && (

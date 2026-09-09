@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Plus, Pencil, Trash2, Copy, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Plus, Pencil, Trash2, Copy, Sparkles, UploadCloud, X, Layers, CheckCircle2, XCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Table, type Column } from "@/components/ui/Table";
 import { Badge, StatusBadge } from "@/components/ui/Badge";
@@ -10,8 +9,8 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { createTask, deleteTask, generateQuizQuestions, listAllTasks, listQuizQuestions, replaceQuizQuestions, updateTask } from "@/services/admin";
-import type { Task, TaskCategory, TaskDifficulty, TaskStatus } from "@/types/domain";
+import { createTask, deleteTask, generateQuizQuestions, listAllTasks, listQuizQuestions, replaceQuizQuestions, updateTask, uploadTaskImage } from "@/services/admin";
+import type { Task, TaskCategory, TaskStatus } from "@/types/domain";
 import { TASK_CATEGORY_LABELS } from "@/types/domain";
 import { useSettings } from "@/contexts/SettingsContext";
 import { formatCurrency } from "@/utils/format";
@@ -25,29 +24,15 @@ const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: "EXPIRED", label: "Expirée" },
 ];
 
-// Les tâches journalières se limitent désormais à ces catégories : les
-// réseaux sociaux (TikTok/YouTube, tâche vidéo), les publicités (Ads,
-// même mécanique de vérification par temps d'engagement) et le quiz —
-// voir AdminTasksPage.
-const ADMIN_TASK_CATEGORIES: TaskCategory[] = ["QUIZ", "TIKTOK", "YOUTUBE", "ADS"];
-const SOCIAL_CATEGORIES: TaskCategory[] = ["TIKTOK", "YOUTUBE"];
-// TikTok/YouTube/Ads partagent la même mécanique : l'utilisateur reste sur
-// la page (avec un lien optionnel) pendant auto_verify_seconds et est
-// crédité automatiquement — par opposition au QUIZ, seule catégorie notée.
-const ENGAGEMENT_CATEGORIES: TaskCategory[] = ["TIKTOK", "YOUTUBE", "ADS"];
-const MAX_QUIZ_OPTIONS = 6;
-
-const WATCH_TIME_OPTIONS: { value: string; label: string }[] = [
-  { value: "15", label: "15 secondes" },
-  { value: "30", label: "30 secondes" },
-  { value: "45", label: "45 secondes" },
-  { value: "60", label: "1 minute" },
-  { value: "90", label: "1 min 30" },
-  { value: "120", label: "2 minutes" },
-  { value: "180", label: "3 minutes" },
-  { value: "300", label: "5 minutes" },
-];
-const DEFAULT_INSTRUCTIONS = "Watch and earn";
+// Tâches d'entraînement IA : annotation (LABELING) ou évaluation de réponses
+// (AI_EVALUATION) — remplace TikTok/YouTube/Ads côté création. Les deux
+// utilisent le même mécanisme que QUIZ (questions à choix unique, correction
+// automatique) : pas de vidéo, pas de révision manuelle, juste des questions
+// que l'utilisateur coche pour annoter/évaluer un contenu.
+const ADMIN_TASK_CATEGORIES: TaskCategory[] = ["LABELING", "AI_EVALUATION"];
+// Chaque question a toujours exactement 3 options (dont une bonne réponse) —
+// pas de +/- pour rester simple.
+const OPTIONS_PER_QUESTION = 3;
 
 // "2026-08-24" -> minuit (UTC) du jour suivant, soit l'instant exact où la
 // tâche datée du 24 doit cesser d'être affichée.
@@ -63,38 +48,54 @@ interface QuizDraftQuestion {
   correct_option: number;
 }
 
-const EMPTY_QUESTION: QuizDraftQuestion = { question: "", options: ["", "", ""], correct_option: 0 };
+interface BulkResult {
+  topic: string;
+  ok: boolean;
+  error?: string;
+}
+
+const EMPTY_BULK_FORM = {
+  category: "LABELING" as TaskCategory,
+  reward: "",
+  questionsPerTask: "3",
+  status: "DRAFT" as TaskStatus,
+  topics: "",
+};
+
+const EMPTY_QUESTION: QuizDraftQuestion = { question: "", options: Array(OPTIONS_PER_QUESTION).fill(""), correct_option: 0 };
 
 const EMPTY_FORM = {
   title: "",
   description: "",
-  category: "QUIZ" as TaskCategory,
+  image_url: "",
+  category: "LABELING" as TaskCategory,
   reward: "",
-  instructions: "",
-  requirements: "",
   max_completions: "",
   single_submission_per_user: true,
   deadline: "",
   status: "DRAFT" as TaskStatus,
-  video_url: "",
-  auto_verify_seconds: "30",
 };
 
 export function AdminTasksPage() {
   const { settings } = useSettings();
-  const [searchParams] = useSearchParams();
-  const socialOnly = searchParams.get("social") === "1";
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [quizQuestions, setQuizQuestions] = useState<QuizDraftQuestion[]>([]);
+  const [quizQuestions, setQuizQuestions] = useState<QuizDraftQuestion[]>([{ ...EMPTY_QUESTION }]);
   const [genTopic, setGenTopic] = useState("");
   const [genCount, setGenCount] = useState("5");
   const [genLoading, setGenLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [toDelete, setToDelete] = useState<Task | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkForm, setBulkForm] = useState(EMPTY_BULK_FORM);
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkResults, setBulkResults] = useState<BulkResult[]>([]);
 
   async function load() {
     setLoading(true);
@@ -106,12 +107,10 @@ export function AdminTasksPage() {
     load();
   }, []);
 
-  const visibleTasks = socialOnly ? tasks.filter((t) => SOCIAL_CATEGORIES.includes(t.category)) : tasks;
-
   function openCreate() {
     setEditing(null);
-    setForm({ ...EMPTY_FORM, category: socialOnly ? "TIKTOK" : "QUIZ" });
-    setQuizQuestions(socialOnly ? [] : [{ ...EMPTY_QUESTION }]);
+    setForm({ ...EMPTY_FORM });
+    setQuizQuestions([{ ...EMPTY_QUESTION }]);
     setGenTopic("");
     setModalOpen(true);
   }
@@ -120,19 +119,16 @@ export function AdminTasksPage() {
     setEditing(task);
     setForm({
       title: task.title,
-      description: task.description,
+      description: task.description === task.title ? "" : task.description,
+      image_url: task.image_url ?? "",
       category: task.category,
       reward: String(task.reward),
-      instructions: task.instructions ?? "",
-      requirements: task.requirements ?? "",
       max_completions: task.max_completions ? String(task.max_completions) : "",
       single_submission_per_user: task.single_submission_per_user,
       deadline: task.deadline ? task.deadline.slice(0, 10) : "",
       status: task.status,
-      video_url: task.video_url ?? "",
-      auto_verify_seconds: String(task.auto_verify_seconds),
     });
-    setQuizQuestions(task.category === "QUIZ" ? await loadQuizDraft(task.id) : []);
+    setQuizQuestions(await loadQuizDraft(task.id));
     setGenTopic("");
     setModalOpen(true);
   }
@@ -141,25 +137,38 @@ export function AdminTasksPage() {
     setEditing(null);
     setForm({
       title: `${task.title} (copie)`,
-      description: task.description,
+      description: task.description === task.title ? "" : task.description,
+      image_url: task.image_url ?? "",
       category: task.category,
       reward: String(task.reward),
-      instructions: task.instructions ?? "",
-      requirements: task.requirements ?? "",
       max_completions: task.max_completions ? String(task.max_completions) : "",
       single_submission_per_user: task.single_submission_per_user,
       deadline: "",
       status: "DRAFT",
-      video_url: task.video_url ?? "",
-      auto_verify_seconds: String(task.auto_verify_seconds),
     });
-    setQuizQuestions(task.category === "QUIZ" ? await loadQuizDraft(task.id) : []);
+    setQuizQuestions(await loadQuizDraft(task.id));
     setGenTopic("");
     setModalOpen(true);
   }
 
+  async function onImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadTaskImage(file);
+      setForm((f) => ({ ...f, image_url: url }));
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : "Envoi de l'image impossible");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function loadQuizDraft(taskId: string): Promise<QuizDraftQuestion[]> {
     const questions = await listQuizQuestions(taskId);
+    if (questions.length === 0) return [{ ...EMPTY_QUESTION }];
     return questions.map((q) => ({ question: q.question, options: q.options, correct_option: q.correct_option }));
   }
 
@@ -171,14 +180,6 @@ export function AdminTasksPage() {
   }
   function updateQuestion(qi: number, patch: Partial<QuizDraftQuestion>) {
     setQuizQuestions(quizQuestions.map((q, i) => (i === qi ? { ...q, ...patch } : q)));
-  }
-  function addOption(qi: number) {
-    updateQuestion(qi, { options: [...quizQuestions[qi].options, ""] });
-  }
-  function removeOption(qi: number, oi: number) {
-    const q = quizQuestions[qi];
-    const options = q.options.filter((_, i) => i !== oi);
-    updateQuestion(qi, { options, correct_option: q.correct_option >= options.length ? 0 : q.correct_option });
   }
   function updateOption(qi: number, oi: number, value: string) {
     const q = quizQuestions[qi];
@@ -205,58 +206,49 @@ export function AdminTasksPage() {
   }
 
   function validateQuiz(): string | null {
-    if (quizQuestions.length === 0) return "Ajoutez au moins une question au quiz";
+    if (quizQuestions.length === 0) return "Ajoutez au moins une question";
     for (const q of quizQuestions) {
       if (!q.question.trim()) return "Chaque question doit avoir un texte";
-      if (q.options.length < 2) return "Chaque question doit avoir au moins 2 options";
+      if (q.options.length !== OPTIONS_PER_QUESTION) return `Chaque question doit avoir exactement ${OPTIONS_PER_QUESTION} options`;
       if (q.options.some((o) => !o.trim())) return "Aucune option ne peut être vide";
     }
     return null;
   }
 
   async function onSave() {
-    const isQuiz = form.category === "QUIZ";
-    if (!form.title || !form.reward || (!isQuiz && !form.description)) {
-      notify.error("Titre, description et récompense sont requis");
+    if (!form.title || !form.reward) {
+      notify.error("Titre et récompense sont requis");
       return;
     }
-    if (ENGAGEMENT_CATEGORIES.includes(form.category) && (!form.auto_verify_seconds || Number(form.auto_verify_seconds) <= 0)) {
-      notify.error("La durée de vérification doit être supérieure à 0");
+    const quizError = validateQuiz();
+    if (quizError) {
+      notify.error(quizError);
       return;
-    }
-    if (SOCIAL_CATEGORIES.includes(form.category) && !form.video_url.trim()) {
-      notify.error("L'URL de la vidéo est obligatoire pour une tâche réseaux sociaux");
-      return;
-    }
-    if (form.category === "QUIZ") {
-      const quizError = validateQuiz();
-      if (quizError) {
-        notify.error(quizError);
-        return;
-      }
     }
     setSaving(true);
     try {
-      const payload = {
+      const payload: Partial<Task> = {
         title: form.title,
-        description: isQuiz ? form.title : form.description,
+        // Contexte affiché à l'utilisateur pour l'aider à répondre — à défaut,
+        // retombe sur le titre plutôt que de laisser vide.
+        description: form.description.trim() || form.title,
+        image_url: form.image_url || null,
         category: form.category,
         reward: Number(form.reward),
         estimated_time: null,
-        difficulty: "EASY" as TaskDifficulty,
-        instructions: isQuiz ? null : ENGAGEMENT_CATEGORIES.includes(form.category) ? DEFAULT_INSTRUCTIONS : form.instructions || null,
-        requirements: isQuiz ? null : form.requirements || null,
-        max_completions: isQuiz ? null : form.max_completions ? Number(form.max_completions) : null,
+        instructions: null,
+        requirements: null,
+        max_completions: form.max_completions ? Number(form.max_completions) : null,
         single_submission_per_user: form.single_submission_per_user,
         // La deadline marque la fin de la journée choisie : une tâche datée
         // lundi reste visible jusqu'à 00h mardi (début du jour suivant).
-        deadline: isQuiz || !form.deadline ? null : endOfDayIso(form.deadline),
+        deadline: form.deadline ? endOfDayIso(form.deadline) : null,
         status: form.status,
-        video_url: ENGAGEMENT_CATEGORIES.includes(form.category) ? form.video_url || null : null,
-        auto_verify_seconds: ENGAGEMENT_CATEGORIES.includes(form.category) ? Number(form.auto_verify_seconds) : 1,
+        video_url: null,
+        auto_verify_seconds: 1,
       };
       const savedTask = editing ? await updateTask(editing.id, payload) : await createTask(payload);
-      await replaceQuizQuestions(savedTask.id, form.category === "QUIZ" ? quizQuestions : []);
+      await replaceQuizQuestions(savedTask.id, quizQuestions);
       notify.success(editing ? "Tâche mise à jour" : "Tâche créée");
       setModalOpen(false);
       await load();
@@ -282,6 +274,61 @@ export function AdminTasksPage() {
     }
   }
 
+  function openBulk() {
+    setBulkForm({ ...EMPTY_BULK_FORM });
+    setBulkResults([]);
+    setBulkOpen(true);
+  }
+
+  // Une tâche par ligne : génère ses questions via l'IA puis la crée et lui
+  // attache ses questions — séquentiel (pas en parallèle) pour ne pas
+  // envoyer N requêtes simultanées à l'API Gemini.
+  async function runBulkGenerate() {
+    const topics = bulkForm.topics.split("\n").map((t) => t.trim()).filter(Boolean);
+    if (topics.length === 0) {
+      notify.error("Indiquez au moins un sujet (un par ligne)");
+      return;
+    }
+    if (!bulkForm.reward) {
+      notify.error("La récompense est requise");
+      return;
+    }
+    setBulkRunning(true);
+    setBulkResults(topics.map((topic) => ({ topic, ok: false, error: undefined })));
+    let successCount = 0;
+    for (let i = 0; i < topics.length; i++) {
+      const topic = topics[i];
+      try {
+        const questions = await generateQuizQuestions(topic, Number(bulkForm.questionsPerTask) || 3, OPTIONS_PER_QUESTION);
+        if (questions.length === 0) throw new Error("Aucune question générée");
+        const savedTask = await createTask({
+          title: topic,
+          description: topic,
+          image_url: null,
+          category: bulkForm.category,
+          reward: Number(bulkForm.reward),
+          estimated_time: null,
+          instructions: null,
+          requirements: null,
+          max_completions: null,
+          single_submission_per_user: true,
+          deadline: null,
+          status: bulkForm.status,
+          video_url: null,
+          auto_verify_seconds: 1,
+        });
+        await replaceQuizQuestions(savedTask.id, questions);
+        successCount++;
+        setBulkResults((prev) => prev.map((r, idx) => (idx === i ? { topic, ok: true } : r)));
+      } catch (err) {
+        setBulkResults((prev) => prev.map((r, idx) => (idx === i ? { topic, ok: false, error: err instanceof Error ? err.message : "Échec" } : r)));
+      }
+    }
+    setBulkRunning(false);
+    notify[successCount === topics.length ? "success" : "error"](`${successCount}/${topics.length} tâches créées`);
+    await load();
+  }
+
   const columns: Column<Task>[] = [
     { key: "title", header: "Tâche", render: (t) => <span className="font-medium text-text-primary">{t.title}</span> },
     { key: "category", header: "Catégorie", render: (t) => <Badge tone="neutral">{TASK_CATEGORY_LABELS[t.category]}</Badge> },
@@ -305,13 +352,16 @@ export function AdminTasksPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-text-primary">{socialOnly ? "Réseaux sociaux" : "Tâches journalières"}</h1>
-          <p className="mt-1 text-sm text-text-secondary">{visibleTasks.length} tâches au total</p>
+          <h1 className="text-xl font-semibold text-text-primary">Tâches journalières</h1>
+          <p className="mt-1 text-sm text-text-secondary">{tasks.length} tâches au total</p>
         </div>
-        <Button icon={<Plus className="size-4" />} onClick={openCreate}>Nouvelle tâche</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" icon={<Layers className="size-4" />} onClick={openBulk}>Génération en masse</Button>
+          <Button icon={<Plus className="size-4" />} onClick={openCreate}>Nouvelle tâche</Button>
+        </div>
       </div>
 
-      <Card>{loading ? <LoadingState /> : <Table columns={columns} data={visibleTasks} rowKey={(t) => t.id} onRowClick={openEdit} emptyMessage="Aucune tâche" />}</Card>
+      <Card>{loading ? <LoadingState /> : <Table columns={columns} data={tasks} rowKey={(t) => t.id} onRowClick={openEdit} emptyMessage="Aucune tâche" />}</Card>
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? "Modifier la tâche" : "Nouvelle tâche"} size="lg" footer={
         <>
@@ -321,115 +371,146 @@ export function AdminTasksPage() {
       }>
         <div className="flex flex-col gap-4">
           <Input label="Titre" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-          {form.category !== "QUIZ" && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-text-primary">Description</label>
-              <textarea className="min-h-20 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-text-primary">Description / contexte (affiché à l'utilisateur pour l'aider à répondre)</label>
+            <textarea
+              className="min-h-16 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Ex : Voici un avis client, lisez-le puis répondez aux questions."
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-text-primary">Image de contexte (optionnelle)</label>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onImageChange} />
+            {form.image_url ? (
+              <div className="relative w-fit">
+                <img src={form.image_url} alt="" className="h-24 w-24 rounded-md border border-border object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, image_url: "" }))}
+                  className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full bg-error text-white shadow-sm"
+                  aria-label="Retirer l'image"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            ) : (
+              <Button type="button" variant="outline" loading={uploading} icon={<UploadCloud className="size-4" />} onClick={() => fileInputRef.current?.click()}>
+                Choisir une image
+              </Button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Type de tâche"
+              options={ADMIN_TASK_CATEGORIES.map((c) => ({ value: c, label: TASK_CATEGORY_LABELS[c] }))}
+              value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value as TaskCategory })}
+            />
+            <Input label={`Récompense (${settings.currencyLabel})`} type="number" value={form.reward} onChange={(e) => setForm({ ...form, reward: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Places max (vide = illimité)" type="number" value={form.max_completions} onChange={(e) => setForm({ ...form, max_completions: e.target.value })} />
+            <Input label="Deadline" type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-3">
+              <p className="flex items-center gap-1.5 text-sm font-medium text-text-primary"><Sparkles className="size-4" /> Générer avec l'IA</p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Input value={genTopic} onChange={(e) => setGenTopic(e.target.value)} placeholder="Sujet (ex: étiqueter le sentiment d'un avis client)" className="flex-1" />
+                <Input type="number" min={1} max={15} value={genCount} onChange={(e) => setGenCount(e.target.value)} className="sm:w-20" hint="Nb." />
+                <Button variant="outline" loading={genLoading} onClick={handleGenerate}>Générer</Button>
+              </div>
             </div>
-          )}
-          {form.category === "QUIZ" ? (
-            <Select label="Catégorie" options={ADMIN_TASK_CATEGORIES.map((c) => ({ value: c, label: TASK_CATEGORY_LABELS[c] }))} value={form.category} onChange={(e) => {
-              const category = e.target.value as TaskCategory;
-              setForm({ ...form, category });
-            }} />
-          ) : (
-            <Select label="Catégorie" options={ADMIN_TASK_CATEGORIES.map((c) => ({ value: c, label: TASK_CATEGORY_LABELS[c] }))} value={form.category} onChange={(e) => {
-              const category = e.target.value as TaskCategory;
-              setForm({ ...form, category });
-              if (category === "QUIZ" && quizQuestions.length === 0) setQuizQuestions([{ ...EMPTY_QUESTION }]);
-            }} />
-          )}
-          <Input label={`Récompense (${settings.currencyLabel})`} type="number" value={form.reward} onChange={(e) => setForm({ ...form, reward: e.target.value })} />
-          {form.category !== "QUIZ" && (
-            <>
-              {!ENGAGEMENT_CATEGORIES.includes(form.category) && (
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-text-primary">Questions</label>
+              <Button variant="outline" size="sm" onClick={addQuestion}>+ Ajouter une question</Button>
+            </div>
+            {quizQuestions.length === 0 && <p className="text-sm text-text-secondary">Aucune question — ajoutez-en au moins une.</p>}
+            {quizQuestions.map((q, qi) => (
+              <div key={qi} className="flex flex-col gap-2 rounded-md border border-border p-3">
+                <div className="flex items-center gap-2">
+                  <Input value={q.question} onChange={(e) => updateQuestion(qi, { question: e.target.value })} placeholder={`Question ${qi + 1}`} className="flex-1" />
+                  <button onClick={() => removeQuestion(qi)} className="rounded-full p-1.5 text-error hover:bg-error-bg" aria-label="Supprimer la question"><Trash2 className="size-4" /></button>
+                </div>
+                <p className="text-xs text-text-secondary">3 options — cochez la bonne réponse</p>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-text-primary">Instructions</label>
-                  <textarea className="min-h-16 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.instructions} onChange={(e) => setForm({ ...form, instructions: e.target.value })} />
-                </div>
-              )}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-text-primary">Conditions</label>
-                <textarea className="min-h-16 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Input label="Places max (vide = illimité)" type="number" value={form.max_completions} onChange={(e) => setForm({ ...form, max_completions: e.target.value })} />
-                <Input label="Deadline" type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
-              </div>
-            </>
-          )}
-
-          {ENGAGEMENT_CATEGORIES.includes(form.category) && (
-            <>
-              <Input
-                label={form.category === "ADS" ? "Lien à visiter (optionnel)" : "URL vidéo"}
-                value={form.video_url}
-                onChange={(e) => setForm({ ...form, video_url: e.target.value })}
-                placeholder={form.category === "ADS" ? "https://exemple.com/offre" : "https://www.tiktok.com/@compte/video/1234567890"}
-                hint={form.category === "ADS" ? "Lien de la publicité — s'ouvre dans un nouvel onglet" : "Lien TikTok — la vidéo s'affiche directement dans l'application"}
-              />
-              <Select
-                label="Temps de visionnage"
-                options={WATCH_TIME_OPTIONS}
-                value={form.auto_verify_seconds}
-                onChange={(e) => setForm({ ...form, auto_verify_seconds: e.target.value })}
-                hint="Temps que l'utilisateur doit rester sur la page pour être crédité automatiquement — aucune preuve à envoyer"
-              />
-            </>
-          )}
-
-          {form.category === "QUIZ" && (
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-3">
-                <p className="flex items-center gap-1.5 text-sm font-medium text-text-primary"><Sparkles className="size-4" /> Générer avec l'IA</p>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Input value={genTopic} onChange={(e) => setGenTopic(e.target.value)} placeholder="Sujet (ex: culture générale africaine)" className="flex-1" />
-                  <Input type="number" min={1} max={15} value={genCount} onChange={(e) => setGenCount(e.target.value)} className="sm:w-20" hint="Nb." />
-                  <Button variant="outline" loading={genLoading} onClick={handleGenerate}>Générer</Button>
+                  {q.options.map((opt, oi) => (
+                    <div key={oi} className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name={`correct-${qi}`}
+                        checked={q.correct_option === oi}
+                        onChange={() => updateQuestion(qi, { correct_option: oi })}
+                        className="size-4 accent-primary"
+                      />
+                      <Input value={opt} onChange={(e) => updateOption(qi, oi, e.target.value)} placeholder={`Option ${oi + 1}`} className="flex-1" />
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-text-primary">Questions du quiz</label>
-                <Button variant="outline" size="sm" onClick={addQuestion}>+ Ajouter une question</Button>
-              </div>
-              {quizQuestions.length === 0 && <p className="text-sm text-text-secondary">Aucune question — ajoutez-en au moins une.</p>}
-              {quizQuestions.map((q, qi) => (
-                <div key={qi} className="flex flex-col gap-2 rounded-md border border-border p-3">
-                  <div className="flex items-center gap-2">
-                    <Input value={q.question} onChange={(e) => updateQuestion(qi, { question: e.target.value })} placeholder={`Question ${qi + 1}`} className="flex-1" />
-                    <button onClick={() => removeQuestion(qi)} className="rounded-full p-1.5 text-error hover:bg-error-bg" aria-label="Supprimer la question"><Trash2 className="size-4" /></button>
-                  </div>
-                  <p className="text-xs text-text-secondary">Cochez la bonne réponse</p>
-                  <div className="flex flex-col gap-1.5">
-                    {q.options.map((opt, oi) => (
-                      <div key={oi} className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name={`correct-${qi}`}
-                          checked={q.correct_option === oi}
-                          onChange={() => updateQuestion(qi, { correct_option: oi })}
-                          className="size-4 accent-primary"
-                        />
-                        <Input value={opt} onChange={(e) => updateOption(qi, oi, e.target.value)} placeholder={`Option ${oi + 1}`} className="flex-1" />
-                        {q.options.length > 2 && (
-                          <button onClick={() => removeOption(qi, oi)} className="rounded-full p-1 text-text-secondary hover:bg-error-bg hover:text-error" aria-label="Retirer l'option"><Trash2 className="size-3.5" /></button>
-                        )}
-                      </div>
-                    ))}
-                    {q.options.length < MAX_QUIZ_OPTIONS && (
-                      <button onClick={() => addOption(qi)} className="self-start text-xs font-medium text-primary hover:underline">+ Ajouter une option</button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+            ))}
+          </div>
 
           <Select label="Statut" options={STATUS_OPTIONS} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as TaskStatus })} />
           <label className="flex items-center gap-2 text-sm text-text-primary">
             <input type="checkbox" className="size-4 accent-primary" checked={form.single_submission_per_user} onChange={(e) => setForm({ ...form, single_submission_per_user: e.target.checked })} />
             Une seule participation par utilisateur
           </label>
+        </div>
+      </Modal>
+
+      <Modal open={bulkOpen} onClose={() => !bulkRunning && setBulkOpen(false)} title="Génération en masse" size="lg" footer={
+        <>
+          <Button variant="outline" onClick={() => setBulkOpen(false)} disabled={bulkRunning}>Fermer</Button>
+          <Button onClick={runBulkGenerate} loading={bulkRunning}>Générer et créer</Button>
+        </>
+      }>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-text-secondary">Un sujet par ligne = une tâche créée avec ses questions générées par l'IA (mêmes réglages pour toutes).</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Type de tâche"
+              options={ADMIN_TASK_CATEGORIES.map((c) => ({ value: c, label: TASK_CATEGORY_LABELS[c] }))}
+              value={bulkForm.category}
+              onChange={(e) => setBulkForm({ ...bulkForm, category: e.target.value as TaskCategory })}
+              disabled={bulkRunning}
+            />
+            <Input label={`Récompense (${settings.currencyLabel})`} type="number" value={bulkForm.reward} onChange={(e) => setBulkForm({ ...bulkForm, reward: e.target.value })} disabled={bulkRunning} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Questions par tâche" type="number" min={1} max={15} value={bulkForm.questionsPerTask} onChange={(e) => setBulkForm({ ...bulkForm, questionsPerTask: e.target.value })} disabled={bulkRunning} />
+            <Select label="Statut" options={STATUS_OPTIONS} value={bulkForm.status} onChange={(e) => setBulkForm({ ...bulkForm, status: e.target.value as TaskStatus })} disabled={bulkRunning} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-text-primary">Sujets (un par ligne)</label>
+            <textarea
+              className="min-h-32 w-full rounded-md border border-border bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              value={bulkForm.topics}
+              onChange={(e) => setBulkForm({ ...bulkForm, topics: e.target.value })}
+              placeholder={"Sentiment d'un avis client\nClassification d'une image de produit\nDétection de spam dans un message"}
+              disabled={bulkRunning}
+            />
+          </div>
+          {bulkResults.length > 0 && (
+            <div className="flex flex-col gap-1.5 rounded-md border border-border p-3">
+              {bulkResults.map((r, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm">
+                  {r.ok ? (
+                    <CheckCircle2 className="size-4 shrink-0 text-success" />
+                  ) : r.error ? (
+                    <XCircle className="size-4 shrink-0 text-error" />
+                  ) : (
+                    <span className="size-4 shrink-0 animate-pulse rounded-full bg-border" />
+                  )}
+                  <span className="flex-1 truncate text-text-primary">{r.topic}</span>
+                  {r.error && <span className="text-xs text-error">{r.error}</span>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </Modal>
 

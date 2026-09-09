@@ -21,12 +21,10 @@ import {
   GraduationCap,
   Radio,
   LifeBuoy,
-  Video,
-  HelpCircle,
-  MousePointerClick,
+  Tags,
+  Scale,
 } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
-import { TikTokIcon, YouTubeIcon } from "@/components/shared/SocialIcons";
 import type { translations } from "@/i18n/translations";
 
 type NavLabelKey = keyof typeof translations.en.nav;
@@ -49,10 +47,8 @@ export interface NavItem {
 export const USER_SIDEBAR_NAV: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, labelKey: "dashboard" },
   { label: "Tâches journalières", to: "/tasks", icon: ListChecks, labelKey: "tasks", expandOnly: true },
-  { label: "TikTok", to: "/tasks/tiktok", icon: TikTokIcon, indent: true, labelKey: "tiktokTasks" },
-  { label: "YouTube", to: "/tasks/youtube", icon: YouTubeIcon, indent: true, labelKey: "youtubeTasks" },
-  { label: "Quiz", to: "/tasks/quiz", icon: HelpCircle, indent: true, labelKey: "quizTasks" },
-  { label: "Ads", to: "/tasks/ads", icon: MousePointerClick, indent: true, labelKey: "adsTasks" },
+  { label: "Annotation", to: "/tasks/labeling", icon: Tags, indent: true, labelKey: "labelingTasks" },
+  { label: "Évaluation IA", to: "/tasks/evaluation", icon: Scale, indent: true, labelKey: "evaluationTasks" },
   { label: "Formations", to: "/courses", icon: GraduationCap, labelKey: "courses" },
   { label: "Portefeuille", to: "/wallet", icon: Wallet, labelKey: "wallet" },
   { label: "Retrait", to: "/wallet?tab=withdrawals", icon: ArrowUpFromLine, indent: true, labelKey: "withdraw" },
@@ -80,7 +76,6 @@ export const ADMIN_SIDEBAR_NAV: NavItem[] = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
   { label: "Utilisateurs", to: "/admin/users", icon: Users },
   { label: "Tâches journalières", to: "/admin/tasks", icon: ClipboardList },
-  { label: "Réseaux sociaux", to: "/admin/tasks?social=1", icon: Video, indent: true },
   { label: "Formations", to: "/admin/courses", icon: GraduationCap },
   { label: "Frais d'activation", to: "/admin/deposits", icon: ArrowDownToLine },
   { label: "Retraits", to: "/admin/withdrawals", icon: ArrowUpFromLine },

@@ -17,13 +17,26 @@ import { formatCurrency } from "@/utils/format";
 import { WEST_AFRICA_COUNTRIES } from "@/config/countries";
 import { getOperatorsForCountry } from "@/config/operators";
 import type { Deposit, Wallet } from "@/types/domain";
+import { cn } from "@/utils/cn";
+
+// Paliers de recharge proposés une fois le compte déjà activé (les frais
+// d'activation eux restent un montant fixe, non lié à ces paliers). Les noms
+// sont purement décoratifs (distinguer visuellement les montants) — aucun
+// statut, aucun avantage ni récompense différenciée n'y est associé.
+const TOP_UP_TIERS: { amount: number; label: string }[] = [
+  { amount: 8800, label: "Bronze" },
+  { amount: 38000, label: "Argent" },
+  { amount: 98000, label: "Or" },
+  { amount: 315000, label: "Platine" },
+  { amount: 720000, label: "Diamant" },
+];
 
 export function DepositPage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { settings } = useSettings();
   const td = useT().deposit;
-  const amount = settings.accountActivationMinDeposit;
+  const [selectedTier, setSelectedTier] = useState(TOP_UP_TIERS[0].amount);
   const [country, setCountry] = useState(WEST_AFRICA_COUNTRIES.find((c) => c.name === profile?.country)?.code ?? "CI");
   const [operator, setOperator] = useState(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
   const [phone, setPhone] = useState(profile?.phone ?? "");
@@ -51,8 +64,12 @@ export function DepositPage() {
   }, [country]);
 
   const needsActivation = !isAccountActivated(wallet, settings, profile?.role);
+  const amount = needsActivation ? settings.accountActivationMinDeposit : selectedTier;
   const selectedCountry = WEST_AFRICA_COUNTRIES.find((c) => c.code === country);
-  const activeDeposit = deposits.find((d) => d.status === "PENDING" || d.status === "COMPLETED");
+  // Une fois activé, un dépôt COMPLETED passé (l'activation elle-même, ou une
+  // recharge précédente) ne doit plus bloquer la page — seul un dépôt encore
+  // PENDING justifie l'écran d'attente/suivi.
+  const activeDeposit = deposits.find((d) => (needsActivation ? d.status === "PENDING" || d.status === "COMPLETED" : d.status === "PENDING"));
 
   // Pendant l'attente, on ne veut pas laisser l'utilisateur planté sur un
   // écran figé : on sonde le statut toutes les 4s pour rediriger dès que
@@ -178,7 +195,7 @@ export function DepositPage() {
       </button>
 
       <Card>
-        <h1 className="text-lg font-semibold text-text-primary">{td.title}</h1>
+        <h1 className="text-lg font-semibold text-text-primary">{needsActivation ? td.title : td.topUpTitle}</h1>
         <div className="mt-4 flex flex-col gap-3">
           {needsActivation && (
             <div className="flex items-start gap-3 rounded-md border border-warning/30 bg-warning-bg p-4">
@@ -200,10 +217,32 @@ export function DepositPage() {
 
         <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-4">
           {error && <Alert tone="error">{error}</Alert>}
-          <div className="flex items-baseline justify-between rounded-md border border-border bg-surface-alt px-4 py-3">
-            <span className="text-sm font-medium text-text-secondary">{td.fee}</span>
-            <span className="text-lg font-semibold text-text-primary">{formatCurrency(amount, settings.currencyLabel)}</span>
-          </div>
+          {needsActivation ? (
+            <div className="flex items-baseline justify-between rounded-md border border-border bg-surface-alt px-4 py-3">
+              <span className="text-sm font-medium text-text-secondary">{td.fee}</span>
+              <span className="text-lg font-semibold text-text-primary">{formatCurrency(amount, settings.currencyLabel)}</span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-text-primary">{td.chooseAmount}</label>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {TOP_UP_TIERS.map((tier) => (
+                  <button
+                    type="button"
+                    key={tier.amount}
+                    onClick={() => setSelectedTier(tier.amount)}
+                    className={cn(
+                      "flex flex-col items-center gap-0.5 rounded-md border px-3 py-2.5 text-sm font-medium transition-colors",
+                      selectedTier === tier.amount ? "border-primary bg-primary/10 text-primary" : "border-border text-text-secondary hover:bg-surface-alt",
+                    )}
+                  >
+                    <span>{tier.label}</span>
+                    <span className="text-xs font-normal opacity-80">{formatCurrency(tier.amount, settings.currencyLabel)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <Select
               label={td.country}
@@ -227,7 +266,7 @@ export function DepositPage() {
           />
           <p className="-mt-2 text-xs text-text-secondary">{td.phoneHint}</p>
           <Button type="submit" fullWidth loading={loading}>
-            {settings.paymentProvider === "mock" ? td.activateDemo : td.activate}
+            {needsActivation ? (settings.paymentProvider === "mock" ? td.activateDemo : td.activate) : td.topUp}
           </Button>
         </form>
       </Card>

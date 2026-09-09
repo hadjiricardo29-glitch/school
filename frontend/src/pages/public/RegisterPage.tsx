@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Mail, Lock, User, Phone } from "lucide-react";
+import { Mail, Lock, User, Phone, Users, BadgeCheck, Coins, Share2, ArrowDownToLine } from "lucide-react";
 import { AuthCard } from "@/components/shared/AuthCard";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -9,6 +9,7 @@ import { Alert } from "@/components/ui/Alert";
 import { COUNTRIES } from "@/config/countries";
 import { registerUser } from "@/services/auth";
 import { useT } from "@/i18n/useT";
+import { cn } from "@/utils/cn";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -118,83 +119,124 @@ export function RegisterPage() {
         </>
       }
     >
+      <div className="mb-5 grid grid-cols-3 gap-2 rounded-md border border-border bg-surface-alt p-3">
+        {[
+          { icon: Coins, label: t.valueProp1 },
+          { icon: Share2, label: t.valueProp2 },
+          { icon: ArrowDownToLine, label: t.valueProp3 },
+        ].map(({ icon: Icon, label }, i) => (
+          <div key={i} className="flex flex-col items-center gap-1.5 text-center">
+            <span className="flex size-8 items-center justify-center rounded-md bg-primary text-white">
+              <Icon className="size-4" />
+            </span>
+            <span className="text-[11px] font-medium leading-tight text-text-secondary">{label}</span>
+          </div>
+        ))}
+      </div>
+
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         {error && <Alert tone="error">{error}</Alert>}
 
-        <div className="grid grid-cols-2 gap-3">
-          <Input label={t.firstName} required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-          <Input label={t.lastName} required value={lastName} onChange={(e) => setLastName(e.target.value)} />
-        </div>
-
-        <Input
-          label={t.username}
-          required
-          leftIcon={<User className="size-4" />}
-          value={username}
-          onChange={(e) => setUsername(e.target.value.replace(/\s/g, "").toLowerCase())}
-          placeholder="prince123"
-          hint={t.usernameHint}
-        />
-
-        <Input
-          label={t.email}
-          type="email"
-          required
-          leftIcon={<Mail className="size-4" />}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="vous@exemple.com"
-        />
-
-        <div className="grid grid-cols-2 gap-3">
-          <Select
-            label={t.country}
-            options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-          />
+        <div
+          className={cn(
+            "flex flex-col gap-3 rounded-md border p-4",
+            referralLocked ? "border-success/40 bg-success/5" : "border-primary/40 bg-primary/5",
+          )}
+        >
+          <div className="flex items-center gap-2.5">
+            <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-md", referralLocked ? "bg-success text-white" : "bg-primary text-white")}>
+              {referralLocked ? <BadgeCheck className="size-5" /> : <Users className="size-5" />}
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-text-primary">{referralLocked ? t.referralBoxTitleLocked : t.referralBoxTitleUnlocked}</p>
+              <p className="text-xs text-text-secondary">
+                {referralLocked ? t.referralBoxBodyLocked.replace("{code}", referralCode) : t.referralBoxBodyUnlocked}
+              </p>
+            </div>
+          </div>
           <Input
-            label={t.phone}
+            label={t.referralCode}
             required
-            leftIcon={<Phone className="size-4" />}
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder={`${selectedCountry.phoneCode} 00 00 00 00`}
+            value={referralCode}
+            onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+            disabled={referralLocked}
+            placeholder="PRINCE123"
+            hint={referralLocked ? t.referralHintLocked : t.referralHint}
+            className="font-mono text-base tracking-wider"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-3 border-t border-border pt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">{t.identitySection}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Input label={t.firstName} required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+            <Input label={t.lastName} required value={lastName} onChange={(e) => setLastName(e.target.value)} />
+          </div>
           <Input
-            label={t.password}
-            type="password"
+            label={t.username}
             required
-            leftIcon={<Lock className="size-4" />}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-          />
-          <Input
-            label={t.confirm}
-            type="password"
-            required
-            leftIcon={<Lock className="size-4" />}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="••••••••"
+            leftIcon={<User className="size-4" />}
+            value={username}
+            onChange={(e) => setUsername(e.target.value.replace(/\s/g, "").toLowerCase())}
+            placeholder="prince123"
+            hint={t.usernameHint}
           />
         </div>
 
-        <Input
-          label={t.referralCode}
-          required
-          value={referralCode}
-          onChange={(e) => setReferralCode(e.target.value)}
-          disabled={referralLocked}
-          placeholder="PRINCE123"
-          hint={referralLocked ? t.referralHintLocked : t.referralHint}
-        />
+        <div className="flex flex-col gap-3 border-t border-border pt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">{t.contactSection}</p>
+          <Input
+            label={t.email}
+            type="email"
+            required
+            leftIcon={<Mail className="size-4" />}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="vous@exemple.com"
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label={t.country}
+              options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+            />
+            <Input
+              label={t.phone}
+              required
+              leftIcon={<Phone className="size-4" />}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder={`${selectedCountry.phoneCode} 00 00 00 00`}
+            />
+          </div>
+        </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3 border-t border-border pt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">{t.securitySection}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label={t.password}
+              type="password"
+              required
+              leftIcon={<Lock className="size-4" />}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+            <Input
+              label={t.confirm}
+              type="password"
+              required
+              leftIcon={<Lock className="size-4" />}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 border-t border-border pt-4">
           <label className="flex items-start gap-2 text-sm text-text-secondary">
             <input
               type="checkbox"
