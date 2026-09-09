@@ -14,7 +14,7 @@ import { StatusBadge } from "@/components/ui/Badge";
 import { TransactionRow } from "@/components/shared/TransactionRow";
 import { getDeposits, getTransactions, getWallet, getWalletBalances, getWithdrawals } from "@/services/wallet";
 import type { Deposit, EarningBucket, Transaction, Wallet, WalletBalance, WithdrawalRequest } from "@/types/domain";
-import { EARNING_BUCKET_COLORS } from "@/types/domain";
+import { CURRENT_EARNING_BUCKETS, EARNING_BUCKET_COLORS } from "@/types/domain";
 import { cn } from "@/utils/cn";
 import { formatCurrency, formatDateTime } from "@/utils/format";
 import { hasUsedDeposit, isAccountActivated } from "@/utils/activation";
@@ -111,7 +111,9 @@ export function WalletPage() {
         <p className="text-sm font-semibold text-text-primary">{tw.byCategory}</p>
         <p className="mt-0.5 text-xs text-text-secondary">{tw.byCategoryBody}</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {(Object.keys(t.enums.earningBucket) as EarningBucket[]).map((b) => (
+          {(Object.keys(t.enums.earningBucket) as EarningBucket[])
+            .filter((b) => CURRENT_EARNING_BUCKETS.includes(b) || (balances.find((wb) => wb.bucket === b)?.available_balance ?? 0) > 0)
+            .map((b) => (
             <div key={b} className={cn("rounded-md p-3", EARNING_BUCKET_COLORS[b])}>
               <p className="text-xs opacity-80">{t.enums.earningBucket[b]}</p>
               <p className="mt-1 text-sm font-semibold">

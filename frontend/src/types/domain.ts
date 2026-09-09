@@ -83,7 +83,15 @@ export interface Wallet {
   updated_at: string;
 }
 
-export type EarningBucket = "WALLET" | "TIKTOK" | "YOUTUBE" | "VIDEOS" | "ADS" | "SURVEYS";
+// TIKTOK/YOUTUBE/VIDEOS/ADS/SURVEYS restent dans le type pour la
+// rétrocompatibilité (anciennes tâches encore en base) mais ne sont plus
+// des catégories actives — voir CURRENT_EARNING_BUCKETS plus bas, utilisé
+// pour ne plus les afficher dans le tableau de bord/le sélecteur de retrait
+// une fois leur solde à zéro (soldes existants fusionnés dans WALLET).
+export type EarningBucket = "WALLET" | "TIKTOK" | "YOUTUBE" | "VIDEOS" | "ADS" | "SURVEYS" | "LABELING" | "AI_EVALUATION";
+
+/** Catégories de gains actuellement proposées (hors legacy) — voir le commentaire ci-dessus. */
+export const CURRENT_EARNING_BUCKETS: EarningBucket[] = ["WALLET", "LABELING", "AI_EVALUATION"];
 
 export interface WalletBalance {
   id: string;
@@ -101,6 +109,8 @@ export const EARNING_BUCKET_LABELS: Record<EarningBucket, string> = {
   VIDEOS: "Vidéos",
   ADS: "Publicités",
   SURVEYS: "Sondages",
+  LABELING: "Annotation",
+  AI_EVALUATION: "Évaluation IA",
 };
 
 /** Classes Tailwind (fond + texte) pour distinguer visuellement chaque bucket de gain. */
@@ -111,6 +121,8 @@ export const EARNING_BUCKET_COLORS: Record<EarningBucket, string> = {
   VIDEOS: "bg-accent/10 text-accent",
   ADS: "bg-warning/10 text-warning",
   SURVEYS: "bg-success/10 text-success",
+  LABELING: "bg-purple/10 text-purple",
+  AI_EVALUATION: "bg-accent/10 text-accent",
 };
 
 export interface Transaction {

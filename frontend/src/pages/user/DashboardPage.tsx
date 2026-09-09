@@ -15,7 +15,7 @@ import { getDeposits, getTransactions, getWallet, getWalletBalances } from "@/se
 import { listPublishedTasks } from "@/services/tasks";
 import { getDirectReferrals, getMyRank, type ReferralWithStatus } from "@/services/referrals";
 import type { Deposit, EarningBucket, MyRank, Task, TaskCategory, Transaction, Wallet, WalletBalance } from "@/types/domain";
-import { EARNING_BUCKET_COLORS, EARNING_BUCKET_LABELS } from "@/types/domain";
+import { CURRENT_EARNING_BUCKETS, EARNING_BUCKET_COLORS, EARNING_BUCKET_LABELS } from "@/types/domain";
 import { formatCurrency, formatDate, getLocale } from "@/utils/format";
 import { hasUsedDeposit, isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
@@ -33,11 +33,11 @@ const WEEKLY_SCHEDULE: {
   icon: ComponentType<{ className?: string }>;
   to: string;
 }[] = [
-  { weekday: 1, category: "LABELING", bucket: "WALLET", type: "answer", icon: Tags, to: "/tasks/labeling" },
-  { weekday: 2, category: "AI_EVALUATION", bucket: "WALLET", type: "answer", icon: Scale, to: "/tasks/evaluation" },
-  { weekday: 3, category: "LABELING", bucket: "WALLET", type: "answer", icon: Tags, to: "/tasks/labeling" },
-  { weekday: 4, category: "AI_EVALUATION", bucket: "WALLET", type: "answer", icon: Scale, to: "/tasks/evaluation" },
-  { weekday: 5, category: "LABELING", bucket: "WALLET", type: "answer", icon: Tags, to: "/tasks/labeling" },
+  { weekday: 1, category: "LABELING", bucket: "LABELING", type: "answer", icon: Tags, to: "/tasks/labeling" },
+  { weekday: 2, category: "AI_EVALUATION", bucket: "AI_EVALUATION", type: "answer", icon: Scale, to: "/tasks/evaluation" },
+  { weekday: 3, category: "LABELING", bucket: "LABELING", type: "answer", icon: Tags, to: "/tasks/labeling" },
+  { weekday: 4, category: "AI_EVALUATION", bucket: "AI_EVALUATION", type: "answer", icon: Scale, to: "/tasks/evaluation" },
+  { weekday: 5, category: "LABELING", bucket: "LABELING", type: "answer", icon: Tags, to: "/tasks/labeling" },
 ];
 
 export function DashboardPage() {
@@ -90,10 +90,15 @@ export function DashboardPage() {
   );
 
   const categoryBreakdown = useMemo(() => {
-    const rows = (Object.keys(EARNING_BUCKET_LABELS) as EarningBucket[]).map((bucket) => ({
-      bucket,
-      amount: balances.find((wb) => wb.bucket === bucket)?.available_balance ?? 0,
-    }));
+    // N'affiche que les catégories actuelles — les anciennes (TikTok, YouTube...)
+    // ne sont plus proposées à la création de tâches ; leurs soldes ont été
+    // fusionnés dans WALLET lors de la bascule, donc plus rien à y montrer.
+    const rows = (Object.keys(EARNING_BUCKET_LABELS) as EarningBucket[])
+      .filter((bucket) => CURRENT_EARNING_BUCKETS.includes(bucket))
+      .map((bucket) => ({
+        bucket,
+        amount: balances.find((wb) => wb.bucket === bucket)?.available_balance ?? 0,
+      }));
     const total = rows.reduce((s, r) => s + r.amount, 0);
     return {
       rows: [...rows].sort((a, b) => b.amount - a.amount),

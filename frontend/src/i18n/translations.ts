@@ -193,6 +193,8 @@ export const translations = {
         VIDEOS: "Videos",
         ADS: "Ads",
         SURVEYS: "Surveys",
+        LABELING: "Labeling",
+        AI_EVALUATION: "AI evaluation",
       } as Record<string, string>,
     },
     common: {
@@ -784,6 +786,8 @@ export const translations = {
         VIDEOS: "Vidéos",
         ADS: "Publicités",
         SURVEYS: "Sondages",
+        LABELING: "Annotation",
+        AI_EVALUATION: "Évaluation IA",
       } as Record<string, string>,
     },
     common: {

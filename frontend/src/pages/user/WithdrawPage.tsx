@@ -14,6 +14,7 @@ import { countActivatedReferrals } from "@/services/referrals";
 import { formatCurrency } from "@/utils/format";
 import { notify } from "@/utils/toast";
 import type { EarningBucket, Wallet, WalletBalance } from "@/types/domain";
+import { CURRENT_EARNING_BUCKETS } from "@/types/domain";
 import { isAccountActivated } from "@/utils/activation";
 import { ActivationBanner } from "@/components/shared/ActivationBanner";
 import { COUNTRIES } from "@/config/countries";
@@ -47,10 +48,14 @@ export function WithdrawPage() {
     setOperator(getOperatorsForCountry(country)[0]?.value ?? "mobile_money");
   }, [country]);
 
-  const bucketOptions = (Object.keys(t.enums.earningBucket) as EarningBucket[]).map((b) => {
-    const balance = balances.find((wb) => wb.bucket === b)?.available_balance ?? 0;
-    return { value: b, label: `${t.enums.earningBucket[b]} — ${formatCurrency(balance, settings.currencyLabel)}` };
-  });
+  // N'affiche que les catégories actuelles, sauf une ancienne (TikTok...)
+  // qui garderait encore un solde — jamais stranded, toujours retirable.
+  const bucketOptions = (Object.keys(t.enums.earningBucket) as EarningBucket[])
+    .filter((b) => CURRENT_EARNING_BUCKETS.includes(b) || (balances.find((wb) => wb.bucket === b)?.available_balance ?? 0) > 0)
+    .map((b) => {
+      const balance = balances.find((wb) => wb.bucket === b)?.available_balance ?? 0;
+      return { value: b, label: `${t.enums.earningBucket[b]} — ${formatCurrency(balance, settings.currencyLabel)}` };
+    });
   const bucketBalance = balances.find((wb) => wb.bucket === bucket)?.available_balance ?? 0;
 
   const referralsRequired = settings.withdrawalMinReferrals;
